@@ -916,11 +916,11 @@ def error_interno(e):
 
 # Registrar blueprints de Google OAuth y Calendar
 # from google_auth import google_bp, bp as google_auth_bp
-from google_calendar import bp as google_calendar_bp
+#from google_calendar import bp as google_calendar_bp
 
 # app.register_blueprint(google_bp, url_prefix="/google")
 # app.register_blueprint(google_auth_bp)
-app.register_blueprint(google_calendar_bp)
+#app.register_blueprint(google_calendar_bp)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
