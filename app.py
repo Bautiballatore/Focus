@@ -923,4 +923,4 @@ from google_calendar import bp as google_calendar_bp
 app.register_blueprint(google_calendar_bp)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
