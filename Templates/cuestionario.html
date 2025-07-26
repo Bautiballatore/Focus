@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen - Generador de Exámenes IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .timer-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .timer i {
+            margin-right: 10px;
+            font-size: 1.4rem;
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 8px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .question-card {
+            display: none;
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .question-card.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .question-number {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .question-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .options-container {
+            margin-bottom: 30px;
+        }
+
+        .option-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-item:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .option-item.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .option-letter {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 15px;
+            font-size: 0.9rem;
+        }
+
+        .option-text {
+            flex: 1;
+            font-size: 1rem;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        .select-dropdown {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            color: #4a5568;
+            margin-bottom: 20px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            cursor: pointer;
+        }
+
+        .select-dropdown:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .nav-btn.primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn.secondary {
+            background: #f8fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .nav-btn.secondary:hover:not(:disabled) {
+            background: #e2e8f0;
+            border-color: #cbd5e0;
+        }
+
+        .submit-section {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background: #f0f4ff;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .submit-section.show {
+            display: block;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(72, 187, 120, 0.3);
+        }
+
+        .question-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .indicator-dot.active {
+            background: #667eea;
+            transform: scale(1.2);
+        }
+
+        .indicator-dot.answered {
+            background: #48bb78;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .question-card {
+                padding: 20px;
+            }
+
+            .navigation {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-clipboard-list"></i> Examen en Curso</h1>
+            <p>Responde todas las preguntas y envía tu examen</p>
+            
+            <div class="timer-container">
+                <div class="timer" id="timer">
+                    <i class="fas fa-clock"></i>
+                    <span>Tiempo: 0 segundos</span>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="question-indicator" id="questionIndicator">
+                {% for p in preguntas %}
+                    <div class="indicator-dot" data-question="{{ loop.index0 }}" onclick="goToQuestion({{ loop.index0 }})"></div>
+                {% endfor %}
+            </div>
+
+            <form method="POST" action="/evaluar" id="examForm">
+                {% for p in preguntas %}
+                    <div class="question-card" id="question_{{ loop.index0 }}">
+                        <div class="question-header">
+                            <div class="question-number">
+                                Pregunta {{ loop.index }} de {{ preguntas|length }}
+                            </div>
+                        </div>
+                        
+                        <div class="question-title">{{ p.enunciado }}</div>
+                        
+                        <div class="options-container">
+                            <select name="pregunta_{{ loop.index0 }}" class="select-dropdown" required onchange="updateAnswerStatus({{ loop.index0 }})">
+                                <option value="" disabled selected>Selecciona tu respuesta</option>
+                                <option value="a">a</option>
+                                <option value="b">b</option>
+                                <option value="c">c</option>
+                                <option value="d">d</option>
+                            </select>
+                            
+                            <div class="options-list">
+                                {% for op in p.opciones %}
+                                    <div class="option-item">
+                                        <div class="option-letter">{{ op[0] }}</div>
+                                        <div class="option-text">{{ op[2:] }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="navigation">
+                            <button type="button" class="nav-btn secondary" onclick="previousQuestion()" id="prevBtn_{{ loop.index0 }}">
+                                <i class="fas fa-arrow-left"></i> Anterior
+                            </button>
+                            <button type="button" class="nav-btn primary" onclick="nextQuestion()" id="nextBtn_{{ loop.index0 }}">
+                                Siguiente <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="submit-section" id="submitSection">
+                    <h3 style="margin-bottom: 15px; color: #2d3748;">¿Listo para enviar tu examen?</h3>
+                    <p style="margin-bottom: 25px; color: #718096;">Revisa tus respuestas antes de enviar. Una vez enviado, no podrás hacer cambios.</p>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        Enviar Examen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 0;
+        let totalQuestions = {{ preguntas|length }};
+        let seconds = 0;
+        let answeredQuestions = new Set();
+
+        // Timer functionality
+        const timer = document.getElementById('timer');
+        setInterval(() => {
+            seconds++;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            timer.innerHTML = `<i class="fas fa-clock"></i><span>Tiempo: ${minutes}:${remainingSeconds.toString().padStart(2, '0')}</span>`;
+        }, 1000);
+
+        // Initialize
+        function init() {
+            showQuestion(0);
+            updateProgress();
+            updateIndicators();
+        }
+
+        // Show specific question
+        function showQuestion(index) {
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            document.getElementById(`question_${index}`).classList.add('active');
+            currentQuestion = index;
+            
+            // Update navigation buttons
+            updateNavigationButtons();
+            updateProgress();
+            updateIndicators();
+            
+            // Show submit section if last question
+            const submitSection = document.getElementById('submitSection');
+            if (index === totalQuestions - 1) {
+                submitSection.classList.add('show');
+            } else {
+                submitSection.classList.remove('show');
+            }
+        }
+
+        // Navigation functions
+        function nextQuestion() {
+            if (currentQuestion < totalQuestions - 1) {
+                showQuestion(currentQuestion + 1);
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                showQuestion(currentQuestion - 1);
+            }
+        }
+
+        function goToQuestion(index) {
+            showQuestion(index);
+        }
+
+        // Update navigation buttons
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById(`prevBtn_${currentQuestion}`);
+            const nextBtn = document.getElementById(`nextBtn_${currentQuestion}`);
+            
+            if (prevBtn) {
+                prevBtn.disabled = currentQuestion === 0;
+            }
+            
+            if (nextBtn) {
+                if (currentQuestion === totalQuestions - 1) {
+                    nextBtn.style.display = 'none';
+                } else {
+                    nextBtn.style.display = 'flex';
+                }
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        // Update question indicators
+        function updateIndicators() {
+            document.querySelectorAll('.indicator-dot').forEach((dot, index) => {
+                dot.classList.remove('active');
+                if (index === currentQuestion) {
+                    dot.classList.add('active');
+                }
+            });
+        }
+
+        // Track answered questions
+        function updateAnswerStatus(questionIndex) {
+            answeredQuestions.add(questionIndex);
+            const dot = document.querySelector(`[data-question="${questionIndex}"]`);
+            if (dot) {
+                dot.classList.add('answered');
+            }
+        }
+
+        // Form submission validation
+        document.getElementById('examForm').addEventListener('submit', function(e) {
+            const unansweredQuestions = [];
+            
+            for (let i = 0; i < totalQuestions; i++) {
+                const select = document.querySelector(`select[name="pregunta_${i}"]`);
+                if (!select.value) {
+                    unansweredQuestions.push(i + 1);
+                }
+            }
+            
+            if (unansweredQuestions.length > 0) {
+                e.preventDefault();
+                alert(`Por favor, responde las siguientes preguntas antes de enviar: ${unansweredQuestions.join(', ')}`);
+                return false;
+            }
+            
+            return confirm('¿Estás seguro de que quieres enviar tu examen? No podrás hacer cambios después.');
+        });
+
+        // Initialize on page load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

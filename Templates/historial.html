@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Exámenes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-light: #a855f7;
+            --secondary: #38bdf8;
+            --accent: #4ade80;
+            --bg-dark: #18181b;
+            --text-light: #fff;
+            --card-dark: #23263a;
+            --muted: #a0aec0;
+        }
+        html, body { height: 100%; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: var(--card-dark);
+            border-radius: 18px;
+            padding: 36px 44px 30px 44px;
+            box-shadow: 0 4px 24px #0008;
+        }
+        h1 {
+            margin-bottom: 28px;
+            color: var(--primary);
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 30px;
+            background: var(--card-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px #7c3aed11;
+        }
+        .table th, .table td {
+            padding: 14px 18px;
+            text-align: center;
+        }
+        .table th {
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+        .table tr:nth-child(even) {
+            background: #23263aee;
+        }
+        .table tr:nth-child(odd) {
+            background: #1a1a1e;
+        }
+        .btn-main {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            margin: 0 4px;
+            transition: background 0.2s;
+            display: inline-block;
+            border: none;
+            box-shadow: 0 2px 12px #7c3aed33;
+        }
+        .btn-main:hover {
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            box-shadow: 0 4px 16px #38bdf855;
+        }
+        .volver {
+            margin-bottom: 18px;
+            display: inline-block;
+        }
+        .nota {
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        .correctas { color: #4ade80; font-weight: bold; }
+        .parciales { color: #facc15; font-weight: bold; }
+        .incorrectas { color: #f87171; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fa-solid fa-list"></i> Historial de Exámenes</h1>
+        <a href="{{ url_for('perfil') }}" class="btn-main volver"><i class="fa-solid fa-user"></i> Volver al perfil</a>
+        {% if examenes %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Nota</th>
+                    <th>Correctas</th>
+                    <th>Parciales</th>
+                    <th>Incorrectas</th>
+                    <th>Tiempo (s)</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for examen in examenes %}
+                <tr>
+                    <td>{{ examen.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td class="nota">{{ examen.nota }}</td>
+                    <td class="correctas">{{ examen.correctas }}</td>
+                    <td class="parciales">{{ examen.parciales }}</td>
+                    <td class="incorrectas">{{ examen.incorrectas }}</td>
+                    <td>{{ examen.tiempo_total }}</td>
+                    <td><a href="{{ url_for('detalle_examen', examen_id=examen.id) }}" class="btn-main">Ver</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No has realizado exámenes aún.</p>
+        {% endif %}
+    </div>
+</body>
+</html> 

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen - Generador de Exámenes IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html, body { height: 100%; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            opacity: 0.25;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto 0 auto;
+            background: rgba(30,32,40,0.7);
+            border-radius: 24px;
+            box-shadow: 0 8px 40px #000a;
+            padding: 0 0 32px 0;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .topbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 18px 32px 0 32px;
+        }
+        .user-info {
+            color: #b3b3b3;
+            font-size: 1rem;
+            margin-right: 18px;
+        }
+        .topbar a {
+            color: #8ab4f8;
+            text-decoration: none;
+            margin-left: 12px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .topbar a:hover { color: #fff; }
+        .header {
+            text-align: center;
+            padding: 24px 32px 0 32px;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #8ab4f8, #a084ee 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 8px 0;
+        }
+        .progress-bar {
+            width: 100%; height: 8px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 8px;
+            margin: 18px 0 0 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8ab4f8, #a084ee 80%);
+            border-radius: 8px;
+            transition: width 0.3s;
+        }
+        .timer-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 18px 0 0 0;
+        }
+        .timer {
+            background: rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 8px 18px;
+            font-size: 1.1rem;
+            color: #8ab4f8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .content {
+            padding: 32px 32px 0 32px;
+        }
+        .question-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 32px 24px 24px 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 16px #0002;
+        }
+        .question-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 24px;
+        }
+        .options-container {
+            margin-bottom: 24px;
+        }
+        .option-item {
+            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(138,180,248,0.13);
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .option-item.selected, .option-item:hover {
+            border-color: #8ab4f8;
+            background: rgba(138,180,248,0.08);
+        }
+        .option-item input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .option-checkmark {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            border: 2px solid #8ab4f8;
+            margin-right: 16px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.08);
+        }
+        .option-item input[type="radio"]:checked ~ .option-checkmark {
+            background: linear-gradient(135deg, #8ab4f8, #a084ee);
+            border-color: #8ab4f8;
+        }
+        .option-item input[type="radio"]:checked ~ .option-checkmark::after {
+            content: '✓';
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .option-text {
+            flex: 1;
+            font-size: 1rem;
+            color: #e0e0e0;
+        }
+        .textarea-container {
+            margin-bottom: 24px;
+        }
+        .textarea-container textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 14px;
+            border: 1.5px solid #8ab4f8;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            resize: vertical;
+            transition: border 0.2s;
+        }
+        .textarea-container textarea:focus {
+            outline: none;
+            border-color: #a084ee;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .nav-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-btn.primary {
+            background: linear-gradient(90deg, #8ab4f8, #a084ee 80%);
+            color: #fff;
+        }
+        .nav-btn.primary:hover {
+            box-shadow: 0 4px 16px #8ab4f855;
+        }
+        .nav-btn.secondary {
+            background: rgba(255,255,255,0.04);
+            color: #8ab4f8;
+            border: 1.5px solid #8ab4f8;
+        }
+        .nav-btn.secondary:hover {
+            background: #8ab4f8;
+            color: #fff;
+        }
+        .nav-btn.finish {
+            background: linear-gradient(90deg, #4ade80, #22d3ee 80%);
+            color: #fff;
+        }
+        .nav-btn.finish:hover {
+            box-shadow: 0 4px 16px #22d3ee55;
+        }
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .validation-message {
+            background: rgba(245, 101, 101, 0.13);
+            color: #f56565;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            display: none;
+            font-size: 0.98rem;
+            border: 1px solid #f56565;
+        }
+        .validation-message.show {
+            display: block;
+        }
+        @media (max-width: 600px) {
+            .container { margin: 0; border-radius: 0; }
+            .header, .content, .topbar { padding-left: 10px; padding-right: 10px; }
+            .question-card { padding: 18px 6px 12px 6px; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="container">
+    <div class="topbar">
+        {% if current_user.is_authenticated %}
+            <span class="user-info"><i class="fa-solid fa-user"></i> {{ current_user.nombre }}</span>
+            <a href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+        {% else %}
+            <a href="{{ url_for('login') }}"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</a>
+            <a href="{{ url_for('registro') }}"><i class="fa-solid fa-user-plus"></i> Registrarse</a>
+        {% endif %}
+    </div>
+    <div class="header">
+        <h1><i class="fas fa-clipboard-question"></i> Pregunta {{ numero }} de {{ total }}</h1>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ ((numero / total) * 100)|round }}%"></div>
+        </div>
+        <div class="timer-container">
+            <div class="timer" id="timer">
+                <i class="fas fa-clock"></i>
+                <span>Tiempo en esta pregunta: 0:00</span>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="validation-message" id="validationMessage">
+            <i class="fas fa-exclamation-triangle"></i>
+            Por favor, selecciona una respuesta antes de continuar.
+        </div>
+        <form method="post" id="examForm">
+            <div class="question-card">
+                <div class="question-title">{{ pregunta.enunciado }}</div>
+                {% if pregunta.tipo == "multiple" %}
+                    <div class="options-container">
+                        {% for opcion in pregunta.opciones %}
+                            <label class="option-item" onclick="selectOption(this)">
+                                <input type="radio" name="respuesta" value="{{ opcion[0]|lower }}" {% if respuesta_actual == opcion[0]|lower %}checked{% endif %} required>
+                                <div class="option-checkmark"></div>
+                                <div class="option-text">{{ opcion }}</div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                {% elif pregunta.tipo == "vf" %}
+                    <div class="options-container">
+                        <label class="option-item" onclick="selectOption(this)">
+                            <input type="radio" name="respuesta" value="verdadero" {% if respuesta_actual == 'verdadero' %}checked{% endif %} required>
+                            <div class="option-checkmark"></div>
+                            <div class="option-text">Verdadero</div>
+                        </label>
+                        <label class="option-item" onclick="selectOption(this)">
+                            <input type="radio" name="respuesta" value="falso" {% if respuesta_actual == 'falso' %}checked{% endif %}>
+                            <div class="option-checkmark"></div>
+                            <div class="option-text">Falso</div>
+                        </label>
+                    </div>
+                {% else %}
+                    <div class="textarea-container">
+                        <textarea name="respuesta" placeholder="Escribe tu respuesta aquí..." required>{{ respuesta_actual }}</textarea>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="navigation">
+                {% if actual > 0 %}
+                    <a href="{{ url_for('pregunta', numero=actual - 1) }}" class="nav-btn secondary">
+                        <i class="fas fa-arrow-left"></i> Anterior
+                    </a>
+                {% else %}
+                    <div></div>
+                {% endif %}
+                <button type="submit" class="nav-btn {% if actual + 1 == total %}finish{% else %}primary{% endif %}">
+                    {% if actual + 1 == total %}
+                        <i class="fas fa-check-circle"></i> Finalizar Examen
+                    {% else %}
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+// Fondo animado tipo red
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let w = window.innerWidth, h = window.innerHeight;
+canvas.width = w; canvas.height = h;
+let particles = [];
+const N = 48;
+for(let i=0;i<N;i++){
+    particles.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        vx: (Math.random()-0.5)*0.7,
+        vy: (Math.random()-0.5)*0.7,
+        r: Math.random()*2+1,
+        o: Math.random()*0.5+0.3
+    });
+}
+function drawNet(){
+    ctx.clearRect(0,0,w,h);
+    for(let i=0;i<N;i++){
+        let p=particles[i];
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+        ctx.fillStyle = `rgba(138,180,248,${p.o})`;
+        ctx.fill();
+        for(let j=i+1;j<N;j++){
+            let q=particles[j];
+            let dx=p.x-q.x,dy=p.y-q.y,dist=Math.sqrt(dx*dx+dy*dy);
+            if(dist<120){
+                ctx.beginPath();
+                ctx.moveTo(p.x,p.y);
+                ctx.lineTo(q.x,q.y);
+                ctx.strokeStyle = `rgba(138,180,248,${0.13*(1-dist/120)})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+    }
+}
+function animate(){
+    for(let p of particles){
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0||p.x>w) p.vx*=-1;
+        if(p.y<0||p.y>h) p.vy*=-1;
+    }
+    drawNet();
+    requestAnimationFrame(animate);
+}
+animate();
+window.addEventListener('resize',()=>{
+    w=window.innerWidth; h=window.innerHeight;
+    canvas.width=w; canvas.height=h;
+});
+// Timer
+let seconds = 0;
+const timer = document.getElementById('timer');
+setInterval(()=>{
+    seconds++;
+    const m = Math.floor(seconds/60);
+    const s = seconds%60;
+    timer.querySelector('span').textContent = `Tiempo en esta pregunta: ${m}:${s.toString().padStart(2,'0')}`;
+},1000);
+// Option selection
+function selectOption(label){
+    document.querySelectorAll('.option-item').forEach(item=>item.classList.remove('selected'));
+    label.classList.add('selected');
+    document.getElementById('validationMessage').classList.remove('show');
+}
+// Form validation
+const form = document.getElementById('examForm');
+form.addEventListener('submit',function(e){
+    const radios = form.querySelectorAll('input[type="radio"]');
+    const textarea = form.querySelector('textarea');
+    const validationMessage = document.getElementById('validationMessage');
+    if(radios.length>0){
+        const isSelected = Array.from(radios).some(r=>r.checked);
+        if(!isSelected){
+            e.preventDefault();
+            validationMessage.classList.add('show');
+            return false;
+        }
+    }else if(textarea){
+        if(textarea.value.trim()===''){
+            e.preventDefault();
+            validationMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Por favor, escribe una respuesta antes de continuar.';
+            validationMessage.classList.add('show');
+            return false;
+        }
+    }
+    {% if actual + 1 == total %}
+    return confirm('¿Estás seguro de que quieres finalizar el examen? No podrás hacer cambios después.');
+    {% endif %}
+    return true;
+});
+window.addEventListener('load',function(){
+    const checkedRadio = document.querySelector('input[type="radio"]:checked');
+    if(checkedRadio){
+        const label = checkedRadio.closest('.option-item');
+        if(label) label.classList.add('selected');
+    }
+});
+const textarea = document.querySelector('textarea');
+if(textarea){
+    textarea.addEventListener('input',function(){
+        this.style.height='auto';
+        this.style.height=Math.max(120,this.scrollHeight)+'px';
+    });
+}
+</script>
+</body>
+</html> 

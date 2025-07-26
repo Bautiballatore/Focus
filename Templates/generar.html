@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generar examen</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-light: #a855f7;
+            --secondary: #38bdf8;
+            --accent: #4ade80;
+            --bg-dark: #18181b;
+            --text-light: #fff;
+            --card-dark: #23263a;
+            --muted: #a0aec0;
+        }
+        html, body { height: 100%; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: var(--card-dark);
+            border-radius: 18px;
+            padding: 36px 44px 30px 44px;
+            box-shadow: 0 4px 24px #0008;
+        }
+        h1 {
+            margin-bottom: 18px;
+            color: var(--primary);
+            font-size: 2rem;
+            letter-spacing: 1px;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        label {
+            font-weight: 600;
+            color: var(--primary-light);
+            margin-bottom: 4px;
+        }
+        select, input[type="text"], input[type="number"] {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.1rem;
+            background: #23263a;
+            color: #fff;
+            outline: none;
+        }
+        .temas-math {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            background: #23263aee;
+            border-radius: 10px;
+            padding: 18px 18px 10px 18px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 8px #7c3aed11;
+        }
+        .temas-math.active {
+            display: flex;
+        }
+        .temas-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+            margin-bottom: 8px;
+        }
+        .tema-checkbox {
+            display: flex;
+            align-items: center;
+            background: #23263a;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: var(--accent);
+            font-size: 1rem;
+            cursor: pointer;
+            border: 1px solid #333;
+            transition: background 0.2s, color 0.2s;
+        }
+        .tema-checkbox input[type="checkbox"] {
+            margin-right: 7px;
+            accent-color: var(--primary);
+        }
+        .tema-checkbox:hover {
+            background: var(--primary-light);
+            color: #fff;
+        }
+        .btn-main {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 12px #7c3aed33;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn-main:hover {
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            box-shadow: 0 4px 16px #38bdf855;
+        }
+        .grupo-campo {
+            margin-bottom: 8px;
+        }
+        .modal-carga {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            background: rgba(24,24,27,0.85);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-carga.active { display: flex; }
+        .modal-content-carga {
+            background: #23263a;
+            border-radius: 18px;
+            padding: 36px 32px 28px 32px;
+            box-shadow: 0 4px 24px #0008;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .spinner {
+            border: 6px solid #a855f7;
+            border-top: 6px solid #38bdf8;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 18px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .carga-img {
+            width: 220px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px #0006;
+        }
+        .carga-text {
+            color: var(--primary-light);
+            font-size: 1.15rem;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+    </style>
+    <script>
+        function toggleTemasMath() {
+            const formato = document.getElementById('formato').value;
+            const temasDiv = document.getElementById('temas-math');
+            if (formato === 'ejercicios matematicos') {
+                temasDiv.classList.add('active');
+            } else {
+                temasDiv.classList.remove('active');
+            }
+        }
+    </script>
+</head>
+<body>
+    {% if mensaje_error %}
+    <div id="modalError" class="modal-error">
+      <div class="modal-content-error">
+        <span class="close-error" onclick="cerrarModalError()">&times;</span>
+        <img src="https://cdn-icons-png.flaticon.com/512/564/564619.png" alt="Error" style="width:80px; margin-bottom: 10px;">
+        <h2>¡Ups!</h2>
+        <p>{{ mensaje_error }}</p>
+      </div>
+    </div>
+    <script>
+    function cerrarModalError() {
+      document.getElementById('modalError').style.display = 'none';
+    }
+    window.onload = function() {
+      if (document.getElementById('modalError')) {
+        document.getElementById('modalError').style.display = 'block';
+      }
+    }
+    </script>
+    <style>
+    .modal-error { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(24,24,27,0.85); align-items: center; justify-content: center; }
+    .modal-content-error { background: #fff; color: #23263a; border-radius: 18px; padding: 36px 32px 28px 32px; box-shadow: 0 4px 24px #0008; display: flex; flex-direction: column; align-items: center; position: relative; max-width: 350px; margin: 10% auto; }
+    .modal-content-error h2 { color: #e74c3c; margin-bottom: 8px; }
+    .modal-content-error p { font-size: 1.15em; margin-bottom: 0; text-align: center; }
+    .close-error { position: absolute; right: 15px; top: 10px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; }
+    .close-error:hover { color: #e74c3c; }
+    </style>
+    {% endif %}
+    <div class="container">
+        <h1><i class="fa-solid fa-file-circle-plus"></i> Generar examen</h1>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="grupo-campo">
+                <label for="nivel">Nivel educativo</label>
+                <select id="nivel" name="nivel" required>
+                    <option value="Primario">Primario</option>
+                    <option value="Secundario">Secundario</option>
+                    <option value="Universitario" selected>Universitario</option>
+                </select>
+            </div>
+            <div class="grupo-campo">
+                <label for="cantidad">Cantidad de preguntas</label>
+                <input type="number" id="cantidad" name="cantidad" min="1" max="20" value="5" required>
+            </div>
+            <div class="grupo-campo">
+                <label for="formato">Formato de preguntas</label>
+                <select id="formato" name="formato" required onchange="toggleTemasMath()">
+                    <option value="multiple choice" selected>Opción múltiple</option>
+                    <option value="verdadero o falso">Verdadero o falso</option>
+                    <option value="desarrollo">Desarrollo</option>
+                    <option value="ejercicios matematicos">Ejercicios matemáticos</option>
+                </select>
+            </div>
+            <div class="temas-math" id="temas-math">
+                <label>Temas de matemática (puedes elegir varios o escribir uno personalizado)</label>
+                <div class="temas-checkboxes">
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="álgebra">Álgebra</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="ecuaciones">Ecuaciones</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="derivadas">Derivadas</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="integrales">Integrales</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="límite">Límites</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="funciones">Funciones</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="trigonometría">Trigonometría</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="geometría">Geometría</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="probabilidad">Probabilidad</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="estadística">Estadística</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="matrices">Matrices</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="sistemas de ecuaciones">Sistemas de ecuaciones</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="polinomios">Polinomios</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="logaritmos">Logaritmos</label>
+                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="exponenciales">Exponenciales</label>
+                </div>
+                <input type="text" name="tema_personalizado" placeholder="Tema personalizado (opcional)">
+            </div>
+            <div class="grupo-campo" id="opciones-multiple" style="display:block;">
+                <label for="cantidad_opciones">Cantidad de opciones para cada pregunta (solo opción múltiple)</label>
+                <select id="cantidad_opciones" name="cantidad_opciones">
+                    <option value="3">3</option>
+                    <option value="4" selected>4</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+            <div class="grupo-campo" id="instrucciones-desarrollo" style="display:none;">
+                <label for="instrucciones_desarrollo">Instrucciones personalizadas para preguntas de desarrollo (opcional)</label>
+                <input type="text" id="instrucciones_desarrollo" name="instrucciones_desarrollo" placeholder="Ej: La respuesta debe incluir ejemplos, responder en 3 párrafos, etc.">
+            </div>
+            <div class="grupo-campo" id="instrucciones-vf" style="display:none;">
+                <label for="instrucciones_vf">Instrucciones personalizadas para preguntas de verdadero/falso (opcional)</label>
+                <input type="text" id="instrucciones_vf" name="instrucciones_vf" placeholder="Ej: Que las afirmaciones sean comparativas, etc.">
+            </div>
+            <div class="grupo-campo">
+                <label for="tema">Tema (si no sube archivo)</label>
+                <input type="text" id="tema" name="tema" placeholder="Ingrese el tema del examen">
+            </div>
+            <div class="grupo-campo">
+                <label for="archivo">O suba un archivo (.txt, .pdf, .docx)</label>
+                <input type="file" id="archivo" name="archivo" accept=".txt,.pdf,.docx">
+            </div>
+            <button type="submit" class="btn-main"><i class="fa-solid fa-bolt"></i> Generar examen</button>
+        </form>
+    </div>
+    <div class="modal-carga" id="modal-carga">
+        <div class="modal-content-carga">
+            <div class="spinner"></div>
+            <img src="https://i.imgur.com/1ZQZ1Z1.jpg" alt="esperando" class="carga-img">
+            <div class="carga-text">Generando tu examen...<br>¡No te pongas ansioso!</div>
+        </div>
+    </div>
+    <script>
+        // Mostrar/ocultar campos según formato
+        function mostrarOpciones() {
+            var formato = document.getElementById('formato').value;
+            document.getElementById('opciones-multiple').style.display = (formato === 'multiple choice') ? 'block' : 'none';
+            document.getElementById('instrucciones-desarrollo').style.display = (formato === 'desarrollo') ? 'block' : 'none';
+            document.getElementById('instrucciones-vf').style.display = (formato === 'verdadero o falso') ? 'block' : 'none';
+        }
+        mostrarOpciones();
+        document.getElementById('formato').addEventListener('change', mostrarOpciones);
+        toggleTemasMath();
+        // Mostrar modal de carga al enviar el formulario
+        document.querySelector('form').addEventListener('submit', function(e) {
+            document.getElementById('modal-carga').classList.add('active');
+        });
+    </script>
+</body>
+</html> 

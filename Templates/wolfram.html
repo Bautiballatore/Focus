@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ejercicios matemáticos - Wolfram Alpha</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-light: #a855f7;
+            --secondary: #38bdf8;
+            --accent: #4ade80;
+            --bg-dark: #18181b;
+            --text-light: #fff;
+            --card-dark: #23263a;
+            --muted: #a0aec0;
+        }
+        html, body { height: 100%; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: var(--card-dark);
+            border-radius: 18px;
+            padding: 36px 44px 30px 44px;
+            box-shadow: 0 4px 24px #0008;
+        }
+        h1 {
+            margin-bottom: 18px;
+            color: var(--primary);
+            font-size: 2rem;
+            letter-spacing: 1px;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .row {
+            display: flex;
+            gap: 12px;
+        }
+        select, input[type="text"] {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.1rem;
+            background: #23263a;
+            color: #fff;
+            outline: none;
+        }
+        select {
+            min-width: 180px;
+        }
+        input[type="text"] {
+            flex: 1;
+        }
+        .symbols-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .symbol-btn {
+            background: #23263a;
+            color: var(--primary-light);
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .symbol-btn:hover {
+            background: var(--primary-light);
+            color: #fff;
+        }
+        button[type="submit"] {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 12px #7c3aed33;
+            transition: background 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
+        }
+        button[type="submit"]:hover {
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            box-shadow: 0 4px 16px #38bdf855;
+        }
+        .sugerencias {
+            color: var(--muted);
+            font-size: 0.98rem;
+            margin-bottom: 10px;
+        }
+        .pods {
+            margin-top: 24px;
+        }
+        .pod {
+            background: #23263aee;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #7c3aed11;
+            margin-bottom: 18px;
+            padding: 18px 20px;
+        }
+        .pod-title {
+            color: var(--primary-light);
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .pod-content {
+            font-size: 1.08rem;
+            color: var(--text-light);
+        }
+        .pod-content img {
+            margin-top: 8px;
+            max-width: 100%;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 1px 6px #0002;
+        }
+        .error {
+            color: #f87171;
+            background: #2d1a1a;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 18px;
+        }
+    </style>
+    <script>
+        function insertSymbol(symbol) {
+            const input = document.getElementById('expresion');
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const text = input.value;
+            input.value = text.slice(0, start) + symbol + text.slice(end);
+            input.focus();
+            input.selectionStart = input.selectionEnd = start + symbol.length;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fa-solid fa-calculator"></i> Ejercicios matemáticos</h1>
+        <div class="sugerencias">
+            <b>Ejemplos:</b> <span>integrate x^2, derivative of sin(x), solve x^2+2x+1=0, lim x→0 sin(x)/x</span><br>
+            <b>Tip:</b> Podés escribir en español o inglés, o usar los botones de símbolos para armar tu fórmula.
+        </div>
+        <a href="{{ url_for('generar') }}" class="btn-main-examen"><i class="fa-solid fa-file-circle-plus"></i> Generar examen</a>
+        <style>
+        .btn-main-examen {
+            display: inline-block;
+            margin: 12px 0 18px 0;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 28px;
+            cursor: pointer;
+            box-shadow: 0 2px 12px #7c3aed33;
+            text-decoration: none;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn-main-examen:hover {
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            box-shadow: 0 4px 16px #38bdf855;
+        }
+        </style>
+        <div class="ejercicios-sugeridos">
+            <b>Ejercicios sugeridos:</b>
+            <div class="ej-lista">
+                <span class="ej-item" onclick="setEjemplo('integrate x^2')">∫ x² dx</span>
+                <span class="ej-item" onclick="setEjemplo('derivative of sin(x)')">Derivada de sin(x)</span>
+                <span class="ej-item" onclick="setEjemplo('solve x^2+2x+1=0')">Resolver x²+2x+1=0</span>
+                <span class="ej-item" onclick="setEjemplo('limit sin(x)/x as x→0')">Límite sin(x)/x cuando x→0</span>
+                <span class="ej-item" onclick="setEjemplo('expand (x+1)^3')">Expandir (x+1)³</span>
+                <span class="ej-item" onclick="setEjemplo('factor x^2-4')">Factorizar x²-4</span>
+                <span class="ej-item" onclick="setEjemplo('plot x^2-3x+2')">Graficar x²-3x+2</span>
+                <span class="ej-item" onclick="setEjemplo('simplify (x^2-1)/(x-1)')">Simplificar (x²-1)/(x-1)</span>
+            </div>
+        </div>
+        <style>
+        .ejercicios-sugeridos { margin-bottom: 10px; }
+        .ej-lista { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        .ej-item {
+            background: #23263a;
+            color: var(--accent);
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: 1px solid #333;
+            transition: background 0.2s, color 0.2s;
+        }
+        .ej-item:hover {
+            background: var(--primary-light);
+            color: #fff;
+        }
+        </style>
+        <script>
+        function setEjemplo(ej) {
+            document.getElementById('expresion').value = ej;
+            document.getElementById('expresion').focus();
+        }
+        </script>
+        <form method="POST">
+            <div class="row">
+                <select name="operacion" id="operacion">
+                    <option value="">Elige operación (opcional)</option>
+                    <option value="derivative">Derivada</option>
+                    <option value="integral">Integral</option>
+                    <option value="solve">Resolver ecuación</option>
+                    <option value="limit">Límite</option>
+                    <option value="simplify">Simplificar</option>
+                    <option value="expand">Expandir</option>
+                    <option value="factor">Factorizar</option>
+                    <option value="plot">Graficar</option>
+                    <option value="">Otra</option>
+                </select>
+                <input type="text" name="expresion" id="expresion" placeholder="Escribí la expresión o frase" required value="{{ request.form.expresion or '' }}">
+            </div>
+            <div class="symbols-bar">
+                <button type="button" class="symbol-btn" onclick="insertSymbol('^')">^</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('√')">√</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('∫')">∫</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('π')">π</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('∞')">∞</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('Δ')">Δ</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('∑')">∑</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('≤')">≤</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('≥')">≥</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('→')">→</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('≈')">≈</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('≠')">≠</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('∂')">∂</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('log')">log</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('sin')">sin</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('cos')">cos</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('tan')">tan</button>
+                <button type="button" class="symbol-btn" onclick="insertSymbol('e')">e</button>
+            </div>
+            <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+        </form>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <div class="pods">
+        {% if resultado %}
+            <div class="pod">
+                <div class="pod-title">Resultado principal</div>
+                <div class="pod-content">
+                    <p>{{ resultado }}</p>
+                    {% if imagen_url %}
+                        <img src="{{ imagen_url }}" alt="Resultado gráfico">
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        {% if pods %}
+            {% for pod in pods %}
+                <div class="pod">
+                    <div class="pod-title">{{ pod.title }}</div>
+                    <div class="pod-content">
+                        {% if pod.plaintext %}<p>{{ pod.plaintext }}</p>{% endif %}
+                        {% if pod.img %}<img src="{{ pod.img }}" alt="Imagen pod">{% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,16 @@
+flask
+openai
+python-dotenv
+flask-dance
+oauthlib
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+Flask-SQLAlchemy
+Flask-Login
+Werkzeug
+PyPDF2
+python-docx
+requests
+gunicorn

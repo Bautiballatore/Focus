@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Planificación de estudio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff; 
+            min-height: 100vh; 
+            margin: 0;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .container { 
+            max-width: 650px; 
+            margin: 20px auto; 
+            background: rgba(30, 30, 50, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; 
+            padding: 40px 50px 80px 50px; 
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative; 
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            border-radius: 24px 24px 0 0;
+        }
+        
+        h1 { 
+            color: transparent;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            font-size: 2.5rem; 
+            margin-bottom: 30px; 
+            font-family: 'Poppins', sans-serif; 
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #f093fb);
+            border-radius: 2px;
+        }
+        
+        label { 
+            color: #e2e8f0;
+            font-weight: 600; 
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 12px;
+            position: relative;
+            padding-left: 8px;
+        }
+
+        label::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
+        input, textarea { 
+            padding: 16px 20px; 
+            border-radius: 12px; 
+            border: 2px solid rgba(255, 255, 255, 0.1); 
+            font-size: 1.1rem; 
+            background: rgba(20, 20, 40, 0.8);
+            backdrop-filter: blur(10px);
+            color: #fff; 
+            margin-bottom: 20px; 
+            width: 100%; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Inter', sans-serif;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        input:hover, textarea:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        textarea { 
+            resize: vertical;
+            min-height: 48px; /* Más compacto */
+            line-height: 1.6;
+        }
+        
+        .wizard-slide {
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(100%) scale(0.95);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            padding: 20px 0;
+        }
+        
+        .wizard-slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0) scale(1);
+            z-index: 2;
+        }
+        
+        .wizard-slide.slide-in-left {
+            transform: translateX(-100%) scale(0.95);
+            opacity: 0;
+        }
+        
+        .wizard-slide.slide-in-right {
+            transform: translateX(100%) scale(0.95);
+            opacity: 0;
+        }
+        
+        .wizard-slide.slide-out-left {
+            transform: translateX(-100%) scale(0.95);
+            opacity: 0;
+        }
+        
+        .wizard-slide.slide-out-right {
+            transform: translateX(100%) scale(0.95);
+            opacity: 0;
+        }
+        
+        .wizard-nav { 
+            display: flex; 
+            justify-content: space-between; /* Siempre space-between */
+            align-items: center;
+            padding: 30px 0 0 0;
+            position: absolute;
+            left: 50px; 
+            right: 50px; 
+            bottom: 30px;
+            background: linear-gradient(0deg, rgba(30, 30, 50, 0.98) 80%, transparent 100%);
+            z-index: 10;
+        }
+        
+        .btn-main { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            border: none; 
+            border-radius: 12px; 
+            padding: 14px 28px; 
+            cursor: pointer; 
+            box-shadow: 
+                0 4px 15px rgba(102, 126, 234, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            margin-top: 0;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-main:hover::before {
+            left: 100%;
+        }
+        
+        .btn-main:hover { 
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            box-shadow: 
+                0 6px 20px rgba(102, 126, 234, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-main:active {
+            transform: translateY(0);
+        }
+
+        /* Botón invisible para mantener el espacio */
+        .btn-placeholder {
+            opacity: 0;
+            pointer-events: none;
+            padding: 14px 28px;
+            font-size: 1rem;
+        }
+        
+        @keyframes fadeInUp { 
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            } 
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            } 
+        }
+        
+        .flatpickr-calendar { 
+            color: #1a1a2e;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        form { 
+            position: relative; 
+            min-height: 400px;
+        }
+
+        .input-error { 
+            border: 2px solid #ef4444 !important; 
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-msg {
+            color: #ef4444 !important;
+            font-size: 0.9rem !important;
+            margin-top: 5px;
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+        
+        .calendario-box {
+            display: flex;
+            align-items: center;
+            background: rgba(20, 20, 40, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calendario-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), transparent);
+        }
+        
+        .calendario-box:focus-within {
+            border-color: #667eea;
+            box-shadow: 
+                0 0 0 3px rgba(102, 126, 234, 0.2),
+                0 12px 35px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .calendario-box:hover {
+            border-color: rgba(102, 126, 234, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .cal-icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            user-select: none;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .calendario-box input[type="text"] {
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            font-size: 1.1rem;
+            outline: none;
+            width: 100%;
+            padding: 8px 0;
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        .calendario-box input[type="text"]::placeholder {
+            color: rgba(226, 232, 240, 0.6);
+        }
+        
+        .cal-tip {
+            color: #38bdf8;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            margin-top: -10px;
+            text-align: left;
+            padding: 12px 16px;
+            background: rgba(56, 189, 248, 0.1);
+            border-left: 3px solid #38bdf8;
+            border-radius: 0 8px 8px 0;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        /* Progress indicator */
+        .progress-container {
+            position: absolute;
+            top: 20px;
+            left: 50px;
+            right: 50px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #f093fb);
+            border-radius: 2px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Step indicator */
+        .step-indicator {
+            position: absolute;
+            top: 40px;
+            right: 50px;
+            background: rgba(20, 20, 40, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #a0aec0;
+            font-weight: 500;
+        }
+
+        /* File upload styling */
+        input[type="file"] {
+            background: rgba(20, 20, 40, 0.8);
+            border: 2px dashed rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"]:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* Estado cuando hay archivo subido */
+        input[type="file"].file-uploaded {
+            background: rgba(118, 75, 162, 0.2);
+            border: 2px solid #764ba2;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+        }
+
+        input[type="file"].file-uploaded:hover {
+            background: rgba(118, 75, 162, 0.3);
+            border-color: #667eea;
+        }
+
+        /* Ocultar el texto de confirmación */
+        #archivo-nombre {
+            display: none !important;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 30px 25px 70px 25px;
+                border-radius: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .wizard-nav {
+                left: 25px;
+                right: 25px;
+            }
+
+            .progress-container,
+            .step-indicator {
+                left: 25px;
+                right: 25px;
+            }
+
+            .step-indicator {
+                right: 25px;
+                position: relative;
+                top: 0;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .btn-main {
+                padding: 12px 20px;
+                font-size: 0.95rem;
+            }
+
+            form {
+                min-height: 350px; /* Reducido para móvil */
+            }
+        }
+
+        /* Enhanced animations */
+        .wizard-slide.active {
+            animation: slideInScale 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInScale {
+            0% {
+                opacity: 0;
+                transform: translateX(50px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        /* Enhanced focus states */
+        input:focus, textarea:focus {
+            background: rgba(20, 20, 40, 0.95);
+        }
+
+        /* Loading state for submit button */
+        .btn-main.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .btn-main.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #slide-5 textarea {
+            margin-bottom: 20px; /* Reducido de 30px a 20px */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar" style="width: 20%"></div>
+        </div>
+        <div class="step-indicator" id="stepIndicator">Paso 1 de 5</div>
+        
+        <h1>✨ Planificación de estudio</h1>
+        <form id="wizardForm" method="POST" enctype="multipart/form-data">
+            <!-- Slide 1: Día de examen -->
+            <div class="wizard-slide active" id="slide-1">
+                <label for="fecha_examen">📅 Seleccioná el día del examen:</label>
+                <div class="calendario-box">
+                    <span class="cal-icon">📅</span>
+                    <input type="text" id="fecha_examen" name="fecha_examen" placeholder="¡Seleccioná desde el calendario!" readonly>
+                </div>
+            </div>
+            
+            <!-- Slide 2: Días NO disponibles -->
+            <div class="wizard-slide" id="slide-2">
+                <label for="dias_no">🚫 Seleccioná los días en los que <b>NO</b> podés estudiar:</label>
+                <div class="calendario-box">
+                    <span class="cal-icon">📅</span>
+                    <input type="text" id="dias_no" name="dias_no" placeholder="¡Tocá y elegí varios días!" readonly>
+                </div>
+                <div class="cal-tip">💡 Tip: podés seleccionar varios días haciendo clic en el calendario.</div>
+            </div>
+            
+            <!-- Slide 3: Tiempo por día -->
+            <div class="wizard-slide" id="slide-3">
+                <label for="tiempo_dia">⏰ ¿Cuánto tiempo podés dedicar por día? (en horas)</label>
+                <input type="number" id="tiempo_dia" name="tiempo_dia" min="0" max="24" step="0.5" placeholder="Ej: 2">
+            </div>
+            
+            <!-- Slide 4: Aclaraciones -->
+            <div class="wizard-slide" id="slide-4">
+                <label for="aclaraciones">📝 Aclaraciones (opcional):</label>
+                <input type="text" id="aclaraciones" name="aclaraciones" placeholder="Ej: Solo puedo estudiar a la noche, los sábados menos tiempo, etc.">
+            </div>
+            
+            <!-- Slide 5: Resumen/temario -->
+            <div class="wizard-slide" id="slide-5">
+                <label for="resumen">📚 Pegá tu resumen o temario:</label>
+                <textarea id="resumen" name="resumen" rows="2" placeholder="Pegá aquí el contenido que necesitás estudiar..."></textarea>
+                <label for="archivo">📎 O subí un archivo (.txt, .pdf, .docx):</label>
+                <input type="file" id="archivo" name="archivo" accept=".txt,.pdf,.docx">
+                <span id="archivo-nombre"></span>
+            </div>
+            
+            <div class="wizard-nav">
+                <button type="button" class="btn-main btn-placeholder" id="prevBtnPlaceholder">← Anterior</button>
+                <button type="button" class="btn-main" id="prevBtn" onclick="nextPrev(-1)">← Anterior</button>
+                <button type="button" class="btn-main" id="nextBtn" onclick="nextPrev(1)">Siguiente →</button>
+            </div>
+        </form>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+    // Wizard logic con animación tipo PowerPoint y validaciones
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.wizard-slide');
+    const prevBtn = document.getElementById('prevBtn');
+    const prevBtnPlaceholder = document.getElementById('prevBtnPlaceholder');
+    const nextBtn = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progressBar');
+    const stepIndicator = document.getElementById('stepIndicator');
+    let animating = false;
+    
+    showSlide(currentSlide, null);
+
+    // Update progress and step indicator
+    function updateProgress() {
+        const progress = ((currentSlide + 1) / slides.length) * 100;
+        progressBar.style.width = progress + '%';
+        stepIndicator.textContent = `Paso ${currentSlide + 1} de ${slides.length}`;
+    }
+
+    // Validaciones por slide
+    function validarSlide(n) {
+        // Limpiar errores previos
+        document.querySelectorAll('.error-msg').forEach(e => e.remove());
+        document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
+        
+        if (n === 0) { // Fecha examen
+            const fecha = document.getElementById('fecha_examen').value;
+            if (!fecha) {
+                mostrarError('fecha_examen', 'Seleccioná el día del examen.');
+                return false;
+            }
+        }
+        if (n === 1) { // Días no disponibles
+            const fechaExamen = document.getElementById('fecha_examen').value;
+            const diasNo = document.getElementById('dias_no').value.split(',').map(d=>d.trim());
+            if (diasNo.includes(fechaExamen)) {
+                mostrarError('dias_no', 'No podés marcar el día del examen como no disponible.');
+                return false;
+            }
+        }
+        if (n === 2) { // Tiempo por día
+            const tiempo = parseFloat(document.getElementById('tiempo_dia').value);
+            if (isNaN(tiempo) || tiempo <= 0 || tiempo > 24) {
+                mostrarError('tiempo_dia', 'Ingresá un valor válido (mayor a 0 y hasta 24 horas).');
+                return false;
+            }
+        }
+        if (n === 4) { // Resumen/temario
+            const resumen = document.getElementById('resumen').value.trim();
+            const archivo = document.getElementById('archivo').files[0];
+            if (!resumen && !archivo) {
+                mostrarError('resumen', 'Pegá un resumen o subí un archivo.');
+                mostrarError('archivo', 'Pegá un resumen o subí un archivo.');
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    function mostrarError(id, msg) {
+        const el = document.getElementById(id);
+        el.classList.add('input-error');
+        const span = document.createElement('span');
+        span.className = 'error-msg';
+        span.innerText = msg;
+        el.parentNode.insertBefore(span, el.nextSibling);
+    }
+    
+    function showSlide(n, direction) {
+        slides.forEach((slide, i) => {
+            slide.classList.remove('active', 'slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
+            if (i === n) {
+                slide.classList.add('active');
+                if (direction === 'left') {
+                    slide.classList.add('slide-in-left');
+                } else if (direction === 'right') {
+                    slide.classList.add('slide-in-right');
+                }
+            }
+        });
+        
+        // Lógica de botones: siempre mantener el espacio con placeholder
+        if (n === 0) {
+            prevBtn.style.display = 'none';
+            prevBtnPlaceholder.style.display = 'inline-block';
+        } else {
+            prevBtn.style.display = 'inline-block';
+            prevBtnPlaceholder.style.display = 'none';
+        }
+        
+        nextBtn.innerHTML = n === slides.length - 1 ? '🚀 Generar planificación' : 'Siguiente →';
+        updateProgress();
+    }
+    
+    function nextPrev(n) {
+        if (animating) return;
+        if (n === 1 && !validarSlide(currentSlide)) return;
+        
+        let newSlide = currentSlide + n;
+        if (n === 1 && currentSlide === slides.length - 1) {
+            if (!validarSlide(currentSlide)) return;
+            nextBtn.classList.add('loading');
+            nextBtn.innerHTML = 'Generando...';
+            document.getElementById('archivo').disabled = false;
+            document.getElementById('wizardForm').submit();
+            return;
+        }
+        
+        if (newSlide < 0 || newSlide >= slides.length) return;
+        
+        animating = true;
+        slides[currentSlide].classList.remove('active');
+        slides[currentSlide].classList.add(n === 1 ? 'slide-out-left' : 'slide-out-right');
+        slides[newSlide].classList.add('active');
+        slides[newSlide].classList.add(n === 1 ? 'slide-in-right' : 'slide-in-left');
+        
+        setTimeout(() => {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
+                slide.classList.toggle('active', i === newSlide);
+            });
+            currentSlide = newSlide;
+            
+            if (currentSlide === 0) {
+                prevBtn.style.display = 'none';
+                prevBtnPlaceholder.style.display = 'inline-block';
+            } else {
+                prevBtn.style.display = 'inline-block';
+                prevBtnPlaceholder.style.display = 'none';
+            }
+            
+            nextBtn.innerHTML = currentSlide === slides.length - 1 ? '🚀 Generar planificación' : 'Siguiente →';
+            updateProgress();
+            animating = false;
+        }, 600);
+    }
+    
+    // Calendario para fecha de examen (single date)
+    flatpickr("#fecha_examen", {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        allowInput: false,
+        locale: "es"
+    });
+    
+    // Calendario para días NO disponibles (multiple dates)
+    flatpickr("#dias_no", {
+        mode: "multiple",
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        allowInput: false,
+        locale: "es"
+    });
+    
+    // Manejo de textarea/archivo en resumen
+    const resumen = document.getElementById('resumen');
+    const archivo = document.getElementById('archivo');
+    const archivoNombre = document.getElementById('archivo-nombre');
+    
+    archivo.addEventListener('change', function() {
+        if (archivo.files.length > 0) {
+            // Cambiar el color del área de archivo a violeta
+            archivo.classList.add('file-uploaded');
+            resumen.disabled = true;
+            resumen.style.opacity = '0.5';
+        } else {
+            // Volver al color original
+            archivo.classList.remove('file-uploaded');
+            resumen.disabled = false;
+            resumen.style.opacity = '1';
+        }
+    });
+    
+    resumen.addEventListener('input', function() {
+        if (resumen.value.trim().length > 0) {
+            archivo.disabled = true;
+            archivo.style.opacity = '0.5';
+        } else {
+            archivo.disabled = false;
+            archivo.style.opacity = '1';
+        }
+    });
+    </script>
+</body>
+</html>

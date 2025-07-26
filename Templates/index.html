@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corrige.me - Plataforma IA para estudiar mejor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #8b5cf6;
+            --primary-dark: #4f46e5;
+            --secondary: #06b6d4;
+            --secondary-light: #22d3ee;
+            --accent: #10b981;
+            --accent-light: #34d399;
+            --bg-dark: #0f0f23;
+            --bg-card: #1a1a2e;
+            --bg-section: #16213e;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-accent: #e2e8f0;
+            --border-subtle: rgba(148, 163, 184, 0.1);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+            --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            --gradient-secondary: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            --gradient-hero: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-section) 50%, var(--bg-card) 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gradient-hero);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            opacity: 0.15;
+        }
+
+        .main-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Enhanced Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .navbar-brand::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .navbar-brand:hover::after {
+            width: 100%;
+        }
+
+        .navbar-auth {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .navbar-auth a {
+            color: var(--text-accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .navbar-auth a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary);
+            opacity: 0.1;
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .navbar-auth a:hover {
+            color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .navbar-auth a:hover::before {
+            left: 0;
+        }
+
+        .navbar-auth a i {
+            margin-right: 6px;
+            font-size: 0.9rem;
+        }
+
+        /* Enhanced Hero Section */
+        .hero {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 32px 60px;
+            min-height: 600px;
+            gap: 60px;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .hero-content {
+            max-width: 580px;
+            flex: 1 1 400px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 24px;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-weight: 400;
+            line-height: 1.7;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .btn-main {
+            background: var(--gradient-primary);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 32px;
+            cursor: pointer;
+            box-shadow: var(--shadow-glow);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-main:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-light);
+            border: 2px solid var(--primary-light);
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 14px 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-light);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .hero-illustration {
+            flex: 1 1 400px;
+            min-width: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInRight 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .hero-illustration img {
+            width: 100%;
+            max-width: 450px;
+            min-width: 250px;
+            aspect-ratio: 1.2/1;
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            object-fit: cover;
+            background: var(--bg-card);
+            transition: transform 0.5s ease;
+        }
+
+        .hero-illustration img:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        /* Enhanced Sections */
+        .section {
+            padding: 80px 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .alt-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            padding: 80px 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .alt-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, rgba(139, 92, 246, 0.02) 100%);
+            border-radius: 24px;
+            z-index: -1;
+        }
+
+        .alt-section.reverse {
+            flex-direction: row-reverse;
+        }
+
+        .alt-section-content,
+        .alt-section-visual {
+            flex: 1 1 0;
+            min-width: 300px;
+            max-width: 600px;
+        }
+
+        .alt-section-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .alt-section-visual img {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            object-fit: cover;
+            background: var(--bg-card);
+            transition: transform 0.3s ease;
+        }
+
+        .alt-section-visual img:hover {
+            transform: scale(1.03);
+        }
+
+        /* Enhanced Typography */
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        /* Enhanced Purpose Block */
+        .purpose-block {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 20px;
+            padding: 32px 28px;
+            margin-bottom: 32px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease;
+        }
+
+        .purpose-block:hover {
+            transform: translateY(-5px);
+        }
+
+        .purpose-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .purpose-desc {
+            font-size: 1.05rem;
+            color: var(--text-accent);
+            line-height: 1.7;
+        }
+
+        /* Enhanced Tabs */
+        .tabs-container {
+            margin: 32px 0;
+        }
+
+        .tabs-nav {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            background: rgba(26, 26, 46, 0.5);
+            border-radius: 16px;
+            padding: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-button {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            color: var(--primary-light);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .tab-button.active {
+            color: white;
+            background: var(--gradient-primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .tab-content-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            padding: 32px 28px;
+            min-height: 200px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-content h3 {
+            color: var(--primary-light);
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .tab-content p,
+        .tab-content ul {
+            color: var(--text-accent);
+            line-height: 1.7;
+            font-size: 1.05rem;
+            margin-bottom: 16px;
+        }
+
+        .tab-content ul {
+            padding-left: 24px;
+        }
+
+        .tab-content li {
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .tab-content li::marker {
+            color: var(--primary-light);
+        }
+
+        /* Enhanced Cards */
+        .who-block {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 32px;
+            justify-content: center;
+        }
+
+        .who-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 24px 20px;
+            flex: 1 1 180px;
+            min-width: 180px;
+            max-width: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .who-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+
+        .who-card i {
+            font-size: 2.5rem;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .who-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .who-card-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .who-highlight {
+            margin-top: 24px;
+            font-size: 1.2rem;
+            background: var(--gradient-accent);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        /* Enhanced Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-secondary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--secondary);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card.coming-soon {
+            opacity: 0.6;
+            background: rgba(26, 26, 46, 0.3);
+        }
+
+        .feature-card.coming-soon::before {
+            background: var(--gradient-primary);
+        }
+
+        .feature-card i {
+            font-size: 2.5rem;
+            background: var(--gradient-secondary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .feature-card.coming-soon i {
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .feature-card.coming-soon .feature-title {
+            color: var(--text-muted);
+        }
+
+        .feature-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .coming-soon-badge {
+            background: var(--gradient-primary);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
+
+        /* Enhanced Differential Section */
+        .differential-section {
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 20px;
+            margin: 60px 0;
+            padding: 40px 32px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .differential-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="90" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .differential-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .differential-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            position: relative;
+        }
+
+        /* Enhanced CTA */
+        .cta-final {
+            text-align: center;
+            margin: 80px 0;
+        }
+
+        .cta-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 24px;
+        }
+
+        .cta-btn {
+            background: var(--gradient-accent);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 16px;
+            padding: 18px 40px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+            margin-bottom: 16px;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .cta-btn:hover::before {
+            left: 100%;
+        }
+
+        .cta-subtext {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        /* Enhanced Dropdown */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle {
+            color: var(--text-accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dropdown-toggle:hover {
+            color: var(--primary-light);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            background: var(--bg-card);
+            min-width: 220px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+        }
+
+        .dropdown-menu a {
+            color: var(--text-accent);
+            padding: 16px 20px;
+            display: block;
+            text-decoration: none;
+            font-size: 0.95rem;
+            border-bottom: 1px solid var(--border-subtle);
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-menu a:hover {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        /* Enhanced How It Works Section */
+        #como-funciona {
+            max-width: 1000px;
+            margin: 80px auto 60px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 60px 40px;
+            color: var(--text-light);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #como-funciona::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            border-radius: 24px 24px 0 0;
+        }
+
+        #como-funciona h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 50px;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        #como-funciona > div {
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+        }
+
+        #como-funciona > div > div {
+            background: var(--bg-section);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 40px 32px;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease;
+        }
+
+        #como-funciona > div > div:hover {
+            transform: translateY(-5px);
+        }
+
+        #como-funciona > div > div > div:first-child {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        #como-funciona h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 20px 0 16px;
+            text-align: center;
+            color: var(--primary-light);
+        }
+
+        #como-funciona ol {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-left: 1.5em;
+            color: var(--text-accent);
+        }
+
+        #como-funciona ol li {
+            margin-bottom: 12px;
+            padding-left: 8px;
+        }
+
+        #como-funciona img {
+            width: 100%;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            background: var(--bg-card);
+            transition: transform 0.3s ease;
+        }
+
+        #como-funciona img:hover {
+            transform: scale(1.02);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .hero,
+            .section,
+            .alt-section {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+
+            .navbar {
+                padding: 12px 24px;
+            }
+
+            .hero-title {
+                font-size: 3rem;
+            }
+
+            .section-title {
+                font-size: 2.2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.8rem;
+            }
+
+            .navbar-auth {
+                gap: 16px;
+            }
+
+            .navbar-auth a {
+                font-size: 0.9rem;
+                padding: 6px 12px;
+            }
+
+            .hero {
+                flex-direction: column;
+                padding-top: 60px;
+                gap: 40px;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+                text-align: center;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+                text-align: center;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .alt-section,
+            .alt-section.reverse {
+                flex-direction: column !important;
+                gap: 40px;
+                padding: 60px 16px;
+            }
+
+            .tabs-nav {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .tab-button {
+                justify-content: center;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #como-funciona {
+                margin: 60px 16px 40px;
+                padding: 40px 24px;
+            }
+
+            #como-funciona h2 {
+                font-size: 2.2rem;
+            }
+
+            #como-funciona > div > div {
+                padding: 32px 24px;
+            }
+
+            #como-funciona > div > div > div {
+                flex-direction: column !important;
+                gap: 24px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 8px 16px;
+            }
+
+            .navbar-brand {
+                font-size: 1.5rem;
+            }
+
+            .navbar-auth {
+                gap: 12px;
+            }
+
+            .navbar-auth a {
+                font-size: 0.85rem;
+                padding: 4px 8px;
+            }
+
+            .hero,
+            .section,
+            .alt-section {
+                padding: 40px 12px;
+            }
+
+            .hero-title {
+                font-size: 2.2rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .differential-section {
+                padding: 32px 20px;
+            }
+
+            #como-funciona {
+                padding: 32px 16px;
+            }
+
+            .btn-main,
+            .btn-secondary {
+                font-size: 1rem;
+                padding: 12px 24px;
+            }
+        }
+
+        /* Scroll animations */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .animate-on-scroll.animated {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    <div class="main-wrapper">
+        <div class="navbar">
+            <a href="/" class="navbar-brand">Corrige.me</a>
+            <div class="navbar-auth">
+                <a href="{{ url_for('planificacion') }}"><i class="fa-solid fa-calendar-days"></i> Planificación de estudio</a>
+                <div class="dropdown">
+                    <a href="#" class="dropdown-toggle">Herramientas <i class="fa fa-caret-down"></i></a>
+                    <div class="dropdown-menu">
+                        <a href="{{ url_for('generar') }}">Generador de exámenes</a>
+                        <a href="{{ url_for('wolfram_query') }}">Ejercicios matemáticos</a>
+                    </div>
+                </div>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('perfil') }}"><i class="fa-solid fa-user"></i> Mi perfil</a>
+                    <a href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</a>
+                    <a href="{{ url_for('registro') }}"><i class="fa-solid fa-user-plus"></i> Registrarse</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-title">Estudiar mejor empieza acá</div>
+                <div class="hero-subtitle">Transformá tus resúmenes en preguntas, practicá con IA, medí tu progreso y organizá tu estudio como nunca antes.</div>
+                <div class="hero-buttons">
+                    <a href="{% if current_user.is_authenticated %}{{ url_for('generar') }}{% else %}{{ url_for('registro') }}{% endif %}" class="btn-main">
+                        <i class="fa-solid fa-rocket"></i> Probar ahora
+                    </a>
+                    <a href="#como-funciona" class="btn-secondary" id="btn-como-funciona">
+                        <i class="fa-solid fa-play"></i> Ver cómo funciona
+                    </a>
+                </div>
+            </div>
+            <div class="hero-illustration">
+                <img src="{{ url_for('static', filename='Estudiantes.png') }}" alt="Estudiantes usando la plataforma" loading="lazy">
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="como-funciona" class="animate-on-scroll">
+            <h2>¿Cómo funciona?</h2>
+            <div>
+                <!-- Generador de exámenes -->
+                <div>
+                    <div>📝</div>
+                    <h3>Generador de exámenes</h3>
+                    <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
+                        <div style="flex: 1 1 300px; min-width: 300px;">
+                            <ol>
+                                <li>Selecciona el formato de examen: <strong>Multiple Choice</strong>, <strong>Verdadero/Falso</strong>, <strong>Desarrollo</strong> o <strong>Ejercicios matemáticos</strong>.</li>
+                                <li>Elige un tema, sube un archivo o selecciona tópicos matemáticos.</li>
+                                <li>Haz clic en <strong>Generar</strong> y la IA creará preguntas personalizadas.</li>
+                                <li>Responde cada pregunta y recibe feedback inmediato.</li>
+                            </ol>
+                        </div>
+                        <div style="flex: 1 1 300px; min-width: 300px;">
+                            <img src="{{ url_for('static', filename='generador.png') }}" alt="Generador de exámenes">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial y evolución -->
+                <div>
+                    <div>📊</div>
+                    <h3>Historial y evolución</h3>
+                    <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
+                        <div style="flex: 1 1 300px; min-width: 300px;">
+                            <ol>
+                                <li>Cada examen que realizas se guarda automáticamente.</li>
+                                <li>Accede a tu historial desde el menú y revisa tus resultados.</li>
+                                <li>Consulta detalles, tiempos y feedback de cada intento.</li>
+                                <li>Observa tu progreso y evolución a lo largo del tiempo.</li>
+                            </ol>
+                        </div>
+                        <div style="flex: 1 1 300px; min-width: 300px;">
+                            <img src="/static/ejemplo-historial.png" alt="Ejemplo historial">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ejercicios matemáticos -->
+                <div>
+                    <div>🧮</div>
+                    <h3>Ejercicios matemáticos avanzados</h3>
+                    <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
+                        <div style="flex: 1 1 300px; min-width: 300px;">
+                            <ol>
+                                <li>Accede a la sección de <strong>Ejercicios matemáticos</strong> desde el menú.</li>
+                                <li>Escribe, escanea o selecciona un ejercicio matemático.</li>
+                                <li>Obtén la solución paso a paso, imágenes y explicaciones visuales gracias a Wolfram Alpha.</li>
+                                <li>Genera nuevos ejercicios o consulta ejemplos sugeridos.</li>
+                            </ol>
+                        </div>
+                        <div style="flex: 1 1 300px; min-width: 300px;">
+                            <img src="/static/ejemplo-wolfram.png" alt="Ejemplo matemático">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback inteligente -->
+                <div>
+                    <div>💡</div>
+                    <h3>Feedback inteligente</h3>
+                    <ol>
+                        <li>Recibe retroalimentación generada por IA según tus respuestas.</li>
+                        <li>En preguntas objetivas, obtén explicaciones breves de por qué la respuesta correcta es la adecuada.</li>
+                        <li>En matemáticas, compara tu resultado con la solución oficial y aprende de los pasos.</li>
+                    </ol>
+                </div>
+
+                <!-- Experiencia visual y usabilidad -->
+                <div>
+                    <div>🌙</div>
+                    <h3>Experiencia visual y usabilidad</h3>
+                    <ol>
+                        <li>Interfaz moderna, clara y coherente con tema oscuro.</li>
+                        <li>Barra de progreso segmentada, popups de carga y formularios interactivos.</li>
+                        <li>Acceso rápido a todas las herramientas desde el menú principal.</li>
+                    </ol>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 48px; font-size: 1.2rem; color: var(--text-muted);">
+                <span>¡Explora, aprende y potencia tu estudio con tecnología de última generación!</span>
+            </div>
+        </section>
+
+        <!-- Purpose Section -->
+        <section class="alt-section animate-on-scroll">
+            <div class="alt-section-content">
+                <div class="purpose-block">
+                    <div class="purpose-title">Creamos esta plataforma porque estudiar no es memorizar resúmenes. Es entender, practicar y progresar.</div>
+                    <div class="purpose-desc">La plataforma nace desde la experiencia real de un estudiante que no encontraba herramientas útiles para su forma de estudiar. Nuestra misión es simple pero potente: agregar valor al estudio, ayudando a cada alumno a estudiar mejor, más inteligentemente y con una herramienta hecha por y para estudiantes.</div>
+                </div>
+            </div>
+            <div class="alt-section-visual">
+                <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=600&q=80" alt="Estudio activo" loading="lazy">
+            </div>
+        </section>
+
+        <!-- Institutional Tabs Section -->
+        <section class="alt-section reverse animate-on-scroll" id="tabs-section">
+            <div class="alt-section-content">
+                <div class="tabs-container">
+                    <div class="tabs-nav">
+                        <button class="tab-button active" data-tab="quienes"><i class="fa-solid fa-users"></i> Quiénes somos</button>
+                        <button class="tab-button" data-tab="mision"><i class="fa-solid fa-bullseye"></i> Misión y Visión</button>
+                        <button class="tab-button" data-tab="elegirnos"><i class="fa-solid fa-star"></i> ¿Por qué elegirnos?</button>
+                        <button class="tab-button" data-tab="futuro"><i class="fa-solid fa-rocket"></i> Futuro de la plataforma</button>
+                    </div>
+                    <div class="tab-content-wrapper">
+                        <div class="tab-content active" id="tab-quienes">
+                            <h3>Quiénes somos</h3>
+                            <p>Somos estudiantes, como vos. Esta plataforma nació a partir de la necesidad real de estudiar mejor.</p>
+                            <p>Durante años probamos distintas herramientas, pero ninguna resolvía lo más importante: estudiar de forma activa, con seguimiento y estructura.</p>
+                            <p>Por eso creamos esta plataforma desde cero, con una visión clara: poner la tecnología al servicio del aprendizaje profundo, práctico y ordenado.</p>
+                            <p>No somos una gran empresa ni un producto genérico: somos una solución nacida desde la experiencia universitaria, pensada para vos.</p>
+                        </div>
+                        <div class="tab-content" id="tab-mision">
+                            <h3>Misión</h3>
+                            <p>Brindar herramientas inteligentes que ayuden a estudiantes de todas las edades a organizarse, practicar, corregirse y mejorar su forma de estudiar. Apostamos a la tecnología como medio, no como fin: siempre al servicio de una educación más efectiva.</p>
+                            <h3>Visión</h3>
+                            <p>Visualizamos un futuro donde estudiar sea más simple, profundo y eficiente.</p>
+                            <p>Donde cada persona tenga acceso a una plataforma que lo acompañe de verdad, que mida su progreso, y que lo prepare con confianza para enfrentar cualquier desafío académico.</p>
+                            <p>Queremos democratizar el acceso al estudio de calidad.</p>
+                        </div>
+                        <div class="tab-content" id="tab-elegirnos">
+                            <h3>¿Por qué elegirnos?</h3>
+                            <p>Existen muchas herramientas tecnológicas, pero pocas están realmente diseñadas para el estudiante.</p>
+                            <p>Nos diferenciamos porque nuestro enfoque es 100% académico y personalizado: no somos un simple chat de IA, sino un sistema completo de estudio.</p>
+                            <p>Con exámenes simulados, límite de tiempo, registros históricos, métricas, organización por materia y planificación automática, vas más allá del "preguntar y responder".</p>
+                            <p>Acá entrenás, medís y progresás. Con cada sesión, estás más cerca de aprobar.</p>
+                        </div>
+                        <div class="tab-content" id="tab-futuro">
+                            <h3>Futuro de la plataforma</h3>
+                            <p>Este es solo el comienzo. Ya estamos trabajando en funcionalidades nuevas que potencien aún más tu estudio:</p>
+                            <ul>
+                                <li>Planificación automática según tu calendario, fechas de examen y tiempo disponible.</li>
+                                <li>Análisis inteligente de rendimiento por tema, tipo de pregunta y evolución.</li>
+                                <li>Reconocimiento de imágenes para subir ejercicios escritos (ideal para matemáticas y ciencias).</li>
+                                <li>Integración con docentes y grupos para crear exámenes colaborativos o feedback compartido.</li>
+                            </ul>
+                            <p>Nuestro compromiso es claro: seguir mejorando, siempre con el estudiante en el centro.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="alt-section-visual">
+                <img src="https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=600&q=80" alt="Equipo universitario" loading="lazy">
+            </div>
+        </section>
+
+        <!-- Target Audience Section -->
+        <section class="alt-section animate-on-scroll">
+            <div class="alt-section-content">
+                <div class="section-title">Para todos los que quieren aprender</div>
+                <div class="section-subtitle">Estudiantes universitarios, secundarios, adultos en maestrías, docentes, padres...</div>
+                <div class="who-block">
+                    <div class="who-card">
+                        <i class="fa-solid fa-user-graduate"></i>
+                        <div class="who-card-title">Estudiantes universitarios</div>
+                        <div class="who-card-desc">Para quienes buscan aprobar, aprender y crecer.</div>
+                    </div>
+                    <div class="who-card">
+                        <i class="fa-solid fa-user"></i>
+                        <div class="who-card-title">Secundarios</div>
+                        <div class="who-card-desc">Ideal para chicos y chicas que quieren practicar y entender.</div>
+                    </div>
+                    <div class="who-card">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                        <div class="who-card-title">Docentes</div>
+                        <div class="who-card-desc">Para crear exámenes, practicar y acompañar a sus alumnos.</div>
+                    </div>
+                    <div class="who-card">
+                        <i class="fa-solid fa-people-roof"></i>
+                        <div class="who-card-title">Padres y madres</div>
+                        <div class="who-card-desc">Para ayudar a sus hijos a estudiar de forma moderna y efectiva.</div>
+                    </div>
+                    <div class="who-card">
+                        <i class="fa-solid fa-user-tie"></i>
+                        <div class="who-card-title">Adultos en posgrados</div>
+                        <div class="who-card-desc">Para quienes nunca dejan de aprender.</div>
+                    </div>
+                </div>
+                <div class="who-highlight">Creemos que el estudio no tiene edad.</div>
+            </div>
+            <div class="alt-section-visual">
+                <img src="https://images.unsplash.com/photo-1513258496099-48168024c0b?auto=format&fit=crop&w=600&q=80" alt="Diversidad de estudiantes" loading="lazy">
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="alt-section reverse animate-on-scroll">
+            <div class="alt-section-content">
+                <div class="section-title">¿Qué podés hacer con la plataforma?</div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fa-solid fa-robot"></i>
+                        <div class="feature-title">Generación de exámenes con IA</div>
+                        <div class="feature-desc">Convertí tus resúmenes o temas en preguntas de examen automáticamente.</div>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fa-solid fa-spell-check"></i>
+                        <div class="feature-title">Corrección automática</div>
+                        <div class="feature-desc">Recibí feedback inmediato y detallado sobre tus respuestas.</div>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fa-solid fa-brain"></i>
+                        <div class="feature-title">Estudio activo basado en preguntas</div>
+                        <div class="feature-desc">Aprendé practicando, no solo leyendo.</div>
+                    </div>
+                    <div class="feature-card coming-soon">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <div class="feature-title">Historial de desempeño</div>
+                        <div class="feature-desc">Seguimiento de tu progreso y evolución a lo largo del tiempo.</div>
+                        <div class="coming-soon-badge">Próximamente</div>
+                    </div>
+                    <div class="feature-card coming-soon">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <div class="feature-title">Organización por materias</div>
+                        <div class="feature-desc">Agrupá tus exámenes y prácticas por materia o tema.</div>
+                        <div class="coming-soon-badge">Próximamente</div>
+                    </div>
+                    <div class="feature-card coming-soon">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <div class="feature-title">Planificación personalizada</div>
+                        <div class="feature-desc">Organizá tu estudio y recibí recordatorios.</div>
+                        <div class="coming-soon-badge">Próximamente</div>
+                    </div>
+                    <div class="feature-card coming-soon">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <div class="feature-title">Métricas e insights</div>
+                        <div class="feature-desc">Visualizá estadísticas y recibí sugerencias para mejorar.</div>
+                        <div class="coming-soon-badge">Próximamente</div>
+                    </div>
+                    <div class="feature-card coming-soon">
+                        <i class="fa-solid fa-image"></i>
+                        <div class="feature-title">Interpretación de imágenes</div>
+                        <div class="feature-desc">Subí imágenes de apuntes o gráficos para generar preguntas.</div>
+                        <div class="coming-soon-badge">Próximamente</div>
+                    </div>
+                </div>
+            </div>
+            <div class="alt-section-visual">
+                <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=600&q=80" alt="Funcionalidades IA" loading="lazy">
+            </div>
+        </section>
+
+        <!-- Differentials Section -->
+        <section class="alt-section animate-on-scroll">
+            <div class="alt-section-content">
+                <div class="differential-section">
+                    <div class="differential-title">Más que un chat de IA</div>
+                    <div class="differential-text">A diferencia de herramientas genéricas como ChatGPT, esta plataforma está dedicada exclusivamente al beneficio del alumno y su organización. Simula condiciones reales de examen, con límites de tiempo, correcciones y seguimiento. Tu progreso se registra, tu estudio se planifica y tu aprendizaje se potencia.</div>
+                </div>
+            </div>
+            <div class="alt-section-visual">
+                <img src="https://images.unsplash.com/photo-1513258496099-5bf77c1e2c89?auto=format&fit=crop&w=600&q=80" alt="Diferenciales" loading="lazy">
+            </div>
+        </section>
+
+        <!-- How It Works Button -->
+        <div style="text-align: center; margin-top: 80px;">
+            <a href="{{ url_for('como_funciona') }}" style="display: inline-block; background: var(--gradient-secondary); color: white; font-weight: 700; font-size: 1.3rem; padding: 20px 50px; border-radius: 16px; box-shadow: var(--shadow-lg); text-decoration: none; transition: all 0.3s ease; letter-spacing: 0.5px;">
+                <i class="fa-solid fa-play-circle" style="margin-right: 8px;"></i>
+                Ver cómo funciona
+            </a>
+        </div>
+
+        <!-- Final CTA Section -->
+        <section class="alt-section reverse cta-final animate-on-scroll">
+            <div class="alt-section-content">
+                <div class="cta-title">¿Listo para estudiar mejor?</div>
+                <a href="{% if current_user.is_authenticated %}{{ url_for('generar') }}{% else %}{{ url_for('registro') }}{% endif %}" class="cta-btn">
+                    <i class="fa-solid fa-user-plus" style="margin-right: 8px;"></i>
+                    Crear cuenta gratis
+                </a>
+                <div class="cta-subtext">No importa qué ni cuándo estés estudiando. Te ayudamos a llegar preparado.</div>
+            </div>
+            <div class="alt-section-visual">
+                <img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80" alt="CTA estudiar mejor" loading="lazy">
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Enhanced animated background
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let w = window.innerWidth, h = window.innerHeight;
+        canvas.width = w;
+        canvas.height = h;
+        
+        let particles = [];
+        const N = 60;
+        
+        for(let i = 0; i < N; i++){
+            particles.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                vx: (Math.random() - 0.5) * 0.8,
+                vy: (Math.random() - 0.5) * 0.8,
+                r: Math.random() * 2.5 + 1,
+                o: Math.random() * 0.6 + 0.2,
+                color: Math.random() > 0.5 ? 'rgba(99, 102, 241, ' : 'rgba(139, 92, 246, '
+            });
+        }
+        
+        function drawNet(){
+            ctx.clearRect(0, 0, w, h);
+            
+            for(let i = 0; i < N; i++){
+                let p = particles[i];
+                
+                // Draw particle
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
+                ctx.fillStyle = p.color + p.o + ')';
+                ctx.fill();
+                
+                // Draw connections
+                for(let j = i + 1; j < N; j++){
+                    let q = particles[j];
+                    let dx = p.x - q.x, dy = p.y - q.y, dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if(dist < 150){
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(q.x, q.y);
+                        ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 150)})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+        
+        function animate(){
+            for(let p of particles){
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                if(p.x < 0 || p.x > w) p.vx *= -1;
+                if(p.y < 0 || p.y > h) p.vy *= -1;
+            }
+            
+            drawNet();
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        window.addEventListener('resize', () => {
+            w = window.innerWidth;
+            h = window.innerHeight;
+            canvas.width = w;
+            canvas.height = h;
+        });
+
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+                });
+            });
+
+            // Scroll animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animated');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

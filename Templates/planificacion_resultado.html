@@ -1,0 +1,1038 @@
+{% macro actividad_bullets(item) %}
+    {%- set texto = item.tema_principal.strip() -%}
+    {%- set es_dia_dificil = 'día difícil' in texto.lower() -%}
+    {%- set color = '#a259f7' if es_dia_dificil else '' -%}
+    {%- if item.subtemas and item.subtemas|length > 0 -%}
+        <ul style="margin:0;padding-left:1.2em;list-style-type:disc;text-align:left;">
+            <li><b style="color:{{ color }};text-align:left;">{{ texto[0]|upper ~ texto[1:] if texto|length > 1 else texto|upper }}</b>
+                <ul style="margin:0.2em 0 0 0.8em;list-style-type:circle;text-align:left;">
+                {%- for sub in item.subtemas %}
+                    {%- if sub %}<li style="text-align:left;">{{ sub[0]|upper ~ sub[1:] if sub|length > 1 else sub|upper }}</li>{% endif %}
+                {%- endfor %}
+                </ul>
+            </li>
+        </ul>
+    {%- else -%}
+        <div style="margin:0.5em 0; color:{{ color }};text-align:left;">{{ texto[0]|upper ~ texto[1:] if texto|length > 1 else texto|upper }}</div>
+    {%- endif -%}
+{% endmacro %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado de planificación</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Inter', 'Montserrat', Arial, sans-serif; 
+            background: #18181b; 
+            color: #fff; 
+            min-height: 100vh; 
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .container { 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            background: #23263a; 
+            border-radius: 18px; 
+            padding: 36px 44px 30px 44px; 
+            box-shadow: 0 4px 24px #0008; 
+        }
+        
+        h1 { 
+            color: #7c3aed; 
+            font-size: 2rem; 
+            margin-bottom: 18px; 
+            font-family: 'Montserrat', Arial, sans-serif; 
+            text-align: center;
+        }
+        
+        .plan-text { 
+            background: #18181b; 
+            border-radius: 10px; 
+            padding: 18px; 
+            margin-bottom: 24px; 
+            font-size: 1.08em; 
+        }
+
+        /* Timeline Styles */
+        .timeline-section {
+            margin: 40px 0;
+            padding: 20px 0;
+        }
+
+        .timeline-title {
+            color: #38bdf8;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            overflow-x: auto;
+            padding: 80px 20px 40px 20px;
+            margin: 0 -20px;
+        }
+
+        .timeline-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-width: max-content;
+            padding: 0 40px;
+        }
+
+        /* Timeline Line */
+        .timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 40px;
+            right: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, #7c3aed, #38bdf8, #4ade80);
+            border-radius: 2px;
+            z-index: 1;
+        }
+
+        /* Timeline Points */
+        .timeline-point {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 30px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .timeline-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 4px solid #23263a;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 3;
+        }
+
+        .timeline-dot.estudio {
+            background: #38bdf8;
+            box-shadow: 0 0 0 3px #38bdf822;
+        }
+
+        .timeline-dot.eval {
+            background: #a259f7;
+            box-shadow: 0 0 0 3px #a259f722;
+        }
+
+        .timeline-dot.repaso {
+            background: #4ade80;
+            box-shadow: 0 0 0 3px #4ade8022;
+        }
+
+        .timeline-dot:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.2);
+        }
+
+        .timeline-date {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #a0aec0;
+            font-weight: 600;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        /* Calendar Styles */
+        .calendar-section {
+            margin: 60px 0 40px 0;
+            padding: 30px 0;
+            border-top: 2px solid #4a5568;
+        }
+
+        .calendar-title {
+            color: #38bdf8;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .calendar-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .calendar-nav-button {
+            background: #4a5568;
+            border: none;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .calendar-nav-button:hover:not(:disabled) {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        .calendar-nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .calendar-month-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            text-align: center;
+            flex: 1;
+        }
+
+        .calendar-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #2d3748;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            background: #4a5568;
+            border-radius: 8px;
+            padding: 2px;
+        }
+
+        .calendar-day-header {
+            background: #374151;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        .calendar-day {
+            background: #2d3748;
+            padding: 12px 8px;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background: #374151;
+        }
+
+        .calendar-day.other-month {
+            color: #6b7280;
+            background: #1f2937;
+        }
+
+        .calendar-day.has-activity {
+            background: linear-gradient(135deg, #7c3aed22, #38bdf822);
+            border: 2px solid #7c3aed;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .calendar-day.has-activity.estudio {
+            border-color: #38bdf8;
+            background: linear-gradient(135deg, #38bdf822, #38bdf811);
+        }
+
+        .calendar-day.has-activity.eval {
+            border-color: #a259f7;
+            background: linear-gradient(135deg, #a259f722, #a259f711);
+        }
+
+        .calendar-day.has-activity.repaso {
+            border-color: #4ade80;
+            background: linear-gradient(135deg, #4ade8022, #4ade8011);
+        }
+
+        .calendar-day.has-activity:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        /* TOOLTIP/POPUP STYLES - COMPLETELY FIXED */
+        .activity-tooltip {
+            position: fixed;
+            background: #1a202c;
+            border: 2px solid #4a5568;
+            border-radius: 12px;
+            padding: 16px 20px;
+            min-width: 300px;
+            max-width: 450px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .activity-tooltip.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+
+        .activity-tooltip::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 10px solid transparent;
+        }
+
+        .activity-tooltip.arrow-top::before {
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-color: #4a5568;
+        }
+
+        .activity-tooltip.arrow-bottom::before {
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-top-color: #4a5568;
+        }
+
+        .activity-tooltip.arrow-left::before {
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-right-color: #4a5568;
+        }
+
+        .activity-tooltip.arrow-right::before {
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-left-color: #4a5568;
+        }
+
+        .tooltip-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #4a5568;
+        }
+
+        .tooltip-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        .tooltip-date {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            font-weight: 600;
+        }
+
+        .tooltip-content {
+            color: #e2e8f0;
+        }
+
+        .tooltip-content ul {
+            margin: 8px 0;
+            padding-left: 1.2em;
+        }
+
+        .tooltip-content li {
+            margin: 4px 0;
+        }
+
+        .tooltip-content b {
+            color: #fff;
+        }
+
+        /* Hidden data containers */
+        .activity-data {
+            display: none !important;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 15000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: #1a202c;
+            border: 2px solid #4a5568;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            transform: scale(0.8) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #4a5568;
+        }
+
+        .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-icon {
+            font-size: 1.8rem;
+        }
+
+        .modal-date {
+            font-size: 1.2rem;
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #a0aec0;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #4a5568;
+            color: #fff;
+        }
+
+        .modal-body {
+            color: #e2e8f0;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .modal-body ul {
+            margin: 12px 0;
+            padding-left: 1.2em;
+        }
+
+        .modal-body li {
+            margin: 6px 0;
+        }
+
+        .modal-body b {
+            color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                max-width: 90%;
+                padding: 20px;
+                max-height: 85vh;
+            }
+            
+            .modal-date {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px;
+                padding: 24px;
+            }
+            
+            .timeline-wrapper {
+                padding: 60px 10px 30px 10px;
+                margin: 0 -10px;
+            }
+            
+            .timeline-point {
+                margin: 0 20px;
+            }
+            
+            .activity-tooltip {
+                min-width: 280px;
+                max-width: 320px;
+                font-size: 0.9rem;
+            }
+
+            .calendar-container {
+                padding: 16px;
+            }
+
+            .calendar-day {
+                padding: 8px 4px;
+                min-height: 35px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, #7c3aed, #38bdf8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Planificación generada</h1>
+        
+        {% if explicacion_ia and not (explicacion_ia.strip().startswith('[') and 'fecha' in explicacion_ia and 'actividad' in explicacion_ia) %}
+            <div class="plan-text" style="background:#23263a; color:#38bdf8; border:1.5px solid #38bdf8; margin-bottom:18px;">
+                <b>Nota de la IA:</b><br>
+                {{ explicacion_ia }}
+            </div>
+        {% endif %}
+        
+        {% if plan is none %}
+            <div class="plan-text" style="color:#e74c3c; background:#23263a; border:1.5px solid #e74c3c; margin-bottom:18px;">
+                <b>❌ Ocurrió un error al generar la planificación.</b><br>
+                Por favor, intentá nuevamente o revisá el temario cargado.
+            </div>
+        {% else %}
+            <!-- Timeline Visual -->
+            <div class="timeline-section">
+                <h2 class="timeline-title">Tu plan de estudio</h2>
+                <div class="timeline-wrapper">
+                    <div class="timeline-container">
+                        <div class="timeline-line"></div>
+                        {% for item in plan %}
+                            {% set actividad = item.actividad.lower() %}
+                            {% set tipo_clase = 'eval' if ('evaluación' in actividad or 'evaluacion' in actividad) else ('repaso' if 'repaso' in actividad else 'estudio') %}
+                            
+                            <div class="timeline-point" 
+                                 data-fecha="{{ item.fecha }}" 
+                                 data-tipo="{{ tipo_clase }}"
+                                 data-icon="{% if 'evaluación' in actividad or 'evaluacion' in actividad %}📝{% elif 'repaso' in actividad %}🔄{% else %}📚{% endif %}">
+                                <div class="timeline-dot {{ tipo_clase }}"></div>
+                                <div class="timeline-date">{{ item.fecha }}</div>
+                                
+                                <!-- Hidden activity data -->
+                                <div class="activity-data">{{ actividad_bullets(item) }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Section -->
+            <div class="calendar-section">
+                <h2 class="calendar-title">Vista de calendario</h2>
+                <div class="calendar-container">
+                    <div class="calendar-navigation">
+                        <button class="calendar-nav-button" id="prev-month">
+                            ← Anterior
+                        </button>
+                        <div class="calendar-month-display" id="calendar-month-year"></div>
+                        <button class="calendar-nav-button" id="next-month">
+                            Siguiente →
+                        </button>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid">
+                        <!-- Calendar will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden activity data for calendar -->
+            <div style="display: none;">
+                {% for item in plan %}
+                <div class="calendar-activity-data" data-fecha="{{ item.fecha }}" data-tipo="{% if 'evaluación' in item.actividad.lower() or 'evaluacion' in item.actividad.lower() %}eval{% elif 'repaso' in item.actividad.lower() %}repaso{% else %}estudio{% endif %}" data-icon="{% if 'evaluación' in item.actividad.lower() or 'evaluacion' in item.actividad.lower() %}📝{% elif 'repaso' in item.actividad.lower() %}🔄{% else %}📚{% endif %}">{{ actividad_bullets(item) }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <div style="text-align: center;">
+            {% if plan %}
+                <form action="{{ url_for('google_calendar.export_calendar') }}" method="post" style="display: inline-block; margin-right: 15px;">
+                    <input type="hidden" name="plan_json" value='{{ plan_json|tojson|safe }}'>
+                    <button type="submit" class="btn-main" style="background: linear-gradient(135deg, #4285f4, #34a853);">
+                        <i class="fab fa-google"></i> Exportar a Google Calendar
+                    </button>
+                </form>
+            {% endif %}
+            <a href="{{ url_for('planificacion') }}" class="btn-main">Volver a planificar</a>
+        </div>
+    </div>
+
+    <!-- Single tooltip element -->
+    <div class="activity-tooltip" id="activity-tooltip">
+        <div class="tooltip-header">
+            <div class="tooltip-icon" id="tooltip-icon"></div>
+            <div class="tooltip-date" id="tooltip-date"></div>
+        </div>
+        <div class="tooltip-content" id="tooltip-content"></div>
+    </div>
+
+    <!-- Modal for calendar clicks -->
+    <div class="modal-overlay" id="calendar-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-icon" id="modal-icon"></div>
+                    <div class="modal-date" id="modal-date"></div>
+                </div>
+                <button class="modal-close" id="modal-close">×</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tooltip elements
+            const tooltip = document.getElementById('activity-tooltip');
+            const tooltipIcon = document.getElementById('tooltip-icon');
+            const tooltipDate = document.getElementById('tooltip-date');
+            const tooltipContent = document.getElementById('tooltip-content');
+            
+            let currentElement = null;
+            let hideTimeout = null;
+
+            // Show tooltip function
+            function showTooltip(element, fecha, tipo, icon, content) {
+                // Clear any pending hide
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
+
+                currentElement = element;
+                
+                // Set content
+                tooltipIcon.textContent = icon;
+                tooltipDate.textContent = fecha;
+                tooltipContent.innerHTML = content;
+
+                // Position and show tooltip
+                positionTooltip(element);
+                tooltip.classList.add('visible');
+                
+                console.log('Showing tooltip for:', fecha);
+            }
+
+            // Hide tooltip function
+            function hideTooltip(immediate = false) {
+                if (immediate) {
+                    tooltip.classList.remove('visible');
+                    currentElement = null;
+                    if (hideTimeout) {
+                        clearTimeout(hideTimeout);
+                        hideTimeout = null;
+                    }
+                } else {
+                    hideTimeout = setTimeout(() => {
+                        tooltip.classList.remove('visible');
+                        currentElement = null;
+                        hideTimeout = null;
+                    }, 150);
+                }
+            }
+
+            // Position tooltip function
+            function positionTooltip(element) {
+                const rect = element.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const scrollX = window.pageXOffset;
+                const scrollY = window.pageYOffset;
+
+                // Reset classes
+                tooltip.className = 'activity-tooltip visible';
+
+                let left, top;
+                let arrowClass = 'arrow-top'; // default
+
+                // Try positioning above element
+                if (rect.top - tooltipRect.height - 20 >= 0) {
+                    top = rect.top + scrollY - tooltipRect.height - 20;
+                    arrowClass = 'arrow-bottom';
+                }
+                // Try positioning below element
+                else if (rect.bottom + tooltipRect.height + 20 <= viewportHeight) {
+                    top = rect.bottom + scrollY + 20;
+                    arrowClass = 'arrow-top';
+                }
+                // Try positioning to the left
+                else if (rect.left - tooltipRect.width - 20 >= 0) {
+                    left = rect.left + scrollX - tooltipRect.width - 20;
+                    top = rect.top + scrollY + (rect.height / 2) - (tooltipRect.height / 2);
+                    arrowClass = 'arrow-right';
+                }
+                // Position to the right
+                else {
+                    left = rect.right + scrollX + 20;
+                    top = rect.top + scrollY + (rect.height / 2) - (tooltipRect.height / 2);
+                    arrowClass = 'arrow-left';
+                }
+
+                // For top/bottom positioning, center horizontally
+                if (arrowClass === 'arrow-top' || arrowClass === 'arrow-bottom') {
+                    left = rect.left + scrollX + (rect.width / 2) - (tooltipRect.width / 2);
+                    
+                    // Adjust if tooltip goes off screen horizontally
+                    if (left < 15) left = 15;
+                    if (left + tooltipRect.width > viewportWidth - 15) {
+                        left = viewportWidth - tooltipRect.width - 15;
+                    }
+                }
+
+                // Adjust vertical position if needed
+                if (top < 15) top = 15;
+                if (top + tooltipRect.height > viewportHeight + scrollY - 15) {
+                    top = viewportHeight + scrollY - tooltipRect.height - 15;
+                }
+
+                // Apply position and arrow
+                tooltip.style.left = left + 'px';
+                tooltip.style.top = top + 'px';
+                tooltip.classList.add(arrowClass);
+            }
+
+            // Timeline event handlers
+            const timelinePoints = document.querySelectorAll('.timeline-point');
+            timelinePoints.forEach(point => {
+                const fecha = point.dataset.fecha;
+                const tipo = point.dataset.tipo;
+                const icon = point.dataset.icon;
+                const activityData = point.querySelector('.activity-data');
+                const content = activityData ? activityData.innerHTML : '';
+                
+                // Mouse events
+                point.addEventListener('mouseenter', () => {
+                    showTooltip(point, fecha, tipo, icon, content);
+                });
+
+                point.addEventListener('mouseleave', () => {
+                    hideTooltip();
+                });
+
+                // Touch events for mobile
+                point.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (currentElement === point) {
+                        hideTooltip(true);
+                    } else {
+                        showTooltip(point, fecha, tipo, icon, content);
+                    }
+                });
+
+                // Click events
+                point.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (currentElement === point) {
+                        hideTooltip(true);
+                    } else {
+                        showTooltip(point, fecha, tipo, icon, content);
+                    }
+                });
+            });
+
+            // Calendar functionality
+            let currentCalendarMonth, currentCalendarYear;
+            let minMonth, minYear, maxMonth, maxYear;
+
+            // Get calendar activity data
+            const calendarActivityData = {};
+            document.querySelectorAll('.calendar-activity-data').forEach(item => {
+                const fecha = item.dataset.fecha;
+                calendarActivityData[fecha] = {
+                    tipo: item.dataset.tipo,
+                    icon: item.dataset.icon,
+                    content: item.innerHTML
+                };
+            });
+
+            function initializeCalendarRange() {
+                const dates = Object.keys(calendarActivityData).map(fecha => new Date(fecha)).sort((a, b) => a - b);
+                if (dates.length === 0) return;
+
+                const firstDate = dates[0];
+                const lastDate = dates[dates.length - 1];
+
+                minYear = firstDate.getFullYear();
+                minMonth = firstDate.getMonth();
+                maxYear = lastDate.getFullYear();
+                maxMonth = lastDate.getMonth();
+
+                currentCalendarYear = minYear;
+                currentCalendarMonth = minMonth;
+            }
+
+            function generateCalendar(year = currentCalendarYear, month = currentCalendarMonth) {
+                currentCalendarYear = year;
+                currentCalendarMonth = month;
+
+                const monthNames = [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
+
+                const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+                document.getElementById('calendar-month-year').textContent = 
+                    `${monthNames[month]} ${year}`;
+
+                // Update navigation buttons
+                const prevButton = document.getElementById('prev-month');
+                const nextButton = document.getElementById('next-month');
+
+                prevButton.disabled = (year === minYear && month === minMonth);
+                nextButton.disabled = (year === maxYear && month === maxMonth);
+
+                const grid = document.getElementById('calendar-grid');
+                grid.innerHTML = '';
+
+                // Add day headers
+                dayNames.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'calendar-day-header';
+                    dayHeader.textContent = day;
+                    grid.appendChild(dayHeader);
+                });
+
+                // Calendar generation
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+                // Add previous month days
+                for (let i = firstDay - 1; i >= 0; i--) {
+                    const day = daysInPrevMonth - i;
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day other-month';
+                    dayElement.textContent = day;
+                    grid.appendChild(dayElement);
+                }
+
+                // Add current month days
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    dayElement.textContent = day;
+
+                    const activityData = calendarActivityData[dateStr];
+                    if (activityData) {
+                        dayElement.classList.add('has-activity', activityData.tipo);
+                        
+                        // Only hover events for timeline tooltip
+                        dayElement.addEventListener('mouseenter', () => {
+                            showTooltip(dayElement, dateStr, activityData.tipo, activityData.icon, activityData.content);
+                        });
+
+                        dayElement.addEventListener('mouseleave', () => {
+                            hideTooltip();
+                        });
+
+                        // Click events for modal
+                        dayElement.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            showModal(dateStr, activityData.tipo, activityData.icon, activityData.content);
+                        });
+                    }
+
+                    grid.appendChild(dayElement);
+                }
+
+                // Add next month days
+                const totalCells = grid.children.length;
+                const remainingCells = 42 - totalCells;
+                for (let day = 1; day <= remainingCells; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day other-month';
+                    dayElement.textContent = day;
+                    grid.appendChild(dayElement);
+                }
+            }
+
+            function navigateCalendar(direction) {
+                hideTooltip(true);
+
+                if (direction === 'prev') {
+                    if (currentCalendarMonth === 0) {
+                        currentCalendarMonth = 11;
+                        currentCalendarYear--;
+                    } else {
+                        currentCalendarMonth--;
+                    }
+                } else if (direction === 'next') {
+                    if (currentCalendarMonth === 11) {
+                        currentCalendarMonth = 0;
+                        currentCalendarYear++;
+                    } else {
+                        currentCalendarMonth++;
+                    }
+                }
+
+                generateCalendar(currentCalendarYear, currentCalendarMonth);
+            }
+
+            // Initialize calendar
+            initializeCalendarRange();
+            generateCalendar();
+
+            // Navigation event listeners
+            document.getElementById('prev-month').addEventListener('click', () => navigateCalendar('prev'));
+            document.getElementById('next-month').addEventListener('click', () => navigateCalendar('next'));
+
+            // Global event listeners
+            document.addEventListener('click', (e) => {
+                if (!tooltip.contains(e.target) && currentElement && !currentElement.contains(e.target)) {
+                    hideTooltip(true);
+                }
+            });
+
+            // Prevent tooltip from closing when hovering over it
+            tooltip.addEventListener('mouseenter', () => {
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
+            });
+
+            tooltip.addEventListener('mouseleave', () => {
+                hideTooltip();
+            });
+
+            // Reposition tooltip on scroll/resize
+            window.addEventListener('scroll', () => {
+                if (currentElement && tooltip.classList.contains('visible')) {
+                    positionTooltip(currentElement);
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (currentElement && tooltip.classList.contains('visible')) {
+                    positionTooltip(currentElement);
+                }
+            });
+
+            // Modal functionality
+            const modal = document.getElementById('calendar-modal');
+            const modalIcon = document.getElementById('modal-icon');
+            const modalDate = document.getElementById('modal-date');
+            const modalBody = document.getElementById('modal-body');
+            const modalClose = document.getElementById('modal-close');
+
+            function showModal(fecha, tipo, icon, content) {
+                modalIcon.textContent = icon;
+                modalDate.textContent = fecha;
+                modalBody.innerHTML = content;
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden'; // Prevent background scroll
+            }
+
+            function hideModal() {
+                modal.classList.remove('show');
+                document.body.style.overflow = ''; // Restore scroll
+            }
+
+            // Modal event listeners
+            modalClose.addEventListener('click', hideModal);
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('show')) {
+                    hideModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

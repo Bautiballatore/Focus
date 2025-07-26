@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado Examen Matemático</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-light: #a855f7;
+            --secondary: #38bdf8;
+            --accent: #4ade80;
+            --bg-dark: #18181b;
+            --text-light: #fff;
+            --card-dark: #23263a;
+            --muted: #a0aec0;
+        }
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: var(--card-dark);
+            border-radius: 18px;
+            padding: 36px 44px 30px 44px;
+            box-shadow: 0 4px 24px #0008;
+        }
+        h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 18px;
+        }
+        .ejercicio {
+            background: #23263aee;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #7c3aed11;
+            margin-bottom: 22px;
+            padding: 18px 20px;
+        }
+        .enunciado {
+            color: var(--primary-light);
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .respuesta-usuario {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .solucion {
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .feedback {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 0.98rem;
+        }
+        .pods {
+            margin-top: 10px;
+        }
+        .pod {
+            background: #23263a;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+        }
+        .pod-title {
+            color: var(--primary-light);
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+        .pod-content img {
+            margin-top: 6px;
+            max-width: 100%;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 1px 6px #0002;
+        }
+        .correcta { color: #4ade80; font-weight: bold; }
+        .incorrecta { color: #f87171; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fa-solid fa-square-root-variable"></i> Resultado Examen Matemático</h1>
+        <div style="color:var(--muted);margin-bottom:18px;">La solución oficial es la de Wolfram Alpha. Si tu respuesta es equivalente, considérala correcta aunque el sistema no la reconozca. ¡Lo importante es aprender!</div>
+        {% for ejercicio in ejercicios %}
+        <div class="ejercicio">
+            <div class="enunciado">{{ loop.index }}. {{ ejercicio.enunciado }}</div>
+            <div class="respuesta-usuario">Tu respuesta: {{ ejercicio.respuesta_usuario }}</div>
+            <div class="solucion">Solución oficial: <span style="color:var(--accent);font-family:monospace;">{{ ejercicio.solucion }}</span></div>
+            <div style="color:#fff; background:#18181b; border-radius:6px; padding:8px 12px; margin:8px 0; font-size:1.05rem;">
+                <b>¿Tu respuesta es equivalente?</b> Si creés que tu respuesta es correcta pero el sistema no la reconoció, compará con la solución oficial y autoevalúate. ¡Lo importante es el proceso y el aprendizaje!
+            </div>
+            <div class="pods">
+                {% for pod in ejercicio.pods %}
+                    <div class="pod">
+                        <div class="pod-title">{{ pod.title }}</div>
+                        <div class="pod-content">
+                            {% if pod.plaintext %}<p>{{ pod.plaintext }}</p>{% endif %}
+                            {% if pod.img %}<img src="{{ pod.img }}" alt="Imagen pod">{% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html> 

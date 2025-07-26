@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Generador IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --glass: rgba(20, 20, 30, 0.85);
+            --primary: #10a37f;
+            --accent: #a855f7;
+            --cyan: #38bdf8;
+            --text-main: #e5e5e5;
+            --text-soft: #a1a1aa;
+            --border: rgba(90,90,137,0.25);
+        }
+        html, body { height: 100%; }
+        body {
+            min-height: 100vh;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .glass {
+            background: var(--glass);
+            border: 1.5px solid var(--border);
+            box-shadow: 0 8px 32px 0 rgba(16,163,127,0.10);
+            border-radius: 24px;
+            padding: 40px 32px 32px 32px;
+            max-width: 400px;
+            width: 100%;
+            margin: 32px 0;
+            backdrop-filter: blur(12px);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: var(--text-soft);
+            font-size: 1.05rem;
+        }
+        .form-group {
+            margin-bottom: 22px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(30,30,40,0.7);
+            color: var(--text-main);
+            transition: border 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            margin-top: 18px;
+        }
+        .submit-btn:hover {
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            transform: translateY(-2px) scale(1.01);
+        }
+        .google-btn {
+            width: 100%;
+            padding: 15px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .google-btn:hover {
+            background: #3367d6;
+            transform: translateY(-2px) scale(1.01);
+        }
+        .google-btn.proximamente {
+            background: rgba(66, 133, 244, 0.5);
+            color: rgba(255, 255, 255, 0.7);
+            cursor: not-allowed;
+            position: relative;
+            opacity: 0.6;
+        }
+        .google-btn.proximamente:hover {
+            background: rgba(66, 133, 244, 0.5);
+            transform: none;
+        }
+        .proximamente-text {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff6b6b;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: var(--text-soft);
+        }
+        .register-link {
+            text-align: center;
+        }
+        .register-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.97rem;
+            background: #23232b;
+            color: #f87171;
+            border: 1px solid #a855f7;
+        }
+        @media (max-width: 480px) {
+            .glass { padding: 24px 8px; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="container">
+    <div class="glass">
+        <div class="header">
+            <h1><i class="fas fa-user"></i> Iniciar Sesión</h1>
+            <p>Accede a tu cuenta para generar exámenes</p>
+        </div>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <form method="POST">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            </button>
+        </form>
+        
+        <div class="divider">o</div>
+        
+        <button class="google-btn proximamente" disabled>
+            <i class="fab fa-google"></i> Iniciar sesión con Google
+            <span class="proximamente-text">Próximamente</span>
+        </button>
+        
+        <div class="divider">¿No tienes cuenta?</div>
+        <div class="register-link">
+            <a href="{{ url_for('registro') }}">
+                <i class="fas fa-user-plus"></i> Crear cuenta nueva
+            </a>
+        </div>
+    </div>
+</div>
+<script>
+// Fondo animado tipo red (igual que en index)
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let w, h, points;
+function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    points = [];
+    for (let i = 0; i < 60; i++) {
+        points.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5
+        });
+    }
+}
+function draw() {
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < points.length; i++) {
+        let p = points[i];
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.7, 0, 2 * Math.PI);
+        ctx.fillStyle = '#38bdf8';
+        ctx.shadowColor = '#10a37f';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        for (let j = i + 1; j < points.length; j++) {
+            let q = points[j];
+            let dist = Math.hypot(p.x - q.x, p.y - q.y);
+            if (dist < 120) {
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(q.x, q.y);
+                ctx.strokeStyle = 'rgba(168,85,247,' + (1 - dist / 120) + ')';
+                ctx.lineWidth = 1.1;
+                ctx.stroke();
+            }
+        }
+    }
+    requestAnimationFrame(draw);
+}
+resize();
+draw();
+window.addEventListener('resize', resize);
+</script>
+</body>
+</html> 

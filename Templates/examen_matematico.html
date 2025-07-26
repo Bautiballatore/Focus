@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Examen matemático</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-light: #a855f7;
+            --secondary: #38bdf8;
+            --accent: #4ade80;
+            --bg-dark: #18181b;
+            --text-light: #fff;
+            --card-dark: #23263a;
+        }
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: var(--card-dark);
+            border-radius: 18px;
+            padding: 36px 44px 30px 44px;
+            box-shadow: 0 4px 24px #0008;
+        }
+        h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 18px;
+        }
+        .enunciado {
+            font-size: 1.15rem;
+            margin-bottom: 18px;
+            color: var(--primary-light);
+        }
+        .progreso {
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.1rem;
+            background: #23263a;
+            color: #fff;
+            outline: none;
+            margin-bottom: 18px;
+        }
+        button {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 12px #7c3aed33;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            box-shadow: 0 4px 16px #38bdf855;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progreso">Ejercicio {{ numero }} de {{ total }}</div>
+        <h1><i class="fa-solid fa-square-root-variable"></i> Examen matemático</h1>
+        <div class="enunciado">{{ ejercicio.enunciado }}</div>
+        {% if ejercicio.expresion %}
+            <div style="color:#fff; font-size:1.1rem; margin-bottom:10px; text-align:center;">
+                Expresión: <b>{{ ejercicio.expresion }}</b>
+                <div id="mathjax-expresion" style="margin-top:6px;">
+                    \[
+                    {{ ejercicio.expresion }}
+                    \]
+                </div>
+            </div>
+        {% endif %}
+        {% if ejercicio.img_enunciado %}
+            <div style="text-align:center; margin-bottom:18px;">
+                <img src="{{ ejercicio.img_enunciado }}" alt="Enunciado matemático" style="max-width:90%; border-radius:10px; box-shadow:0 2px 12px #0006; background:#fff; padding:8px;">
+            </div>
+        {% endif %}
+        <form method="POST">
+            <input type="text" name="respuesta" placeholder="Escribe tu respuesta aquí" value="{{ ejercicio.respuesta_usuario }}" required>
+            <button type="submit">{{ 'Finalizar' if numero == total else 'Siguiente' }}</button>
+        </form>
+    </div>
+</body>
+</html> 

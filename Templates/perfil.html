@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Generador de Exámenes IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html, body { height: 100%; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            opacity: 0.25;
+        }
+        .container {
+            max-width: 500px;
+            margin: 40px auto 0 auto;
+            background: rgba(30,32,40,0.7);
+            border-radius: 24px;
+            box-shadow: 0 8px 40px #000a;
+            padding: 0 0 32px 0;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .topbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 18px 32px 0 32px;
+        }
+        .user-info {
+            color: #b3b3b3;
+            font-size: 1rem;
+            margin-right: 18px;
+        }
+        .topbar a {
+            color: #8ab4f8;
+            text-decoration: none;
+            margin-left: 12px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .topbar a:hover { color: #fff; }
+        .header {
+            text-align: center;
+            padding: 24px 32px 0 32px;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #8ab4f8, #a084ee 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 8px 0;
+        }
+        .profile-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 32px 24px 24px 24px;
+            margin: 32px 24px 0 24px;
+            box-shadow: 0 2px 16px #0002;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .profile-avatar {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8ab4f8, #a084ee);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 18px;
+        }
+        .profile-info {
+            width: 100%;
+        }
+        .profile-info-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .profile-info-label {
+            width: 120px;
+            color: #8ab4f8;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+        .profile-info-value {
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 400;
+        }
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            margin: 32px 24px 0 24px;
+        }
+        .action-btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(90deg, #8ab4f8, #a084ee 80%);
+            color: #fff;
+        }
+        .action-btn.logout {
+            background: linear-gradient(90deg, #f56565, #a084ee 80%);
+        }
+        .action-btn:hover {
+            box-shadow: 0 4px 16px #8ab4f855;
+        }
+        @media (max-width: 600px) {
+            .container { margin: 0; border-radius: 0; }
+            .header, .topbar { padding-left: 10px; padding-right: 10px; }
+            .profile-card { margin: 18px 2px 0 2px; padding: 18px 6px 12px 6px; }
+            .actions { margin: 24px 2px 0 2px; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="container">
+    <div class="topbar">
+        {% if current_user.is_authenticated %}
+            <span class="user-info"><i class="fa-solid fa-user"></i> {{ current_user.nombre }}</span>
+            <a href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+        {% else %}
+            <a href="{{ url_for('login') }}"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</a>
+            <a href="{{ url_for('registro') }}"><i class="fa-solid fa-user-plus"></i> Registrarse</a>
+        {% endif %}
+    </div>
+    <div class="header">
+        <h1><i class="fas fa-user-circle"></i> Perfil de Usuario</h1>
+    </div>
+    <div class="profile-card">
+        <div class="profile-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="profile-info">
+            <div class="profile-info-row">
+                <span class="profile-info-label"><i class="fa-solid fa-user"></i> Nombre:</span>
+                <span class="profile-info-value">{{ current_user.nombre }}</span>
+            </div>
+            <div class="profile-info-row">
+                <span class="profile-info-label"><i class="fa-solid fa-envelope"></i> Email:</span>
+                <span class="profile-info-value">{{ current_user.email }}</span>
+            </div>
+            <div class="profile-info-row">
+                <span class="profile-info-label"><i class="fa-solid fa-calendar"></i> Registro:</span>
+                <span class="profile-info-value">{{ current_user.fecha_registro.strftime('%d/%m/%Y') }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('index') }}" class="action-btn"><i class="fa-solid fa-house"></i> Volver al inicio</a>
+        <a href="{{ url_for('historial') }}" class="action-btn"><i class="fa-solid fa-list"></i> Historial de exámenes</a>
+        <a href="{{ url_for('logout') }}" class="action-btn logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+    </div>
+</div>
+<script>
+// Fondo animado tipo red
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let w = window.innerWidth, h = window.innerHeight;
+canvas.width = w; canvas.height = h;
+let particles = [];
+const N = 48;
+for(let i=0;i<N;i++){
+    particles.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        vx: (Math.random()-0.5)*0.7,
+        vy: (Math.random()-0.5)*0.7,
+        r: Math.random()*2+1,
+        o: Math.random()*0.5+0.3
+    });
+}
+function drawNet(){
+    ctx.clearRect(0,0,w,h);
+    for(let i=0;i<N;i++){
+        let p=particles[i];
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+        ctx.fillStyle = `rgba(138,180,248,${p.o})`;
+        ctx.fill();
+        for(let j=i+1;j<N;j++){
+            let q=particles[j];
+            let dx=p.x-q.x,dy=p.y-q.y,dist=Math.sqrt(dx*dx+dy*dy);
+            if(dist<120){
+                ctx.beginPath();
+                ctx.moveTo(p.x,p.y);
+                ctx.lineTo(q.x,q.y);
+                ctx.strokeStyle = `rgba(138,180,248,${0.13*(1-dist/120)})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+    }
+}
+function animate(){
+    for(let p of particles){
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0||p.x>w) p.vx*=-1;
+        if(p.y<0||p.y>h) p.vy*=-1;
+    }
+    drawNet();
+    requestAnimationFrame(animate);
+}
+animate();
+window.addEventListener('resize',()=>{
+    w=window.innerWidth; h=window.innerHeight;
+    canvas.width=w; canvas.height=h;
+});
+</script>
+</body>
+</html> 

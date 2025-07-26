@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle del Examen</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-light: #a855f7;
+            --secondary: #38bdf8;
+            --accent: #4ade80;
+            --bg-dark: #18181b;
+            --text-light: #fff;
+            --card-dark: #23263a;
+            --muted: #a0aec0;
+            --correcta: #4ade80;
+            --parcial: #facc15;
+            --incorrecta: #f87171;
+        }
+        html, body { height: 100%; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: var(--card-dark);
+            border-radius: 18px;
+            padding: 36px 44px 30px 44px;
+            box-shadow: 0 4px 24px #0008;
+        }
+        h1 {
+            margin-bottom: 28px;
+            color: var(--primary);
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        .resumen {
+            background: #23263aee;
+            border-radius: 10px;
+            padding: 18px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 4px #7c3aed11;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 28px;
+            background: #23263a;
+            border-radius: 8px;
+            display: flex;
+            overflow: hidden;
+            margin-bottom: 18px;
+            box-shadow: 0 1px 4px #7c3aed11;
+        }
+        .progress-correcta {
+            background: var(--correcta);
+            height: 100%;
+            transition: width 0.5s;
+        }
+        .progress-parcial {
+            background: var(--parcial);
+            height: 100%;
+            transition: width 0.5s;
+        }
+        .progress-incorrecta {
+            background: var(--incorrecta);
+            height: 100%;
+            transition: width 0.5s;
+        }
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.98rem;
+            color: var(--muted);
+        }
+        .pregunta-card {
+            background: #23263aee;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #7c3aed11;
+            margin-bottom: 20px;
+            padding: 20px 24px;
+            font-size: 1.08rem;
+        }
+        .pregunta-card.correcta { border-left: 5px solid #4ade80; }
+        .pregunta-card.incorrecta { border-left: 5px solid #f87171; }
+        .pregunta-card.parcial { border-left: 5px solid #facc15; }
+        .opcion { margin-left: 20px; }
+        .respuesta-usuario { font-weight: bold; }
+        .feedback { margin-top: 10px; font-style: italic; color: var(--muted); }
+        .btn-main {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            margin: 0 4px 18px 0;
+            transition: background 0.2s;
+            display: inline-block;
+            border: none;
+            box-shadow: 0 2px 12px #7c3aed33;
+        }
+        .btn-main:hover {
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            box-shadow: 0 4px 16px #38bdf855;
+        }
+        h2 { color: var(--primary-light); margin-bottom: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fa-solid fa-file-alt"></i> Detalle del Examen</h1>
+        <a href="{{ url_for('historial') }}" class="btn-main"><i class="fa-solid fa-list"></i> Volver al historial</a>
+        <div class="resumen">
+            <p><b>Fecha:</b> {{ examen.fecha.strftime('%d/%m/%Y %H:%M') }}</p>
+            <p><b>Nota:</b> <span style="color:var(--accent)">{{ examen.nota }}</span></p>
+            <p><b>Correctas:</b> <span style="color:#4ade80">{{ examen.correctas }}</span> | <b>Parciales:</b> <span style="color:#facc15">{{ examen.parciales }}</span> | <b>Incorrectas:</b> <span style="color:#f87171">{{ examen.incorrectas }}</span></p>
+            <p><b>Tiempo total:</b> {{ examen.tiempo_total }} segundos</p>
+            <p><b>Feedback general:</b> <span style="color:var(--muted)">{{ examen.feedback_general }}</span></p>
+        </div>
+        <div class="progress-labels">
+            <span><i class="fa-solid fa-check"></i> Correctas</span>
+            <span><i class="fa-solid fa-exclamation"></i> Parciales</span>
+            <span><i class="fa-solid fa-xmark"></i> Incorrectas</span>
+        </div>
+        <div class="progress-bar">
+            {% set total = examen.correctas + examen.parciales + examen.incorrectas %}
+            {% set pct_correcta = (examen.correctas / total * 100) if total > 0 else 0 %}
+            {% set pct_parcial = (examen.parciales / total * 100) if total > 0 else 0 %}
+            {% set pct_incorrecta = (examen.incorrectas / total * 100) if total > 0 else 0 %}
+            <div class="progress-correcta" style="width:{{ pct_correcta }}%"></div>
+            <div class="progress-parcial" style="width:{{ pct_parcial }}%"></div>
+            <div class="progress-incorrecta" style="width:{{ pct_incorrecta }}%"></div>
+        </div>
+        <hr>
+        <h2>Preguntas y respuestas</h2>
+        {% for pregunta in preguntas %}
+        {% set clase = 'pregunta-card' %}
+        {% if 'correcta' in pregunta.feedback.lower() %}
+            {% if 'parcial' in pregunta.feedback.lower() %}
+                {% set clase = clase + ' parcial' %}
+            {% else %}
+                {% set clase = clase + ' correcta' %}
+            {% endif %}
+        {% elif 'incorrecta' in pregunta.feedback.lower() %}
+            {% set clase = clase + ' incorrecta' %}
+        {% endif %}
+        <div class="{{ clase }}">
+            <b>{{ loop.index }}. {{ pregunta.enunciado }}</b><br>
+            {% if pregunta.opciones_decoded %}
+                <ul>
+                {% for op in pregunta.opciones_decoded %}
+                    <li class="opcion">{{ op }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+            <span class="respuesta-usuario">Tu respuesta:</span> {{ pregunta.respuesta_usuario }}<br>
+            <span>Respuesta correcta:</span> {{ pregunta.respuesta_correcta }}<br>
+            <span>Tipo:</span> {{ pregunta.tipo }}<br>
+            <div class="feedback">{{ pregunta.feedback }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html> 

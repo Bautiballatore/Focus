@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados - Generador de Exámenes IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html, body { height: 100%; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            opacity: 0.25;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto 0 auto;
+            background: rgba(30,32,40,0.7);
+            border-radius: 24px;
+            box-shadow: 0 8px 40px #000a;
+            padding: 0 0 32px 0;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .topbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 18px 32px 0 32px;
+        }
+        .user-info {
+            color: #b3b3b3;
+            font-size: 1rem;
+            margin-right: 18px;
+        }
+        .topbar a {
+            color: #8ab4f8;
+            text-decoration: none;
+            margin-left: 12px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .topbar a:hover { color: #fff; }
+        .header {
+            text-align: center;
+            padding: 24px 32px 0 32px;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #8ab4f8, #a084ee 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 8px 0;
+        }
+        .summary-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 18px 24px;
+            margin: 24px 0 0 0;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 16px #0002;
+        }
+        .summary-bar .nota {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #4ade80;
+            margin-right: 18px;
+        }
+        .summary-bar .item {
+            margin-right: 18px;
+            color: #8ab4f8;
+        }
+        .summary-bar .item:last-child { margin-right: 0; }
+        .summary-bar .tiempo {
+            color: #a084ee;
+            font-size: 1rem;
+        }
+        .feedback-general {
+            margin: 32px 0 0 0;
+            background: rgba(138,180,248,0.08);
+            border-left: 4px solid #8ab4f8;
+            border-radius: 10px;
+            padding: 18px 22px;
+            color: #8ab4f8;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .questions-list {
+            margin: 36px 0 0 0;
+        }
+        .question-feedback {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 22px 18px 18px 18px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 12px #0002;
+        }
+        .question-enunciado {
+            font-size: 1.08rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        .question-feedback-text {
+            font-size: 1rem;
+            color: #e0e0e0;
+            margin-bottom: 0;
+        }
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            margin: 32px 0 0 0;
+        }
+        .action-btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(90deg, #8ab4f8, #a084ee 80%);
+            color: #fff;
+        }
+        .action-btn.logout {
+            background: linear-gradient(90deg, #f56565, #a084ee 80%);
+        }
+        .action-btn:hover {
+            box-shadow: 0 4px 16px #8ab4f855;
+        }
+        @media (max-width: 600px) {
+            .container { margin: 0; border-radius: 0; }
+            .header, .topbar { padding-left: 10px; padding-right: 10px; }
+            .summary-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .questions-list { margin-top: 18px; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="container">
+    <div class="topbar">
+        {% if current_user.is_authenticated %}
+            <span class="user-info"><i class="fa-solid fa-user"></i> {{ current_user.nombre }}</span>
+            <a href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+        {% else %}
+            <a href="{{ url_for('login') }}"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</a>
+            <a href="{{ url_for('registro') }}"><i class="fa-solid fa-user-plus"></i> Registrarse</a>
+        {% endif %}
+    </div>
+    <div class="header">
+        <h1><i class="fas fa-clipboard-check"></i> Resultados del Examen</h1>
+    </div>
+    <div class="summary-bar">
+        <span class="nota">{{ resumen.nota }}</span>
+        <span class="item"><i class="fa-solid fa-circle-check"></i> {{ resumen.correctas }} correctas</span>
+        <span class="item"><i class="fa-solid fa-circle-exclamation"></i> {{ resumen.parciales }} parciales</span>
+        <span class="item"><i class="fa-solid fa-circle-xmark"></i> {{ resumen.incorrectas }} incorrectas</span>
+        <span class="tiempo"><i class="fa-solid fa-clock"></i> {{ resumen.tiempo_total }}s</span>
+    </div>
+    <div class="feedback-general">
+        <i class="fa-solid fa-lightbulb"></i> {{ resumen.feedback_general }}
+    </div>
+    <div class="questions-list">
+        {% for i in range(preguntas|length) %}
+            <div class="question-feedback">
+                <div class="question-enunciado">{{ preguntas[i].enunciado }}</div>
+                <div class="question-feedback-text">{{ feedbacks[i]|safe }}</div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('index') }}" class="action-btn"><i class="fa-solid fa-house"></i> Volver al inicio</a>
+        <a href="{{ url_for('logout') }}" class="action-btn logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+    </div>
+</div>
+<script>
+// Fondo animado tipo red
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let w = window.innerWidth, h = window.innerHeight;
+canvas.width = w; canvas.height = h;
+let particles = [];
+const N = 48;
+for(let i=0;i<N;i++){
+    particles.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        vx: (Math.random()-0.5)*0.7,
+        vy: (Math.random()-0.5)*0.7,
+        r: Math.random()*2+1,
+        o: Math.random()*0.5+0.3
+    });
+}
+function drawNet(){
+    ctx.clearRect(0,0,w,h);
+    for(let i=0;i<N;i++){
+        let p=particles[i];
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+        ctx.fillStyle = `rgba(138,180,248,${p.o})`;
+        ctx.fill();
+        for(let j=i+1;j<N;j++){
+            let q=particles[j];
+            let dx=p.x-q.x,dy=p.y-q.y,dist=Math.sqrt(dx*dx+dy*dy);
+            if(dist<120){
+                ctx.beginPath();
+                ctx.moveTo(p.x,p.y);
+                ctx.lineTo(q.x,q.y);
+                ctx.strokeStyle = `rgba(138,180,248,${0.13*(1-dist/120)})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+    }
+}
+function animate(){
+    for(let p of particles){
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0||p.x>w) p.vx*=-1;
+        if(p.y<0||p.y>h) p.vy*=-1;
+    }
+    drawNet();
+    requestAnimationFrame(animate);
+}
+animate();
+window.addEventListener('resize',()=>{
+    w=window.innerWidth; h=window.innerHeight;
+    canvas.width=w; canvas.height=h;
+});
+</script>
+</body>
+</html>
