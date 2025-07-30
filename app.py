@@ -20,7 +20,7 @@ import traceback
 load_dotenv()
 
 # Configuración de la aplicación
-app = Flask(__name__)
+app = Flask(__name__, template_folder='Templates')
 app.config.from_object('config.ProductionConfig' if os.environ.get('FLASK_ENV') == 'production' else 'config.DevelopmentConfig')
 app.jinja_env.globals.update(range=range)
 
