@@ -17,27 +17,28 @@
     {%- endif -%}
 {% endmacro %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Resultado de planificación</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        
-        body { 
-            font-family: 'Inter', 'Montserrat', Arial, sans-serif; 
-            background: #18181b; 
-            color: #fff; 
-            min-height: 100vh; 
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
+{% extends "base.html" %}
+
+{% block title %}Resultado de planificación - Corrige.me{% endblock %}
+
+{% block breadcrumb_items %}
+<span class="separator">/</span>
+<a href="{{ url_for('planificacion') }}">Planificación</a>
+<span class="separator">/</span>
+<span class="current">Resultado</span>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    body { 
+        padding: 0;
+        margin: 0;
+    }
+    
+    .main-content {
+        padding: 0;
+        max-width: none;
+    }
         
         .container { 
             max-width: 1200px; 
@@ -561,8 +562,9 @@
             box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
         }
     </style>
-</head>
-<body>
+{% endblock %}
+
+{% block content %}
     <div class="container">
         <h1>Planificación generada</h1>
         
@@ -632,14 +634,6 @@
         {% endif %}
         
         <div style="text-align: center;">
-            {% if plan %}
-                <form action="{{ url_for('google_calendar.export_calendar') }}" method="post" style="display: inline-block; margin-right: 15px;">
-                    <input type="hidden" name="plan_json" value='{{ plan_json|tojson|safe }}'>
-                    <button type="submit" class="btn-main" style="background: linear-gradient(135deg, #4285f4, #34a853);">
-                        <i class="fab fa-google"></i> Exportar a Google Calendar
-                    </button>
-                </form>
-            {% endif %}
             <a href="{{ url_for('planificacion') }}" class="btn-main">Volver a planificar</a>
         </div>
     </div>
@@ -906,16 +900,7 @@
                     if (activityData) {
                         dayElement.classList.add('has-activity', activityData.tipo);
                         
-                        // Only hover events for timeline tooltip
-                        dayElement.addEventListener('mouseenter', () => {
-                            showTooltip(dayElement, dateStr, activityData.tipo, activityData.icon, activityData.content);
-                        });
-
-                        dayElement.addEventListener('mouseleave', () => {
-                            hideTooltip();
-                        });
-
-                        // Click events for modal
+                        // Click events for modal only
                         dayElement.addEventListener('click', (e) => {
                             e.stopPropagation();
                             showModal(dateStr, activityData.tipo, activityData.icon, activityData.content);
@@ -1034,5 +1019,21 @@
             });
         });
     </script>
-</body>
-</html>
+{% endblock %}
+
+{% block nav_buttons %}
+<div class="nav-buttons">
+    <a href="{{ url_for('planificacion') }}" class="nav-btn">
+        <i class="fa-solid fa-calendar-days"></i> Nueva planificación
+    </a>
+    <a href="{{ url_for('generar') }}" class="nav-btn secondary">
+        <i class="fa-solid fa-file-lines"></i> Generar examen
+    </a>
+    <a href="{{ url_for('historial') }}" class="nav-btn accent">
+        <i class="fa-solid fa-history"></i> Ver historial
+    </a>
+    <a href="{{ url_for('perfil') }}" class="nav-btn outline">
+        <i class="fa-solid fa-user"></i> Mi perfil
+    </a>
+</div>
+{% endblock %}

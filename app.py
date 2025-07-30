@@ -586,6 +586,22 @@ def resultado():
 
     return render_template("resultado_abierto.html", respuestas=respuestas, preguntas=preguntas, feedbacks=feedbacks, resumen=resumen, respuestas_texto_usuario=respuestas_texto_usuario, respuestas_texto_correcta=respuestas_texto_correcta)
 
+@app.route("/cuestionario")
+def cuestionario():
+    # Verificar que hay preguntas en la sesión
+    preguntas = session.get("preguntas", [])
+    if not preguntas:
+        flash("No hay un examen disponible para repetir. Genera un nuevo examen primero.", "error")
+        return redirect(url_for("generar"))
+    
+    # Reiniciar respuestas y tiempos pero mantener las mismas preguntas
+    session["respuestas"] = ["" for _ in preguntas]
+    session["pregunta_times"] = []
+    session["start_time"] = time.time()
+    session["last_question_time"] = time.time()
+    
+    return redirect(url_for("pregunta", numero=0))
+
 @app.route("/reiniciar", methods=["POST"])
 def reiniciar():
     preguntas = session.get("preguntas", [])

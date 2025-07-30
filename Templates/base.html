@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Corrige.me - Plataforma IA para estudiar mejor{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #8b5cf6;
+            --primary-dark: #4f46e5;
+            --secondary: #06b6d4;
+            --secondary-light: #22d3ee;
+            --accent: #10b981;
+            --accent-light: #34d399;
+            --bg-dark: #0f0f23;
+            --bg-card: #1a1a2e;
+            --bg-section: #16213e;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-accent: #e2e8f0;
+            --border-subtle: rgba(148, 163, 184, 0.1);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+            --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            --gradient-secondary: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            --gradient-hero: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-section) 50%, var(--bg-card) 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gradient-hero);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Enhanced Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .navbar-brand::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+        }
+
+        .navbar-brand:hover::after {
+            width: 100%;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .navbar-nav a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-nav a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-primary);
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .navbar-nav a:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .navbar-nav a:hover::before {
+            opacity: 1;
+        }
+
+        .navbar-nav a i {
+            font-size: 1.1em;
+        }
+
+        /* Dropdown Menu */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-toggle {
+            cursor: pointer;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 16px;
+            border-radius: 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .dropdown-menu a:last-child {
+            border-bottom: none;
+        }
+
+        /* Breadcrumbs */
+        .breadcrumbs {
+            padding: 16px 32px;
+            background: rgba(15, 15, 35, 0.8);
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.9em;
+        }
+
+        .breadcrumbs a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--primary);
+        }
+
+        .breadcrumbs .separator {
+            margin: 0 8px;
+            color: var(--text-muted);
+        }
+
+        .breadcrumbs .current {
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--gradient-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-btn.secondary {
+            background: var(--gradient-secondary);
+        }
+
+        .nav-btn.accent {
+            background: var(--gradient-accent);
+        }
+
+        .nav-btn.outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .nav-btn.outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .navbar-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            .navbar-nav a {
+                font-size: 0.9em;
+                padding: 6px 12px;
+            }
+
+            .breadcrumbs {
+                padding: 12px 16px;
+                font-size: 0.8em;
+            }
+
+            .nav-buttons {
+                justify-content: center;
+            }
+
+            .main-content {
+                padding: 16px;
+            }
+        }
+
+        /* Additional styles for specific pages */
+        {% block extra_styles %}{% endblock %}
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="navbar-brand">Corrige.me</a>
+        <div class="navbar-nav">
+            <a href="{{ url_for('planificacion') }}">
+                <i class="fa-solid fa-calendar-days"></i> Planificación
+            </a>
+            <div class="dropdown">
+                <a href="#" class="dropdown-toggle">
+                    <i class="fa-solid fa-tools"></i> Herramientas
+                </a>
+                <div class="dropdown-menu">
+                    <a href="{{ url_for('generar') }}">
+                        <i class="fa-solid fa-file-lines"></i> Generar exámenes
+                    </a>
+                    <a href="{{ url_for('wolfram_query') }}">
+                        <i class="fa-solid fa-calculator"></i> Ejercicios matemáticos
+                    </a>
+                    <a href="{{ url_for('como_funciona') }}">
+                        <i class="fa-solid fa-question-circle"></i> Cómo funciona
+                    </a>
+                </div>
+            </div>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('historial') }}">
+                    <i class="fa-solid fa-history"></i> Historial
+                </a>
+                <a href="{{ url_for('perfil') }}">
+                    <i class="fa-solid fa-user"></i> Mi perfil
+                </a>
+                <a href="{{ url_for('logout') }}">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}">
+                    <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+                </a>
+                <a href="{{ url_for('registro') }}">
+                    <i class="fa-solid fa-user-plus"></i> Registrarse
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Breadcrumbs -->
+    {% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{{ url_for('index') }}">Inicio</a>
+        {% block breadcrumb_items %}{% endblock %}
+    </div>
+    {% endblock %}
+
+    <!-- Main Content -->
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Navigation Buttons -->
+    {% block nav_buttons %}{% endblock %}
+
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

@@ -1,29 +1,34 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Generar examen</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #7c3aed;
-            --primary-light: #a855f7;
-            --secondary: #38bdf8;
-            --accent: #4ade80;
-            --bg-dark: #18181b;
-            --text-light: #fff;
-            --card-dark: #23263a;
-            --muted: #a0aec0;
-        }
-        html, body { height: 100%; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', 'Montserrat', Arial, sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-light);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+{% extends "base.html" %}
+
+{% block title %}Generar examen - Corrige.me{% endblock %}
+
+{% block breadcrumb_items %}
+<span class="separator">/</span>
+<span class="current">Generar examen</span>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    body { 
+        padding: 0;
+        margin: 0;
+    }
+    
+    .main-content {
+        padding: 0;
+        max-width: none;
+    }
+    
+    :root {
+        --primary: #7c3aed;
+        --primary-light: #a855f7;
+        --secondary: #38bdf8;
+        --accent: #4ade80;
+        --bg-dark: #18181b;
+        --text-light: #fff;
+        --card-dark: #23263a;
+        --muted: #a0aec0;
+    }
         .container {
             max-width: 600px;
             margin: 40px auto;
@@ -31,6 +36,8 @@
             border-radius: 18px;
             padding: 36px 44px 30px 44px;
             box-shadow: 0 4px 24px #0008;
+            position: relative;
+            z-index: 10; /* CAMBIAR de implícito a z-index: 10 */
         }
         h1 {
             margin-bottom: 18px;
@@ -160,6 +167,17 @@
             margin-bottom: 6px;
             text-align: center;
         }
+        /* AGREGAR AL FINAL DEL BLOQUE <style> */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -10; /* CAMBIAR de -1 a -10 para asegurar que esté más atrás */
+            opacity: 0.3;
+            pointer-events: none; /* AGREGAR para evitar interferencias */
+        }
     </style>
     <script>
         function toggleTemasMath() {
@@ -202,100 +220,176 @@
     .close-error:hover { color: #e74c3c; }
     </style>
     {% endif %}
-    <div class="container">
-        <h1><i class="fa-solid fa-file-circle-plus"></i> Generar examen</h1>
-        <form method="POST" enctype="multipart/form-data">
-            <div class="grupo-campo">
-                <label for="nivel">Nivel educativo</label>
-                <select id="nivel" name="nivel" required>
-                    <option value="Primario">Primario</option>
-                    <option value="Secundario">Secundario</option>
-                    <option value="Universitario" selected>Universitario</option>
-                </select>
-            </div>
-            <div class="grupo-campo">
-                <label for="cantidad">Cantidad de preguntas</label>
-                <input type="number" id="cantidad" name="cantidad" min="1" max="20" value="5" required>
-            </div>
-            <div class="grupo-campo">
-                <label for="formato">Formato de preguntas</label>
-                <select id="formato" name="formato" required onchange="toggleTemasMath()">
-                    <option value="multiple choice" selected>Opción múltiple</option>
-                    <option value="verdadero o falso">Verdadero o falso</option>
-                    <option value="desarrollo">Desarrollo</option>
-                    <option value="ejercicios matematicos">Ejercicios matemáticos</option>
-                </select>
-            </div>
-            <div class="temas-math" id="temas-math">
-                <label>Temas de matemática (puedes elegir varios o escribir uno personalizado)</label>
-                <div class="temas-checkboxes">
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="álgebra">Álgebra</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="ecuaciones">Ecuaciones</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="derivadas">Derivadas</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="integrales">Integrales</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="límite">Límites</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="funciones">Funciones</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="trigonometría">Trigonometría</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="geometría">Geometría</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="probabilidad">Probabilidad</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="estadística">Estadística</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="matrices">Matrices</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="sistemas de ecuaciones">Sistemas de ecuaciones</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="polinomios">Polinomios</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="logaritmos">Logaritmos</label>
-                    <label class="tema-checkbox"><input type="checkbox" name="temas" value="exponenciales">Exponenciales</label>
-                </div>
-                <input type="text" name="tema_personalizado" placeholder="Tema personalizado (opcional)">
-            </div>
-            <div class="grupo-campo" id="opciones-multiple" style="display:block;">
-                <label for="cantidad_opciones">Cantidad de opciones para cada pregunta (solo opción múltiple)</label>
-                <select id="cantidad_opciones" name="cantidad_opciones">
-                    <option value="3">3</option>
-                    <option value="4" selected>4</option>
-                    <option value="5">5</option>
-                </select>
-            </div>
-            <div class="grupo-campo" id="instrucciones-desarrollo" style="display:none;">
-                <label for="instrucciones_desarrollo">Instrucciones personalizadas para preguntas de desarrollo (opcional)</label>
-                <input type="text" id="instrucciones_desarrollo" name="instrucciones_desarrollo" placeholder="Ej: La respuesta debe incluir ejemplos, responder en 3 párrafos, etc.">
-            </div>
-            <div class="grupo-campo" id="instrucciones-vf" style="display:none;">
-                <label for="instrucciones_vf">Instrucciones personalizadas para preguntas de verdadero/falso (opcional)</label>
-                <input type="text" id="instrucciones_vf" name="instrucciones_vf" placeholder="Ej: Que las afirmaciones sean comparativas, etc.">
-            </div>
-            <div class="grupo-campo">
-                <label for="tema">Tema (si no sube archivo)</label>
-                <input type="text" id="tema" name="tema" placeholder="Ingrese el tema del examen">
-            </div>
-            <div class="grupo-campo">
-                <label for="archivo">O suba un archivo (.txt, .pdf, .docx)</label>
-                <input type="file" id="archivo" name="archivo" accept=".txt,.pdf,.docx">
-            </div>
-            <button type="submit" class="btn-main"><i class="fa-solid fa-bolt"></i> Generar examen</button>
-        </form>
-    </div>
-    <div class="modal-carga" id="modal-carga">
-        <div class="modal-content-carga">
-            <div class="spinner"></div>
-            <img src="https://i.imgur.com/1ZQZ1Z1.jpg" alt="esperando" class="carga-img">
-            <div class="carga-text">Generando tu examen...<br>¡No te pongas ansioso!</div>
+{% endblock %}
+
+{% block content %}
+<canvas id="bg-canvas"></canvas>
+<div class="container">
+    <h1><i class="fa-solid fa-file-circle-plus"></i> Generar examen</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="grupo-campo">
+            <label for="nivel">Nivel educativo</label>
+            <select id="nivel" name="nivel" required>
+                <option value="Primario">Primario</option>
+                <option value="Secundario">Secundario</option>
+                <option value="Universitario" selected>Universitario</option>
+            </select>
         </div>
+        <div class="grupo-campo">
+            <label for="cantidad">Cantidad de preguntas</label>
+            <input type="number" id="cantidad" name="cantidad" min="1" max="20" value="5" required>
+        </div>
+        <div class="grupo-campo">
+            <label for="formato">Formato de preguntas</label>
+            <select id="formato" name="formato" required onchange="toggleTemasMath()">
+                <option value="multiple choice" selected>Opción múltiple</option>
+                <option value="verdadero o falso">Verdadero o falso</option>
+                <option value="desarrollo">Desarrollo</option>
+                <option value="ejercicios matematicos">Ejercicios matemáticos</option>
+            </select>
+        </div>
+        <div class="temas-math" id="temas-math">
+            <label>Temas de matemática (puedes elegir varios o escribir uno personalizado)</label>
+            <div class="temas-checkboxes">
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="álgebra">Álgebra</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="ecuaciones">Ecuaciones</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="derivadas">Derivadas</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="integrales">Integrales</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="límite">Límites</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="funciones">Funciones</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="trigonometría">Trigonometría</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="geometría">Geometría</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="probabilidad">Probabilidad</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="estadística">Estadística</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="matrices">Matrices</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="sistemas de ecuaciones">Sistemas de ecuaciones</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="polinomios">Polinomios</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="logaritmos">Logaritmos</label>
+                <label class="tema-checkbox"><input type="checkbox" name="temas" value="exponenciales">Exponenciales</label>
+            </div>
+            <input type="text" name="tema_personalizado" placeholder="Tema personalizado (opcional)">
+        </div>
+        <div class="grupo-campo" id="opciones-multiple" style="display:block;">
+            <label for="cantidad_opciones">Cantidad de opciones para cada pregunta (solo opción múltiple)</label>
+            <select id="cantidad_opciones" name="cantidad_opciones">
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+            </select>
+        </div>
+        <div class="grupo-campo" id="instrucciones-desarrollo" style="display:none;">
+            <label for="instrucciones_desarrollo">Instrucciones personalizadas para preguntas de desarrollo (opcional)</label>
+            <input type="text" id="instrucciones_desarrollo" name="instrucciones_desarrollo" placeholder="Ej: La respuesta debe incluir ejemplos, responder en 3 párrafos, etc.">
+        </div>
+        <div class="grupo-campo" id="instrucciones-vf" style="display:none;">
+            <label for="instrucciones_vf">Instrucciones personalizadas para preguntas de verdadero/falso (opcional)</label>
+            <input type="text" id="instrucciones_vf" name="instrucciones_vf" placeholder="Ej: Que las afirmaciones sean comparativas, etc.">
+        </div>
+        <div class="grupo-campo">
+            <label for="tema">Tema (si no sube archivo)</label>
+            <input type="text" id="tema" name="tema" placeholder="Ingrese el tema del examen">
+        </div>
+        <div class="grupo-campo">
+            <label for="archivo">O suba un archivo (.txt, .pdf, .docx)</label>
+            <input type="file" id="archivo" name="archivo" accept=".txt,.pdf,.docx">
+        </div>
+        <button type="submit" class="btn-main"><i class="fa-solid fa-bolt"></i> Generar examen</button>
+    </form>
+</div>
+<div class="modal-carga" id="modal-carga">
+    <div class="modal-content-carga">
+        <div class="spinner"></div>
+        <img src="https://i.imgur.com/1ZQZ1Z1.jpg" alt="esperando" class="carga-img">
+        <div class="carga-text">Generando tu examen...<br>¡No te pongas ansioso!</div>
     </div>
-    <script>
-        // Mostrar/ocultar campos según formato
-        function mostrarOpciones() {
-            var formato = document.getElementById('formato').value;
-            document.getElementById('opciones-multiple').style.display = (formato === 'multiple choice') ? 'block' : 'none';
-            document.getElementById('instrucciones-desarrollo').style.display = (formato === 'desarrollo') ? 'block' : 'none';
-            document.getElementById('instrucciones-vf').style.display = (formato === 'verdadero o falso') ? 'block' : 'none';
-        }
-        mostrarOpciones();
-        document.getElementById('formato').addEventListener('change', mostrarOpciones);
-        toggleTemasMath();
-        // Mostrar modal de carga al enviar el formulario
-        document.querySelector('form').addEventListener('submit', function(e) {
-            document.getElementById('modal-carga').classList.add('active');
+</div>
+<script>
+    // Mostrar/ocultar campos según formato
+    function mostrarOpciones() {
+        var formato = document.getElementById('formato').value;
+        document.getElementById('opciones-multiple').style.display = (formato === 'multiple choice') ? 'block' : 'none';
+        document.getElementById('instrucciones-desarrollo').style.display = (formato === 'desarrollo') ? 'block' : 'none';
+        document.getElementById('instrucciones-vf').style.display = (formato === 'verdadero o falso') ? 'block' : 'none';
+    }
+    mostrarOpciones();
+    document.getElementById('formato').addEventListener('change', mostrarOpciones);
+    toggleTemasMath();
+    // Mostrar modal de carga al enviar el formulario
+    document.querySelector('form').addEventListener('submit', function(e) {
+        document.getElementById('modal-carga').classList.add('active');
         });
     </script>
-</body>
-</html> 
+    
+    <script>
+    // Fondo animado tipo red
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let w = window.innerWidth, h = window.innerHeight;
+    canvas.width = w; canvas.height = h;
+    let particles = [];
+    const N = 48;
+    for(let i=0;i<N;i++){
+        particles.push({
+            x: Math.random()*w,
+            y: Math.random()*h,
+            vx: (Math.random()-0.5)*0.7,
+            vy: (Math.random()-0.5)*0.7,
+            r: Math.random()*2+1,
+            o: Math.random()*0.5+0.3
+        });
+    }
+    function drawNet(){
+        ctx.clearRect(0,0,w,h);
+        for(let i=0;i<N;i++){
+            let p=particles[i];
+            ctx.beginPath();
+            ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+            ctx.fillStyle = `rgba(138,180,248,${p.o})`;
+            ctx.fill();
+            for(let j=i+1;j<N;j++){
+                let q=particles[j];
+                let dx=p.x-q.x,dy=p.y-q.y,dist=Math.sqrt(dx*dx+dy*dy);
+                if(dist<120){
+                    ctx.beginPath();
+                    ctx.moveTo(p.x,p.y);
+                    ctx.lineTo(q.x,q.y);
+                    ctx.strokeStyle = `rgba(138,180,248,${0.13*(1-dist/120)})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+    function animate(){
+        for(let p of particles){
+            p.x+=p.vx; p.y+=p.vy;
+            if(p.x<0||p.x>w) p.vx*=-1;
+            if(p.y<0||p.y>h) p.vy*=-1;
+        }
+        drawNet();
+        requestAnimationFrame(animate);
+    }
+    animate();
+    window.addEventListener('resize',()=>{
+        w=window.innerWidth; h=window.innerHeight;
+        canvas.width=w; canvas.height=h;
+    });
+    </script>
+{% endblock %}
+
+{% block nav_buttons %}
+<div class="nav-buttons">
+    <a href="{{ url_for('planificacion') }}" class="nav-btn secondary">
+        <i class="fa-solid fa-calendar-days"></i> Planificación
+    </a>
+    <a href="{{ url_for('wolfram_query') }}" class="nav-btn accent">
+        <i class="fa-solid fa-calculator"></i> Ejercicios matemáticos
+    </a>
+    <a href="{{ url_for('historial') }}" class="nav-btn outline">
+        <i class="fa-solid fa-history"></i> Ver historial
+    </a>
+    <a href="{{ url_for('perfil') }}" class="nav-btn outline">
+        <i class="fa-solid fa-user"></i> Mi perfil
+    </a>
+</div>
+{% endblock %} 

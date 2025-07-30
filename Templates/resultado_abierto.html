@@ -145,6 +145,9 @@
             background: linear-gradient(90deg, #8ab4f8, #a084ee 80%);
             color: #fff;
         }
+        .action-btn.secondary {
+            background: linear-gradient(90deg, #7c3aed, #6d28d9 80%);
+        }
         .action-btn.logout {
             background: linear-gradient(90deg, #f56565, #a084ee 80%);
         }
@@ -193,6 +196,12 @@
         {% endfor %}
     </div>
     <div class="actions">
+        <form action="/cuestionario" method="get" style="display: inline;">
+            <button type="submit" class="action-btn secondary">
+                <i class="fas fa-redo"></i>
+                Rendir el Mismo Examen
+            </button>
+        </form>
         <a href="{{ url_for('index') }}" class="action-btn"><i class="fa-solid fa-house"></i> Volver al inicio</a>
         <a href="{{ url_for('logout') }}" class="action-btn logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
     </div>
