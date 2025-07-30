@@ -19,10 +19,9 @@ import traceback
 
 load_dotenv()
 
+# Configuración de la aplicación
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///examenes.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_object('config.ProductionConfig' if os.environ.get('FLASK_ENV') == 'production' else 'config.DevelopmentConfig')
 app.jinja_env.globals.update(range=range)
 
 db = SQLAlchemy(app)
@@ -959,4 +958,7 @@ def error_interno(e):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    # Configuración para desarrollo
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=debug)
