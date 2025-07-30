@@ -41,6 +41,9 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(200), nullable=False)
     nombre = db.Column(db.String(100), nullable=False)
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
+    como_nos_conociste = db.Column(db.String(100), nullable=True)
+    uso_plataforma = db.Column(db.String(200), nullable=True)
+    preguntas_completadas = db.Column(db.Boolean, default=False)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -117,11 +120,34 @@ def login():
         
         if user and user.check_password(password):
             login_user(user)
-            return redirect(url_for("index"))
+            # Verificar si el usuario ya completó las preguntas
+            if not user.preguntas_completadas:
+                return redirect(url_for("preguntas_usuario"))
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('generar'))
         else:
-            flash("Email o contraseña incorrectos.")
+            flash("Email o contraseña incorrectos")
     
     return render_template("login.html")
+
+@app.route("/preguntas-usuario", methods=["GET", "POST"])
+@login_required
+def preguntas_usuario():
+    if request.method == "POST":
+        como_nos_conociste = request.form.get("como_nos_conociste")
+        uso_plataforma = request.form.get("uso_plataforma")
+        
+        current_user.como_nos_conociste = como_nos_conociste
+        current_user.uso_plataforma = uso_plataforma
+        current_user.preguntas_completadas = True
+        
+        db.session.commit()
+        
+        flash("¡Gracias por tu información! Nos ayuda a mejorar la plataforma.")
+        next_page = request.args.get('next')
+        return redirect(next_page) if next_page else redirect(url_for('generar'))
+    
+    return render_template("preguntas_usuario.html")
 
 @app.route("/logout")
 @login_required
