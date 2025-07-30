@@ -86,12 +86,12 @@ def index():
 @app.route("/registro", methods=["GET", "POST"])
 def registro():
     if request.method == "POST":
-        email = request.form["email"]
+        email = request.form["email"].lower()  # Convertir a minúsculas
         password = request.form["password"]
         nombre = request.form["nombre"]
         
-        # Verificar si el usuario ya existe
-        if User.query.filter_by(email=email).first():
+        # Verificar si el usuario ya existe (case-insensitive)
+        if User.query.filter(User.email.ilike(email)).first():
             flash("El email ya está registrado. Por favor, usa otro email.")
             return render_template("registro.html")
         
@@ -112,10 +112,11 @@ def registro():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
+        email = request.form["email"].lower()  # Convertir a minúsculas
         password = request.form["password"]
         
-        user = User.query.filter_by(email=email).first()
+        # Buscar usuario de forma case-insensitive
+        user = User.query.filter(User.email.ilike(email)).first()
         
         if user and user.check_password(password):
             login_user(user)
