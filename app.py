@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash, make_response
+from flask import Flask, render_template, request, redirect, session, url_for, flash, make_response, send_from_directory
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -1073,6 +1073,11 @@ def sitemap():
     response = make_response(sitemap_xml)
     response.headers["Content-Type"] = "application/xml"
     return response
+
+@app.route("/robots.txt")
+def robots():
+    """Servir robots.txt para SEO"""
+    return send_from_directory('static', 'robots.txt')
 
 
 if __name__ == '__main__':
