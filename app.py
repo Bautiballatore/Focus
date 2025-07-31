@@ -920,22 +920,45 @@ def planificacion():
         from datetime import datetime, timedelta, date
         explicacion_ia = None
         plan = None
-        match = re.search(r'\[\s*{[\s\S]*?}\s*\]', plan_json)
-        if match:
-            json_str = match.group(0)
-            try:
-                plan = json.loads(json_str)
-                print("\n--- PLAN JSON GENERADO POR LA IA ---\n", json.dumps(plan, ensure_ascii=False, indent=2), "\n--- FIN PLAN JSON ---\n")
-            except Exception:
-                plan = None
-            # Si hay texto antes del JSON, lo guardo como explicación
-            if plan_json.strip().startswith(json_str):
-                explicacion_ia = None
+        
+        # Intentar parsear directamente el JSON
+        try:
+            plan = json.loads(plan_json)
+            print("\n--- PLAN JSON GENERADO POR LA IA ---\n", json.dumps(plan, ensure_ascii=False, indent=2), "\n--- FIN PLAN JSON ---\n")
+            explicacion_ia = None  # Si se puede parsear como JSON, no hay explicación
+        except json.JSONDecodeError:
+            # Si no es JSON válido, intentar extraer JSON con regex
+            # Primero intentar extraer JSON de markdown (```json ... ```)
+            markdown_match = re.search(r'```json\s*([\s\S]*?)\s*```', plan_json)
+            if markdown_match:
+                json_str = markdown_match.group(1)
+                try:
+                    plan = json.loads(json_str)
+                    print("\n--- PLAN JSON GENERADO POR LA IA ---\n", json.dumps(plan, ensure_ascii=False, indent=2), "\n--- FIN PLAN JSON ---\n")
+                    explicacion_ia = None
+                except Exception:
+                    plan = None
+                    explicacion_ia = plan_json
             else:
-                explicacion_ia = plan_json.replace(json_str, '').strip()
-        else:
-            # Si no hay JSON, mostrar como texto plano
-            explicacion_ia = plan_json
+                # Intentar extraer JSON normal con regex
+                match = re.search(r'\[\s*{[\s\S]*?}\s*\]', plan_json)
+                if match:
+                    json_str = match.group(0)
+                    try:
+                        plan = json.loads(json_str)
+                        print("\n--- PLAN JSON GENERADO POR LA IA ---\n", json.dumps(plan, ensure_ascii=False, indent=2), "\n--- FIN PLAN JSON ---\n")
+                        # Si hay texto antes del JSON, lo guardo como explicación
+                        if plan_json.strip() != json_str.strip():
+                            explicacion_ia = plan_json.replace(json_str, '').strip()
+                        else:
+                            explicacion_ia = None
+                    except Exception:
+                        plan = None
+                        explicacion_ia = plan_json
+                else:
+                    # Si no hay JSON, mostrar como texto plano
+                    explicacion_ia = plan_json
+                    plan = None
         # Preparar datos para el calendario visual (igual que antes)
         days_list = []
         actividades_por_fecha = {}
