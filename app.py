@@ -201,7 +201,7 @@ def generar():
             )
             try:
                 enunciado_gpt = client.chat.completions.create(
-                    model="gpt-4.1",
+                    model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": "Sos un generador de ejercicios matemáticos para exámenes."},
                         {"role": "user", "content": prompt}
@@ -310,7 +310,7 @@ def generar():
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4.1",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Sos un generador de exámenes"},
                 {"role": "user", "content": prompt + "\n\n" + texto[:3000]}
@@ -878,7 +878,7 @@ def planificacion():
         # Consultar a OpenAI
         try:
             response = client.chat.completions.create(
-                model="gpt-4.1",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "Sos un planificador de estudio experto."},
                     {"role": "user", "content": prompt}
