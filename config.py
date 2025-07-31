@@ -15,7 +15,7 @@ class Config:
     WOLFRAM_APP_ID = os.getenv('WOLFRAM_APP_ID', 'AV6EGRRK9V')
     
     # Configuración de seguridad
-    SESSION_COOKIE_SECURE = os.environ.get('FLASK_ENV') == 'production'
+    SESSION_COOKIE_SECURE = False  # Cambiado para permitir HTTP
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
 
@@ -28,7 +28,7 @@ class ProductionConfig(Config):
     FLASK_ENV = 'production'
     
     # Configuraciones adicionales para producción
-    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = False  # Cambiado para permitir HTTP
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
 
