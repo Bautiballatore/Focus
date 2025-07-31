@@ -323,11 +323,34 @@ def generar():
         print("\n\n--- RESPUESTA IA RAW ---\n", preguntas_raw, "\n--- FIN RESPUESTA ---\n\n")
 
         if preguntas_raw:
-            # Mejorar el regex para capturar cada pregunta individual
-            bloques = re.findall(r"\*\*Enunciado \d+:\*\*\s*([\s\S]*?)(?=\*\*Enunciado \d+:\*\*|\Z)", preguntas_raw.strip())
-            if not bloques:
-                # Fallback para formato sin asteriscos
-                bloques = re.findall(r"Enunciado \d+:\s*([\s\S]*?)(?=\nEnunciado \d+:|\Z)", preguntas_raw.strip())
+            # Dividir por líneas y procesar manualmente
+            lineas = preguntas_raw.strip().split('\n')
+            bloques = []
+            bloque_actual = []
+            en_pregunta = False
+            
+            for linea in lineas:
+                linea = linea.strip()
+                if not linea:
+                    continue
+                
+                # Detectar inicio de nueva pregunta
+                if linea.startswith('**Enunciado') or linea.startswith('Enunciado'):
+                    if bloque_actual:
+                        bloques.append('\n'.join(bloque_actual))
+                        bloque_actual = []
+                    en_pregunta = True
+                    bloque_actual.append(linea)
+                elif en_pregunta:
+                    bloque_actual.append(linea)
+                    # Detectar fin de pregunta (cuando encontramos Respuesta:)
+                    if linea.startswith('Respuesta:'):
+                        en_pregunta = False
+            
+            # Agregar el último bloque
+            if bloque_actual:
+                bloques.append('\n'.join(bloque_actual))
+            
             print(f"\n--- BLOQUES ENCONTRADOS: {len(bloques)} ---\n")
             for i, bloque in enumerate(bloques):
                 print(f"Bloque {i+1}: {bloque[:100]}...")
