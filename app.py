@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash
+from flask import Flask, render_template, request, redirect, session, url_for, flash, make_response
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -1024,6 +1024,55 @@ def pagina_no_encontrada(e):
 def error_interno(e):
     return render_template('500.html'), 500
 
+@app.route("/sitemap.xml")
+def sitemap():
+    """Generar sitemap.xml para SEO"""
+    from datetime import datetime
+    
+    # URLs principales del sitio
+    urls = [
+        {
+            'loc': url_for('index', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'weekly',
+            'priority': '1.0'
+        },
+        {
+            'loc': url_for('login', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'monthly',
+            'priority': '0.8'
+        },
+        {
+            'loc': url_for('registro', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'monthly',
+            'priority': '0.8'
+        },
+        {
+            'loc': url_for('generar', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'weekly',
+            'priority': '0.9'
+        },
+        {
+            'loc': url_for('planificacion', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'weekly',
+            'priority': '0.9'
+        },
+        {
+            'loc': url_for('como_funciona', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'monthly',
+            'priority': '0.7'
+        }
+    ]
+    
+    sitemap_xml = render_template('sitemap.xml', urls=urls)
+    response = make_response(sitemap_xml)
+    response.headers["Content-Type"] = "application/xml"
+    return response
 
 
 if __name__ == '__main__':

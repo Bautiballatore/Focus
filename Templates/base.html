@@ -3,7 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
     <title>{% block title %}Focus Studio - Plataforma IA para estudiar mejor{% endblock %}</title>
+    <meta name="description" content="{% block description %}Focus Studio es una plataforma de IA que te ayuda a generar exámenes personalizados y crear planes de estudio inteligentes. Mejora tu rendimiento académico con tecnología avanzada.{% endblock %}">
+    <meta name="keywords" content="{% block keywords %}exámenes, IA, inteligencia artificial, estudio, planificación, educación, aprendizaje, generador de exámenes, plan de estudio{% endblock %}">
+    <meta name="author" content="Focus Studio">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.focusstudio.com/">
+    <meta property="og:title" content="{% block og_title %}Focus Studio - Plataforma IA para estudiar mejor{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Genera exámenes personalizados y crea planes de estudio inteligentes con IA. Mejora tu rendimiento académico.{% endblock %}">
+    <meta property="og:image" content="https://www.focusstudio.com/static/generador.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.focusstudio.com/">
+    <meta property="twitter:title" content="{% block twitter_title %}Focus Studio - Plataforma IA para estudiar mejor{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}Genera exámenes personalizados y crea planes de estudio inteligentes con IA.{% endblock %}">
+    <meta property="twitter:image" content="https://www.focusstudio.com/static/generador.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.focusstudio.com{{ request.path }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>

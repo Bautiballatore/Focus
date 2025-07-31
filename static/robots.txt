@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.focusstudio.com/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /private/ 
