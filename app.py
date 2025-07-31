@@ -323,7 +323,11 @@ def generar():
         print("\n\n--- RESPUESTA IA RAW ---\n", preguntas_raw, "\n--- FIN RESPUESTA ---\n\n")
 
         if preguntas_raw:
-            bloques = re.findall(r"Enunciado \d+:\s*([\s\S]*?)(?=\nEnunciado \d+:|\Z)", preguntas_raw.strip())
+            # Mejorar el regex para capturar cada pregunta individual
+            bloques = re.findall(r"\*\*Enunciado \d+:\*\*\s*([\s\S]*?)(?=\*\*Enunciado \d+:\*\*|\Z)", preguntas_raw.strip())
+            if not bloques:
+                # Fallback para formato sin asteriscos
+                bloques = re.findall(r"Enunciado \d+:\s*([\s\S]*?)(?=\nEnunciado \d+:|\Z)", preguntas_raw.strip())
             print(f"\n--- BLOQUES ENCONTRADOS: {len(bloques)} ---\n")
             for i, bloque in enumerate(bloques):
                 print(f"Bloque {i+1}: {bloque[:100]}...")
