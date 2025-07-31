@@ -982,6 +982,14 @@ def planificacion():
             ]
             fechas_ordenadas.sort(key=lambda x: x[0])
             print("\n--- FECHAS ORDENADAS PARA TIMELINE ---\n", fechas_ordenadas, "\n--- FIN FECHAS ORDENADAS ---\n")
+        
+        # Debug: imprimir valores que se pasan al template
+        print("\n--- VALORES PARA TEMPLATE ---")
+        print(f"plan: {plan}")
+        print(f"explicacion_ia: {explicacion_ia}")
+        print(f"plan_json: {plan_json[:200]}...")
+        print("--- FIN VALORES ---\n")
+        
         return render_template("planificacion_resultado.html", plan=plan, plan_json=plan_json, days_list=days_list, actividades_por_fecha=actividades_por_fecha, explicacion_ia=explicacion_ia, fechas_ordenadas=fechas_ordenadas)
     return render_template("planificacion.html")
 
