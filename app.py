@@ -1079,6 +1079,11 @@ def robots():
     """Servir robots.txt para SEO"""
     return send_from_directory('static', 'robots.txt')
 
+@app.route("/google48eb92cb7318a041.html")
+def google_verification():
+    """Archivo de verificación de Google Search Console"""
+    return send_from_directory('static', 'google48eb92cb7318a041.html')
+
 
 if __name__ == '__main__':
     # Configuración para desarrollo
