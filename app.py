@@ -324,8 +324,13 @@ def generar():
 
         if preguntas_raw:
             bloques = re.findall(r"Enunciado \d+:\s*([\s\S]*?)(?=\nEnunciado \d+:|\Z)", preguntas_raw.strip())
+            print(f"\n--- BLOQUES ENCONTRADOS: {len(bloques)} ---\n")
+            for i, bloque in enumerate(bloques):
+                print(f"Bloque {i+1}: {bloque[:100]}...")
         else:
             bloques = []
+            print("\n--- NO SE ENCONTRARON BLOQUES ---\n")
+        
         preguntas = []
         for bloque in bloques:
             lineas = bloque.strip().split("\n")
@@ -363,15 +368,19 @@ def generar():
                 tipo = "desarrollo"
 
             if tipo in ["multiple", "vf"] and respuesta == "indefinida":
+                print(f"\n--- PREGUNTA DESCARTADA: {enunciado[:50]}... ---\n")
                 continue
 
             preguntas.append({"enunciado": enunciado, "opciones": opciones, "respuesta": respuesta, "tipo": tipo, "tema": "General"})
+            print(f"\n--- PREGUNTA AGREGADA: {enunciado[:50]}... (tipo: {tipo}, respuesta: {respuesta}) ---\n")
 
         # Validar que haya preguntas y que todos los enunciados sean válidos
         if not preguntas or any(not p["enunciado"].strip() for p in preguntas):
             mensaje_error = "No se pudieron generar preguntas válidas. Verificá el texto, el formato o intentá nuevamente."
+            print(f"\n--- ERROR: {mensaje_error} ---\n")
             return render_template("generar.html", mensaje_error=mensaje_error)
 
+        print(f"\n--- PREGUNTAS FINALES: {len(preguntas)} ---\n")
         session["preguntas"] = preguntas
         session["respuestas"] = ["" for _ in preguntas]
         session["start_time"] = time.time()
@@ -379,6 +388,7 @@ def generar():
         session["last_question_time"] = time.time()
 
     except Exception as e:
+        print(f"\n--- EXCEPCIÓN: {str(e)} ---\n")
         return f"Error al generar preguntas: {str(e)}"
 
     return redirect(url_for('pregunta', numero=0))
