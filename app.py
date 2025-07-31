@@ -351,7 +351,7 @@ def generar():
             for l in lineas:
                 l_strip = l.strip().lower()
                 if l_strip.startswith("respuesta"):
-                    raw_resp = l.split(":")[-1].strip().lower()
+                    raw_resp = l.split(":")[-1].strip().lower().rstrip('.')  # Remover punto al final
                     if raw_resp in ["verdadero", "falso"]:
                         respuesta = raw_resp
                     elif raw_resp in ["a", "b", "c", "d", "e"]:
