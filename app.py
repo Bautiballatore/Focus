@@ -206,7 +206,8 @@ def generar():
                         {"role": "system", "content": "Sos un generador de ejercicios matemáticos para exámenes."},
                         {"role": "user", "content": prompt}
                     ],
-                    max_tokens=120
+                    max_tokens=120,
+                    timeout=30
                 ).choices[0].message.content.strip()
             except Exception as e:
                 enunciado_gpt = f"[Error al generar enunciado: {str(e)}]"
@@ -224,7 +225,7 @@ def generar():
                     "appid": app_id,
                     "format": "image,plaintext"
                 }
-                resp = requests.get(url, params=params)
+                resp = requests.get(url, params=params, timeout=30)
                 solucion = ""
                 pods = []
                 img_enunciado = None
@@ -315,7 +316,8 @@ def generar():
                 {"role": "system", "content": "Sos un generador de exámenes"},
                 {"role": "user", "content": prompt + "\n\n" + texto[:3000]}
             ],
-            max_tokens=2000
+            max_tokens=2000,
+            timeout=60
         )
         preguntas_raw = response.choices[0].message.content
 
@@ -416,7 +418,9 @@ def generar():
 
     except Exception as e:
         print(f"\n--- EXCEPCIÓN: {str(e)} ---\n")
-        return f"Error al generar preguntas: {str(e)}"
+        import traceback
+        traceback.print_exc()
+        return render_template("generar.html", mensaje_error=f"Error al generar preguntas: {str(e)}. Por favor, intenta nuevamente.")
 
     return redirect(url_for('pregunta', numero=0))
 
@@ -509,7 +513,8 @@ def resultado():
                             {"role": "system", "content": "Sos un profesor que explica brevemente por qué una respuesta es correcta en un examen."},
                             {"role": "user", "content": prompt_ia}
                         ],
-                        max_tokens=120
+                        max_tokens=120,
+                        timeout=30
                     ).choices[0].message.content.strip()
                 except Exception as e:
                     explicacion_ia = "(No se pudo generar explicación IA)"
@@ -538,7 +543,8 @@ def resultado():
                         {"role": "system", "content": "Sos un corrector de exámenes"},
                         {"role": "user", "content": prompt}
                     ],
-                    max_tokens=500
+                    max_tokens=500,
+                    timeout=45
                 ).choices[0].message.content
 
                 if feedback_raw:
@@ -594,7 +600,8 @@ def resultado():
                     {"role": "system", "content": "Sos un tutor experto en ayudar a estudiantes a mejorar en exámenes."},
                     {"role": "user", "content": prompt_general}
                 ],
-                max_tokens=200
+                max_tokens=200,
+                timeout=45
             ).choices[0].message.content.strip()
         except Exception as e:
             feedback_general = "(No se pudo generar feedback personalizado)"
@@ -738,7 +745,8 @@ def wolfram_query():
                         {"role": "system", "content": "Sos un traductor de frases matemáticas a consultas para Wolfram Alpha."},
                         {"role": "user", "content": prompt_ia}
                     ],
-                    max_tokens=60
+                    max_tokens=60,
+                    timeout=30
                 ).choices[0].message.content.strip()
             except Exception as e:
                 error = f"No se pudo traducir la frase a consulta matemática: {str(e)}"
@@ -749,7 +757,7 @@ def wolfram_query():
                 "appid": app_id,
                 "format": "image,plaintext"
             }
-            resp = requests.get(url, params=params)
+            resp = requests.get(url, params=params, timeout=30)
             if resp.status_code != 200:
                 error = f"Error HTTP: {resp.status_code}"
             else:
@@ -815,7 +823,7 @@ def resultado_matematico():
                 # 1. Consulta directa
                 consulta_equiv = f"is ({usuario}) = ({solucion})"
                 params = {"input": consulta_equiv, "appid": app_id, "format": "plaintext"}
-                resp = requests.get(url, params=params)
+                resp = requests.get(url, params=params, timeout=30)
                 if resp.status_code == 200:
                     import xml.etree.ElementTree as ET
                     root = ET.fromstring(resp.text)
@@ -831,7 +839,7 @@ def resultado_matematico():
                     derecha = solucion.split('=')[-1].strip()
                     consulta_equiv2 = f"is ({usuario}) = ({derecha})"
                     params2 = {"input": consulta_equiv2, "appid": app_id, "format": "plaintext"}
-                    resp2 = requests.get(url, params=params2)
+                    resp2 = requests.get(url, params=params2, timeout=30)
                     if resp2.status_code == 200:
                         root2 = ET.fromstring(resp2.text)
                         for pod in root2.findall(".//pod"):
@@ -910,7 +918,8 @@ def planificacion():
                     {"role": "system", "content": "Sos un planificador de estudio experto."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=1200
+                max_tokens=1200,
+                timeout=90
             )
             plan_json = response.choices[0].message.content.strip()
         except Exception as e:
