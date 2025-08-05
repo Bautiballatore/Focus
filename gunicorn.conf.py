@@ -1,9 +1,13 @@
 # Configuración de Gunicorn para evitar timeouts
 import multiprocessing
+import os
 
 # Configuración básica
 bind = "0.0.0.0:8080"
-workers = multiprocessing.cpu_count() * 2 + 1
+
+# Configuración de workers más conservadora para Heroku
+# Heroku tiene limitaciones de memoria, usar menos workers
+workers = int(os.environ.get('WEB_CONCURRENCY', 2))
 worker_class = "sync"
 worker_connections = 1000
 
