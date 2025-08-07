@@ -46,9 +46,10 @@
             border-radius: 24px;
             padding: 40px 32px 32px 32px;
             max-width: 400px;
-            width: 100%;
-            margin: 32px 0;
+            width: 90%;
+            margin: 32px auto;
             backdrop-filter: blur(12px);
+            box-sizing: border-box;
         }
         .header {
             text-align: center;
@@ -86,6 +87,7 @@
             background: rgba(30,30,40,0.7);
             color: var(--text-main);
             transition: border 0.2s;
+            box-sizing: border-box;
         }
         .form-group input:focus {
             outline: none;
@@ -180,7 +182,11 @@
             border: 1px solid #a855f7;
         }
         @media (max-width: 480px) {
-            .glass { padding: 24px 8px; }
+            .glass { 
+                padding: 24px 16px; 
+                width: 95%;
+                margin: 16px auto;
+            }
         }
     </style>
 </head>
