@@ -389,10 +389,10 @@ def generar():
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Sos un generador de exámenes"},
-                {"role": "user", "content": prompt + "\n\n" + texto[:1500]}
+                {"role": "user", "content": prompt + "\n\n" + texto[:3000]}
             ],
-            max_tokens=1500,
-            timeout=25
+            max_tokens=3000,
+            timeout=60
         )
         preguntas_raw = response.choices[0].message.content
 
