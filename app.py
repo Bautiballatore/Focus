@@ -389,10 +389,10 @@ def generar():
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Sos un generador de exámenes"},
-                {"role": "user", "content": prompt + "\n\n" + texto[:3000]}
+                {"role": "user", "content": prompt + "\n\n" + texto[:1500]}
             ],
-            max_tokens=2000,
-            timeout=60
+            max_tokens=1500,
+            timeout=25
         )
         preguntas_raw = response.choices[0].message.content
 
@@ -495,7 +495,12 @@ def generar():
         print(f"\n--- EXCEPCIÓN: {str(e)} ---\n")
         import traceback
         traceback.print_exc()
-        return render_template("generar.html", mensaje_error=f"Error al generar preguntas: {str(e)}. Por favor, intenta nuevamente.")
+        
+        # Manejo específico para timeouts
+        if "timeout" in str(e).lower() or "timed out" in str(e).lower():
+            return render_template("generar.html", mensaje_error="La generación tardó demasiado tiempo en Heroku. Por favor, intenta con un archivo más pequeño, menos preguntas, o usa la versión local.")
+        else:
+            return render_template("generar.html", mensaje_error=f"Error al generar preguntas: {str(e)}. Por favor, intenta nuevamente.")
 
     return redirect(url_for('pregunta', numero=0))
 
