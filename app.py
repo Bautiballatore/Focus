@@ -283,9 +283,12 @@ def generar():
             print(f"Total de páginas: {len(reader.pages)}")
             
             texto = ""
-            for i, page in enumerate(reader.pages):
+            max_pages = min(len(reader.pages), 7)  # 🎯 LÍMITE: Solo las primeras 7 páginas
+            print(f"Procesando primeras {max_pages} páginas de {len(reader.pages)} totales")
+            
+            for i in range(max_pages):
                 try:
-                    page_text = page.extract_text()
+                    page_text = reader.pages[i].extract_text()
                     if page_text and page_text.strip():
                         texto += f"\n--- PÁGINA {i+1} ---\n{page_text.strip()}\n"
                         print(f"Página {i+1}: {len(page_text)} caracteres extraídos")
@@ -293,6 +296,10 @@ def generar():
                         print(f"Página {i+1}: Sin texto extraído (página vacía o imagen)")
                 except Exception as e:
                     print(f"Página {i+1}: Error al extraer texto - {str(e)}")
+            
+            if len(reader.pages) > max_pages:
+                print(f"⚠️  NOTA: Solo se procesaron las primeras {max_pages} páginas de {len(reader.pages)}")
+                print(f"💡 Para procesar más páginas, considera dividir el PDF en archivos más pequeños")
             
             # Si no se extrajo texto, intentar métodos alternativos
             if not texto.strip():
@@ -323,10 +330,17 @@ def generar():
             print(f"Total de párrafos: {len(doc.paragraphs)}")
             
             texto = ""
-            for i, paragraph in enumerate(doc.paragraphs):
-                if paragraph.text.strip():
-                    texto += paragraph.text + "\n"
-                    print(f"Párrafo {i+1}: {len(paragraph.text)} caracteres")
+            max_paragraphs = min(len(doc.paragraphs), 50)  # 🎯 LÍMITE: Solo los primeros 50 párrafos (equivalente a ~7 páginas)
+            print(f"Procesando primeros {max_paragraphs} párrafos de {len(doc.paragraphs)} totales")
+            
+            for i in range(max_paragraphs):
+                if doc.paragraphs[i].text.strip():
+                    texto += doc.paragraphs[i].text + "\n"
+                    print(f"Párrafo {i+1}: {len(doc.paragraphs[i].text)} caracteres")
+            
+            if len(doc.paragraphs) > max_paragraphs:
+                print(f"⚠️  NOTA: Solo se procesaron los primeros {max_paragraphs} párrafos de {len(doc.paragraphs)}")
+                print(f"💡 Para procesar más contenido, considera dividir el documento en archivos más pequeños")
             
             print(f"\n--- RESUMEN DOCX ---")
             print(f"Archivo: {archivo.filename}")
