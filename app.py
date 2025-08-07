@@ -271,15 +271,50 @@ def generar():
     texto = ""
     if archivo and archivo.filename:
         if archivo.filename.endswith(".txt"):
+            print(f"\n--- PROCESANDO ARCHIVO TXT: {archivo.filename} ---")
             texto = archivo.read().decode("utf-8")
+            print(f"Total de caracteres: {len(texto)}")
+            print(f"Primeros 500 caracteres: {texto[:500]}...")
+            print("--- FIN ARCHIVO TXT ---\n")
         elif archivo.filename.endswith(".pdf"):
             pdf_stream = BytesIO(archivo.read())
             reader = PyPDF2.PdfReader(pdf_stream)
-            texto = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+            print(f"\n--- PROCESANDO PDF: {archivo.filename} ---")
+            print(f"Total de páginas: {len(reader.pages)}")
+            
+            texto = ""
+            for i, page in enumerate(reader.pages):
+                page_text = page.extract_text()
+                if page_text:
+                    texto += f"\n--- PÁGINA {i+1} ---\n{page_text}\n"
+                    print(f"Página {i+1}: {len(page_text)} caracteres extraídos")
+                else:
+                    print(f"Página {i+1}: Sin texto extraído")
+            
+            print(f"\n--- RESUMEN PDF ---")
+            print(f"Archivo: {archivo.filename}")
+            print(f"Páginas procesadas: {len(reader.pages)}")
+            print(f"Total de caracteres extraídos: {len(texto)}")
+            print(f"Primeros 500 caracteres: {texto[:500]}...")
+            print("--- FIN RESUMEN PDF ---\n")
         elif archivo.filename.endswith(".docx"):
+            print(f"\n--- PROCESANDO ARCHIVO DOCX: {archivo.filename} ---")
             docx_stream = BytesIO(archivo.read())
             doc = docx.Document(docx_stream)
-            texto = "\n".join([p.text for p in doc.paragraphs])
+            print(f"Total de párrafos: {len(doc.paragraphs)}")
+            
+            texto = ""
+            for i, paragraph in enumerate(doc.paragraphs):
+                if paragraph.text.strip():
+                    texto += paragraph.text + "\n"
+                    print(f"Párrafo {i+1}: {len(paragraph.text)} caracteres")
+            
+            print(f"\n--- RESUMEN DOCX ---")
+            print(f"Archivo: {archivo.filename}")
+            print(f"Párrafos procesados: {len(doc.paragraphs)}")
+            print(f"Total de caracteres extraídos: {len(texto)}")
+            print(f"Primeros 500 caracteres: {texto[:500]}...")
+            print("--- FIN RESUMEN DOCX ---\n")
         print("\n--- TEXTO EXTRAÍDO DEL ARCHIVO (GENERADOR) ---\n", texto, "\n--- FIN TEXTO EXTRAÍDO ---\n")
     elif tema:
         texto = f"Tema: {tema}."
