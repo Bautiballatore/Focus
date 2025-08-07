@@ -284,18 +284,37 @@ def generar():
             
             texto = ""
             for i, page in enumerate(reader.pages):
-                page_text = page.extract_text()
-                if page_text:
-                    texto += f"\n--- PÁGINA {i+1} ---\n{page_text}\n"
-                    print(f"Página {i+1}: {len(page_text)} caracteres extraídos")
-                else:
-                    print(f"Página {i+1}: Sin texto extraído")
+                try:
+                    page_text = page.extract_text()
+                    if page_text and page_text.strip():
+                        texto += f"\n--- PÁGINA {i+1} ---\n{page_text.strip()}\n"
+                        print(f"Página {i+1}: {len(page_text)} caracteres extraídos")
+                    else:
+                        print(f"Página {i+1}: Sin texto extraído (página vacía o imagen)")
+                except Exception as e:
+                    print(f"Página {i+1}: Error al extraer texto - {str(e)}")
+            
+            # Si no se extrajo texto, intentar métodos alternativos
+            if not texto.strip():
+                print("⚠️  ADVERTENCIA: No se pudo extraer texto del PDF")
+                print("💡 Posibles causas:")
+                print("   - PDF escaneado (solo imágenes)")
+                print("   - PDF con protección DRM")
+                print("   - PDF con fuentes especiales")
+                print("   - PDF con layout complejo")
+                print("💡 Soluciones:")
+                print("   - Usar un PDF con texto seleccionable")
+                print("   - Convertir el PDF a texto primero")
+                print("   - Usar un archivo TXT o DOCX en su lugar")
             
             print(f"\n--- RESUMEN PDF ---")
             print(f"Archivo: {archivo.filename}")
             print(f"Páginas procesadas: {len(reader.pages)}")
             print(f"Total de caracteres extraídos: {len(texto)}")
-            print(f"Primeros 500 caracteres: {texto[:500]}...")
+            if texto.strip():
+                print(f"Primeros 500 caracteres: {texto[:500]}...")
+            else:
+                print("❌ NO SE EXTRAJO TEXTO DEL PDF")
             print("--- FIN RESUMEN PDF ---\n")
         elif archivo.filename.endswith(".docx"):
             print(f"\n--- PROCESANDO ARCHIVO DOCX: {archivo.filename} ---")
@@ -316,6 +335,13 @@ def generar():
             print(f"Primeros 500 caracteres: {texto[:500]}...")
             print("--- FIN RESUMEN DOCX ---\n")
         print("\n--- TEXTO EXTRAÍDO DEL ARCHIVO (GENERADOR) ---\n", texto, "\n--- FIN TEXTO EXTRAÍDO ---\n")
+        
+        # Validar que se extrajo texto del archivo
+        if archivo and archivo.filename and not texto.strip():
+            if archivo.filename.endswith(".pdf"):
+                return render_template("generar.html", mensaje_error="No se pudo extraer texto del PDF. Posibles causas: PDF escaneado, con protección DRM, o con fuentes especiales. Intenta con un PDF que tenga texto seleccionable o usa un archivo TXT/DOCX.")
+            else:
+                return render_template("generar.html", mensaje_error="No se pudo extraer texto del archivo. Verifica que el archivo contenga texto legible.")
     elif tema:
         texto = f"Tema: {tema}."
     else:
