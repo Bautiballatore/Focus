@@ -1163,6 +1163,18 @@ def sitemap():
     response.headers["Content-Type"] = "application/xml"
     return response
 
+@app.route("/admin/usuarios")
+@login_required
+def ver_usuarios():
+    """Panel de administración para ver usuarios registrados"""
+    # Solo permitir acceso al administrador (tu email)
+    if current_user.email != "ballatorebauti@gmail.com":  # CAMBIA ESTO POR TU EMAIL REAL
+        flash("Acceso denegado. Solo el administrador puede ver esta página.")
+        return redirect(url_for('index'))
+    
+    usuarios = User.query.all()
+    return render_template('admin_usuarios.html', usuarios=usuarios)
+
 @app.route("/robots.txt")
 def robots():
     """Servir robots.txt para SEO"""
