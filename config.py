@@ -28,6 +28,8 @@ class ProductionConfig(Config):
     DEBUG = False
     FLASK_ENV = 'production'
     SESSION_COOKIE_SECURE = True  # HTTPS para producción
+    # Temporalmente usar SQLite para que funcione
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///examenes.db'
 
 config = {
     'development': DevelopmentConfig,
