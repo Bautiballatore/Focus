@@ -17,12 +17,17 @@ class Config:
     # Configuración de seguridad
     SESSION_COOKIE_SECURE = True  # Cambiado para HTTPS
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Strict'  # Más estricto para evitar sesiones cruzadas
+    PERMANENT_SESSION_LIFETIME = 3600  # Sesiones expiran en 1 hora
+    SESSION_COOKIE_MAX_AGE = 3600  # Cookies expiran en 1 hora
 
 class DevelopmentConfig(Config):
     DEBUG = True
     FLASK_ENV = 'development'
     SESSION_COOKIE_SECURE = False  # HTTP para desarrollo
+    SESSION_COOKIE_SAMESITE = 'Strict'  # Más estricto para evitar sesiones cruzadas
+    PERMANENT_SESSION_LIFETIME = 3600  # Sesiones expiran en 1 hora
+    SESSION_COOKIE_MAX_AGE = 3600  # Cookies expiran en 1 hora
 
 class ProductionConfig(Config):
     DEBUG = False
