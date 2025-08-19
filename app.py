@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash, make_response, send_from_directory
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy  # Comentado: no se usa en Supabase
 from werkzeug.security import generate_password_hash, check_password_hash
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -36,7 +36,7 @@ else:
     print("❌ Supabase credentials not found!")
     supabase = None
 
-db = SQLAlchemy(app)
+# db = SQLAlchemy(app)  # Comentado: no se usa en Supabase
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -62,30 +62,31 @@ class User(UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-class Examen(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
-    nota = db.Column(db.Float)
-    correctas = db.Column(db.Integer)
-    parciales = db.Column(db.Integer)
-    incorrectas = db.Column(db.Integer)
-    total = db.Column(db.Integer)
-    tiempo_total = db.Column(db.Float)
-    feedback_general = db.Column(db.String(500))
-    user = db.relationship('User', backref=db.backref('examenes', lazy=True))
-    preguntas = db.relationship('PreguntaExamen', backref='examen', lazy=True)
+# Modelos SQLAlchemy comentados - no se usan en Supabase
+# class Examen(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     fecha = db.Column(db.DateTime, default=datetime.utcnow)
+#     nota = db.Column(db.Float)
+#     correctas = db.Column(db.Integer)
+#     parciales = db.Column(db.Integer)
+#     incorrectas = db.Column(db.Integer)
+#     total = db.Column(db.Integer)
+#     tiempo_total = db.Column(db.Float)
+#     feedback_general = db.Column(db.String(500))
+#     user = db.relationship('User', backref=db.backref('examenes', lazy=True))
+#     preguntas = db.relationship('PreguntaExamen', backref='examen', lazy=True)
 
-class PreguntaExamen(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    examen_id = db.Column(db.Integer, db.ForeignKey('examen.id'), nullable=False)
-    enunciado = db.Column(db.String(500))
-    opciones = db.Column(db.Text)  # JSON string
-    respuesta_usuario = db.Column(db.String(100))
-    respuesta_correcta = db.Column(db.String(100))
-    tipo = db.Column(db.String(20))
-    tema = db.Column(db.String(100))
-    feedback = db.Column(db.Text)
+# class PreguntaExamen(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     examen_id = db.Column(db.Integer, db.ForeignKey('examen.id'), nullable=False)
+#     enunciado = db.Column(db.String(500))
+#     opciones = db.Column(db.Text)  # JSON string
+#     respuesta_usuario = db.Column(db.String(100))
+#     respuesta_correcta = db.Column(db.String(100))
+#     tipo = db.Column(db.String(20))
+#     tema = db.Column(db.String(100))
+#     feedback = db.Column(db.Text)
 
 @login_manager.user_loader
 def load_user(user_id):
