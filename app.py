@@ -1175,6 +1175,8 @@ def google_verification():
     """Archivo de verificación de Google Search Console"""
     return send_from_directory('static', 'google48eb92cb7318a041.html')
 
+# Panel de administración removido - usar Supabase directamente
+
 
 if __name__ == '__main__':
     # Configuración para desarrollo
