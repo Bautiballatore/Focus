@@ -15,6 +15,8 @@ import requests
 import base64
 import xml.etree.ElementTree as ET
 import traceback
+
+# Supabase imports
 from supabase import create_client, Client
 
 load_dotenv()
@@ -22,17 +24,18 @@ load_dotenv()
 # Configuración de la aplicación
 app = Flask(__name__, template_folder='Templates')
 app.config.from_object('config.ProductionConfig' if os.environ.get('FLASK_ENV') == 'production' else 'config.DevelopmentConfig')
+
 app.jinja_env.globals.update(range=range)
 
-# Configuración de Supabase
-SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://youohevduvkkptdcrmut.supabase.co')
-SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvdW9oZXZkdXZra3B0ZGNybXV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MjgyOTQsImV4cCI6MjA3MTIwNDI5NH0.VTg8bqARO-R11D-vNw6epmK6XkGVrT05BcdXyOkBW24')
+# Inicializar Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-try:
+if SUPABASE_URL and SUPABASE_ANON_KEY:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
     print("✅ Supabase client initialized successfully!")
-except Exception as e:
-    print(f"❌ Error initializing Supabase: {e}")
+else:
+    print("❌ Supabase credentials not found!")
     supabase = None
 
 login_manager = LoginManager()
@@ -45,13 +48,14 @@ app_id = "AV6EGRRK9V"
 
 # Modelo de Usuario simplificado para Supabase
 class User(UserMixin):
-    def __init__(self, id, email, nombre, fecha_registro, como_nos_conociste=None, uso_plataforma=None):
+    def __init__(self, id, email, nombre, fecha_registro, como_nos_conociste=None, uso_plataforma=None, preguntas_completadas=False):
         self.id = id
         self.email = email
         self.nombre = nombre
         self.fecha_registro = fecha_registro
         self.como_nos_conociste = como_nos_conociste
         self.uso_plataforma = uso_plataforma
+        self.preguntas_completadas = preguntas_completadas
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -73,7 +77,8 @@ def load_user(user_id):
                     nombre=user_data['nombre'],
                     fecha_registro=datetime.fromisoformat(user_data['fecha_registro'].replace('Z', '+00:00')),
                     como_nos_conociste=user_data.get('como_nos_conociste'),
-                    uso_plataforma=user_data.get('plataforma_uso')
+                    uso_plataforma=user_data.get('plataforma_uso'),
+                    preguntas_completadas=user_data.get('preguntas_completadas', False)
                 )
     except Exception as e:
         print(f"Error loading user: {e}")
@@ -105,7 +110,8 @@ def registro():
                     'nombre': nombre,
                     'password_hash': password_hash,
                     'fecha_registro': datetime.utcnow().isoformat(),
-                    'activo': True
+                    'activo': True,
+                    'preguntas_completadas': False
                 }
                 
                 response = supabase.table('usuarios').insert(user_data).execute()
@@ -144,22 +150,20 @@ def login():
                             nombre=user_data['nombre'],
                             fecha_registro=datetime.fromisoformat(user_data['fecha_registro'].replace('Z', '+00:00')),
                             como_nos_conociste=user_data.get('como_nos_conociste'),
-                            uso_plataforma=user_data.get('plataforma_uso')
+                            uso_plataforma=user_data.get('plataforma_uso'),
+                            preguntas_completadas=user_data.get('preguntas_completadas', False)
                         )
                         login_user(user)
                         
                         # Log de actividad
-                        try:
-                            log_data = {
-                                'usuario_id': user_data['id'],
-                                'tipo_actividad': 'login',
-                                'fecha_actividad': datetime.utcnow().isoformat(),
-                                'detalles': {'accion': 'Usuario inició sesión'},
-                                'ip_address': request.remote_addr
-                            }
-                            supabase.table('logs_actividad').insert(log_data).execute()
-                        except Exception as e:
-                            print(f"Error logging activity: {e}")
+                        log_data = {
+                            'usuario_id': user.id,
+                            'tipo_actividad': 'login',
+                            'fecha_actividad': datetime.utcnow().isoformat(),
+                            'detalles': {'accion': 'Usuario inició sesión'},
+                            'ip_address': request.remote_addr
+                        }
+                        supabase.table('logs_actividad').insert(log_data).execute()
                         
                         return redirect(url_for('preguntas_usuario'))
                     else:
@@ -188,6 +192,7 @@ def preguntas_usuario():
                 update_data = {
                     'como_nos_conociste': como_nos_conociste,
                     'plataforma_uso': uso_plataforma,
+                    'preguntas_completadas': True,
                     'ultima_actividad': datetime.utcnow().isoformat()
                 }
                 
@@ -242,11 +247,234 @@ def logout():
 def perfil():
     return render_template("perfil.html")
 
-# Mantener las demás rutas igual por ahora...
 @app.route("/generar", methods=["GET", "POST"])
 @login_required
 def generar():
+    if request.method == "POST":
+        try:
+            # Obtener datos del formulario
+            materia = request.form.get('materia', '')
+            nivel = request.form.get('nivel', '')
+            cantidad = int(request.form.get('cantidad', 5))
+            tipo_examen = request.form.get('tipo_examen', 'opcion_multiple')
+            
+            # Obtener archivo si se subió
+            archivo = request.files.get('archivo')
+            texto = ""
+            
+            if archivo and archivo.filename:
+                # Procesar archivo según su tipo
+                if archivo.filename.lower().endswith('.txt'):
+                    texto = archivo.read().decode('utf-8')
+                    print(f"📄 Archivo TXT procesado: {len(texto)} caracteres")
+                    
+                elif archivo.filename.lower().endswith('.pdf'):
+                    try:
+                        pdf_reader = PyPDF2.PdfReader(archivo)
+                        max_pages = min(len(pdf_reader.pages), 7)  # Limitar a 7 páginas
+                        
+                        for i in range(max_pages):
+                            page = pdf_reader.pages[i]
+                            texto += page.extract_text() + "\n"
+                        
+                        print(f"📄 PDF procesado: {max_pages} páginas, {len(texto)} caracteres")
+                        
+                        if max_pages < len(pdf_reader.pages):
+                            print(f"⚠️ PDF limitado a {max_pages} páginas de {len(pdf_reader.pages)} total")
+                        
+                    except Exception as e:
+                        print(f"❌ Error procesando PDF: {e}")
+                        flash("Error al procesar el archivo PDF. Intenta con otro archivo.")
+                        return render_template("generar.html")
+                        
+                elif archivo.filename.lower().endswith('.docx'):
+                    try:
+                        doc = docx.Document(archivo)
+                        max_paragraphs = min(len(doc.paragraphs), 50)  # Limitar a 50 párrafos
+                        
+                        for i in range(max_paragraphs):
+                            if doc.paragraphs[i].text.strip():
+                                texto += doc.paragraphs[i].text + "\n"
+                        
+                        print(f"📄 DOCX procesado: {max_paragraphs} párrafos, {len(texto)} caracteres")
+                        
+                        if max_paragraphs < len(doc.paragraphs):
+                            print(f"⚠️ DOCX limitado a {max_paragraphs} párrafos de {len(doc.paragraphs)} total")
+                        
+                    except Exception as e:
+                        print(f"❌ Error procesando DOCX: {e}")
+                        flash("Error al procesar el archivo DOCX. Intenta con otro archivo.")
+                        return render_template("generar.html")
+                
+                if not texto.strip():
+                    print("⚠️ Archivo procesado pero sin contenido extraído")
+                    flash("El archivo no contiene texto legible. Intenta con otro archivo.")
+                    return render_template("generar.html")
+            
+            # Si no hay archivo, usar texto del formulario
+            if not texto:
+                texto = request.form.get('texto', '')
+            
+            if not texto.strip():
+                flash("Por favor, proporciona un texto o sube un archivo.")
+                return render_template("generar.html")
+            
+            # Limitar el texto a 3000 caracteres para evitar timeouts
+            texto = texto[:3000]
+            
+            # Generar prompt para OpenAI
+            if tipo_examen == 'opcion_multiple':
+                prompt = f"""Genera un examen de {materia} de nivel {nivel} con {cantidad} preguntas de opción múltiple.
+
+Texto de referencia:
+{texto}
+
+Formato de respuesta (JSON):
+{{
+    "titulo": "Título del examen",
+    "materia": "{materia}",
+    "nivel": "{nivel}",
+    "preguntas": [
+        {{
+            "enunciado": "Pregunta 1",
+            "opciones": ["A) Opción 1", "B) Opción 2", "C) Opción 3", "D) Opción 4"],
+            "respuesta_correcta": "A",
+            "explicacion": "Explicación de por qué es correcta"
+        }}
+    ]
+}}
+
+Asegúrate de que las preguntas sean claras, relevantes al texto y que solo una opción sea correcta."""
+            
+            elif tipo_examen == 'verdadero_falso':
+                prompt = f"""Genera un examen de {materia} de nivel {nivel} con {cantidad} preguntas de verdadero o falso.
+
+Texto de referencia:
+{texto}
+
+Formato de respuesta (JSON):
+{{
+    "titulo": "Título del examen",
+    "materia": "{materia}",
+    "nivel": "{nivel}",
+    "preguntas": [
+        {{
+            "enunciado": "Pregunta 1",
+            "respuesta_correcta": "Verdadero",
+            "explicacion": "Explicación de por qué es verdadero o falso"
+        }}
+    ]
+}}
+
+Asegúrate de que las preguntas sean claras y relevantes al texto."""
+            
+            else:  # preguntas_abiertas
+                prompt = f"""Genera un examen de {materia} de nivel {nivel} con {cantidad} preguntas abiertas.
+
+Texto de referencia:
+{texto}
+
+Formato de respuesta (JSON):
+{{
+    "titulo": "Título del examen",
+    "materia": "{materia}",
+    "nivel": "{nivel}",
+    "preguntas": [
+        {{
+            "enunciado": "Pregunta 1",
+            "respuesta_esperada": "Respuesta esperada o puntos clave",
+            "puntos_clave": ["Punto clave 1", "Punto clave 2", "Punto clave 3"]
+        }}
+    ]
+}}
+
+Asegúrate de que las preguntas sean claras, relevantes al texto y que requieran respuestas detalladas."""
+            
+            # Llamar a OpenAI
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=3000,
+                    temperature=0.7,
+                    timeout=60
+                )
+                
+                # Procesar respuesta
+                contenido = response.choices[0].message.content
+                
+                # Intentar extraer JSON
+                try:
+                    # Buscar JSON en la respuesta
+                    json_match = re.search(r'\{.*\}', contenido, re.DOTALL)
+                    if json_match:
+                        examen_data = json.loads(json_match.group())
+                        
+                        # Guardar en sesión para mostrar
+                        session['examen_actual'] = examen_data
+                        session['tipo_examen'] = tipo_examen
+                        
+                        return redirect(url_for('resultado'))
+                    else:
+                        flash("Error al generar el examen. Intenta de nuevo.")
+                        return render_template("generar.html")
+                        
+                except json.JSONDecodeError as e:
+                    print(f"❌ Error decodificando JSON: {e}")
+                    print(f"Contenido recibido: {contenido}")
+                    flash("Error al procesar la respuesta de la IA. Intenta de nuevo.")
+                    return render_template("generar.html")
+                    
+            except Exception as e:
+                print(f"❌ Error llamando a OpenAI: {e}")
+                traceback.print_exc()
+                flash("Error al generar el examen. Intenta de nuevo.")
+                return render_template("generar.html")
+                
+        except Exception as e:
+            print(f"❌ Error general en generación: {e}")
+            traceback.print_exc()
+            flash("Error inesperado. Intenta de nuevo.")
+            return render_template("generar.html")
+    
     return render_template("generar.html")
+
+@app.route("/resultado")
+@login_required
+def resultado():
+    examen = session.get('examen_actual')
+    tipo_examen = session.get('tipo_examen')
+    
+    if not examen:
+        flash("No hay examen para mostrar.")
+        return redirect(url_for('generar'))
+    
+    return render_template("resultado.html", examen=examen, tipo_examen=tipo_examen)
+
+@app.route("/resultado-matematico")
+@login_required
+def resultado_matematico():
+    return render_template("resultado_matematico.html")
+
+@app.route("/resultado-abierto")
+@login_required
+def resultado_abierto():
+    return render_template("resultado_abierto.html")
+
+@app.route("/examen-matematico")
+@login_required
+def examen_matematico():
+    return render_template("examen_matematico.html")
+
+@app.route("/examen")
+@login_required
+def examen():
+    return render_template("examen.html")
+
+@app.route("/detalle-examen")
+@login_required
+def detalle_examen():
+    return render_template("detalle_examen.html")
 
 @app.route("/historial")
 @login_required
@@ -256,7 +484,133 @@ def historial():
 @app.route("/planificacion", methods=["GET", "POST"])
 @login_required
 def planificacion():
+    if request.method == "POST":
+        try:
+            # Obtener datos del formulario
+            materia = request.form.get('materia', '')
+            nivel = request.form.get('nivel', '')
+            objetivo = request.form.get('objetivo', '')
+            tiempo_disponible = request.form.get('tiempo_disponible', '')
+            archivo = request.files.get('archivo')
+            
+            texto = ""
+            if archivo and archivo.filename:
+                # Procesar archivo según su tipo
+                if archivo.filename.lower().endswith('.txt'):
+                    texto = archivo.read().decode('utf-8')
+                    
+                elif archivo.filename.lower().endswith('.pdf'):
+                    try:
+                        pdf_reader = PyPDF2.PdfReader(archivo)
+                        # Para planificación, usar todo el PDF
+                        for page in pdf_reader.pages:
+                            texto += page.extract_text() + "\n"
+                    except Exception as e:
+                        print(f"❌ Error procesando PDF: {e}")
+                        flash("Error al procesar el archivo PDF. Intenta con otro archivo.")
+                        return render_template("planificacion.html")
+                        
+                elif archivo.filename.lower().endswith('.docx'):
+                    try:
+                        doc = docx.Document(archivo)
+                        for paragraph in doc.paragraphs:
+                            if paragraph.text.strip():
+                                texto += paragraph.text + "\n"
+                    except Exception as e:
+                        print(f"❌ Error procesando DOCX: {e}")
+                        flash("Error al procesar el archivo DOCX. Intenta con otro archivo.")
+                        return render_template("planificacion.html")
+            
+            # Si no hay archivo, usar texto del formulario
+            if not texto:
+                texto = request.form.get('texto', '')
+            
+            if not texto.strip():
+                flash("Por favor, proporciona un texto o sube un archivo.")
+                return render_template("planificacion.html")
+            
+            # Generar plan de estudio
+            prompt = f"""Genera un plan de estudio personalizado para {materia} de nivel {nivel}.
+
+Objetivo: {objetivo}
+Tiempo disponible: {tiempo_disponible}
+
+Contenido a estudiar:
+{texto}
+
+Formato de respuesta (JSON):
+{{
+    "materia": "{materia}",
+    "nivel": "{nivel}",
+    "objetivo": "{objetivo}",
+    "tiempo_disponible": "{tiempo_disponible}",
+    "plan_estudio": [
+        {{
+            "semana": 1,
+            "tema": "Tema a estudiar",
+            "actividades": ["Actividad 1", "Actividad 2"],
+            "tiempo_estimado": "2 horas",
+            "objetivos_semana": "Objetivos específicos de la semana"
+        }}
+    ],
+    "recomendaciones": ["Recomendación 1", "Recomendación 2"],
+    "evaluacion": "Cómo evaluar el progreso"
+}}
+
+Asegúrate de que el plan sea realista, estructurado y adaptado al tiempo disponible."""
+            
+            # Llamar a OpenAI
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=4000,
+                    temperature=0.7,
+                    timeout=90
+                )
+                
+                # Procesar respuesta
+                contenido = response.choices[0].message.content
+                
+                # Intentar extraer JSON
+                try:
+                    json_match = re.search(r'\{.*\}', contenido, re.DOTALL)
+                    if json_match:
+                        plan_data = json.loads(json_match.group())
+                        session['plan_estudio'] = plan_data
+                        return redirect(url_for('planificacion_resultado'))
+                    else:
+                        flash("Error al generar el plan de estudio. Intenta de nuevo.")
+                        return render_template("planificacion.html")
+                        
+                except json.JSONDecodeError as e:
+                    print(f"❌ Error decodificando JSON: {e}")
+                    flash("Error al procesar la respuesta de la IA. Intenta de nuevo.")
+                    return render_template("planificacion.html")
+                    
+            except Exception as e:
+                print(f"❌ Error llamando a OpenAI: {e}")
+                traceback.print_exc()
+                flash("Error al generar el plan de estudio. Intenta de nuevo.")
+                return render_template("planificacion.html")
+                
+        except Exception as e:
+            print(f"❌ Error general en planificación: {e}")
+            traceback.print_exc()
+            flash("Error inesperado. Intenta de nuevo.")
+            return render_template("planificacion.html")
+    
     return render_template("planificacion.html")
+
+@app.route("/planificacion-resultado")
+@login_required
+def planificacion_resultado():
+    plan = session.get('plan_estudio')
+    if not plan:
+        flash("No hay plan de estudio para mostrar.")
+        return redirect(url_for('planificacion'))
+    
+    return render_template("planificacion_resultado.html", plan=plan)
 
 @app.route("/como-funciona")
 def como_funciona():
@@ -265,7 +619,66 @@ def como_funciona():
 @app.route("/wolfram", methods=["GET", "POST"])
 @login_required
 def wolfram_query():
+    if request.method == "POST":
+        query = request.form.get('query', '')
+        
+        if not query.strip():
+            flash("Por favor, ingresa una consulta matemática.")
+            return render_template("wolfram.html")
+        
+        try:
+            # Configuración de Wolfram Alpha
+            app_id = "AV6EGRRK9V"
+            base_url = "http://api.wolframalpha.com/v2/query"
+            
+            params = {
+                'input': query,
+                'appid': app_id,
+                'output': 'xml',
+                'format': 'plaintext'
+            }
+            
+            # Llamar a Wolfram Alpha con timeout
+            response = requests.get(base_url, params=params, timeout=30)
+            response.raise_for_status()
+            
+            # Procesar respuesta XML
+            root = ET.fromstring(response.content)
+            
+            # Extraer resultados
+            resultados = []
+            for pod in root.findall('.//pod'):
+                titulo = pod.get('title', '')
+                contenido = pod.find('.//plaintext')
+                if contenido is not None and contenido.text:
+                    resultados.append({
+                        'titulo': titulo,
+                        'contenido': contenido.text.strip()
+                    })
+            
+            if resultados:
+                return render_template("wolfram.html", resultados=resultados, query=query)
+            else:
+                flash("No se encontraron resultados para tu consulta.")
+                return render_template("wolfram.html")
+                
+        except requests.exceptions.Timeout:
+            flash("La consulta tardó demasiado. Intenta con una consulta más simple.")
+            return render_template("wolfram.html")
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Error en request a Wolfram: {e}")
+            flash("Error al consultar Wolfram Alpha. Intenta de nuevo.")
+            return render_template("wolfram.html")
+        except Exception as e:
+            print(f"❌ Error general en Wolfram: {e}")
+            flash("Error inesperado. Intenta de nuevo.")
+            return render_template("wolfram.html")
+    
     return render_template("wolfram.html")
+
+@app.route("/cuestionario")
+def cuestionario():
+    return render_template("cuestionario.html")
 
 if __name__ == '__main__':
     debug = os.environ.get('FLASK_ENV') == 'development'
