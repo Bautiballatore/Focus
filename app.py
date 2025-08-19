@@ -101,7 +101,7 @@ def load_user(user_id):
                     fecha_registro=datetime.fromisoformat(user_data['fecha_registro'].replace('Z', '+00:00')),
                     como_nos_conociste=user_data.get('como_nos_conociste'),
                     uso_plataforma=user_data.get('plataforma_uso'),
-                    preguntas_completadas=user_data.get('preguntas_completadas', False)
+                    preguntas_completadas=bool(user_data.get('preguntas_completadas', 0))
                 )
     except Exception as e:
         print(f"Error loading user: {e}")
@@ -132,7 +132,7 @@ def registro():
                     'password_hash': password_hash,
                     'fecha_registro': datetime.utcnow().isoformat(),
                     'activo': True,
-                    'preguntas_completadas': False
+                    'preguntas_completadas': 0  # En Supabase es INTEGER, no BOOLEAN
                 }
 
                 response = supabase.table('usuarios').insert(user_data).execute()
@@ -171,7 +171,7 @@ def login():
                             fecha_registro=datetime.fromisoformat(user_data['fecha_registro'].replace('Z', '+00:00')),
                             como_nos_conociste=user_data.get('como_nos_conociste'),
                             uso_plataforma=user_data.get('plataforma_uso'),
-                            preguntas_completadas=user_data.get('preguntas_completadas', False)
+                            preguntas_completadas=bool(user_data.get('preguntas_completadas', 0))
                         )
                         login_user(user)
 
@@ -214,7 +214,7 @@ def preguntas_usuario():
                 update_data = {
                     'como_nos_conociste': como_nos_conociste,
                     'plataforma_uso': uso_plataforma,
-                    'preguntas_completadas': True,
+                    'preguntas_completadas': 1,  # En Supabase es INTEGER, no BOOLEAN
                     'ultima_actividad': datetime.utcnow().isoformat()
                 }
 
@@ -806,36 +806,17 @@ def resultado():
         "feedback_general": feedback_general
     }
 
-    # GUARDAR EN BASE DE DATOS
+    # GUARDAR EN BASE DE DATOS (TEMPORALMENTE DESHABILITADO PARA SUPABASE)
+    # TODO: Implementar guardado en Supabase cuando se creen las tablas
     if current_user.is_authenticated:
-        examen = Examen(
-            user_id=current_user.id,
-            fecha=datetime.utcnow(),
-            nota=nota,
-            correctas=correctas,
-            parciales=parciales,
-            incorrectas=incorrectas,
-            total=total,
-            tiempo_total=resumen["tiempo_total"],
-            feedback_general=feedback_general
-        )
-        db.session.add(examen)
-        db.session.commit()
-        # Guardar cada pregunta respondida
-        for i, pregunta in enumerate(preguntas):
-            opciones_json = json.dumps(pregunta["opciones"]) if pregunta["opciones"] else None
-            pregunta_db = PreguntaExamen(
-                examen_id=examen.id,
-                enunciado=pregunta["enunciado"],
-                opciones=opciones_json,
-                respuesta_usuario=respuestas[i],
-                respuesta_correcta=pregunta["respuesta"],
-                tipo=pregunta["tipo"],
-                tema=pregunta["tema"],
-                feedback=feedbacks[i]
-            )
-            db.session.add(pregunta_db)
-        db.session.commit()
+        try:
+            # Intentar guardar en Supabase si las tablas existen
+            if supabase:
+                # Por ahora solo log, no guardar
+                print(f"Usuario {current_user.email} completó examen: {nota}/10")
+        except Exception as e:
+            print(f"Error al guardar examen en Supabase: {e}")
+            # Continuar sin guardar
 
     # OPCIONAL: seguir guardando en JSON para legacy
     with open("resultados.json", "a") as f:
@@ -871,24 +852,18 @@ def reiniciar():
 @app.route("/historial")
 @login_required
 def historial():
-    examenes = Examen.query.filter_by(user_id=current_user.id).order_by(Examen.fecha.desc()).all()
-    return render_template("historial.html", examenes=examenes)
+    # TEMPORALMENTE DESHABILITADO PARA SUPABASE
+    # TODO: Implementar cuando se creen las tablas de exámenes
+    flash("El historial estará disponible próximamente cuando se configure la base de datos completa.")
+    return redirect(url_for('generar'))
 
 @app.route("/examen/<int:examen_id>")
 @login_required
 def detalle_examen(examen_id):
-    examen = Examen.query.filter_by(id=examen_id, user_id=current_user.id).first_or_404()
-    preguntas = PreguntaExamen.query.filter_by(examen_id=examen.id).all()
-    # Decodificar opciones JSON en Python
-    for pregunta in preguntas:
-        if pregunta.opciones:
-            try:
-                pregunta.opciones_decoded = json.loads(pregunta.opciones)
-            except Exception:
-                pregunta.opciones_decoded = []
-        else:
-            pregunta.opciones_decoded = []
-    return render_template("detalle_examen.html", examen=examen, preguntas=preguntas)
+    # TEMPORALMENTE DESHABILITADO PARA SUPABASE
+    # TODO: Implementar cuando se creen las tablas de exámenes
+    flash("Los detalles del examen estarán disponibles próximamente.")
+    return redirect(url_for('generar'))
 
 @app.route("/wolfram", methods=["GET", "POST"])
 @login_required
