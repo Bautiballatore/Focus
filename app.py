@@ -1181,3 +1181,5 @@ if __name__ == '__main__':
     debug = os.environ.get('FLASK_ENV') == 'development'
     port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port, debug=debug)
+
+# PRUEBA: Esta línea solo debe aparecer en la rama supabase-migration
