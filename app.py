@@ -439,47 +439,204 @@ Asegúrate de que las preguntas sean claras, relevantes al texto y que requieran
     
     return render_template("generar.html")
 
+@app.route("/pregunta/<int:numero>", methods=["GET", "POST"])
+@login_required
+def pregunta(numero):
+    if 'examen_actual' not in session:
+        flash("No hay examen activo. Genera uno nuevo.")
+        return redirect(url_for('generar'))
+    
+    examen = session['examen_actual']
+    preguntas = examen.get('preguntas', [])
+    
+    if numero < 1 or numero > len(preguntas):
+        flash("Número de pregunta inválido.")
+        return redirect(url_for('generar'))
+    
+    pregunta = preguntas[numero - 1]
+    
+    if request.method == "POST":
+        respuesta_usuario = request.form.get('respuesta')
+        
+        if not respuesta_usuario:
+            flash("Por favor, selecciona una respuesta.")
+            return render_template("pregunta.html", pregunta=pregunta, numero=numero, total=len(preguntas))
+        
+        # Guardar respuesta en sesión
+        if 'respuestas_usuario' not in session:
+            session['respuestas_usuario'] = {}
+        session['respuestas_usuario'][str(numero)] = respuesta_usuario
+        
+        # Si es la última pregunta, ir a resultado
+        if numero == len(preguntas):
+            return redirect(url_for('resultado'))
+        else:
+            return redirect(url_for('pregunta', numero=numero + 1))
+    
+    return render_template("pregunta.html", pregunta=pregunta, numero=numero, total=len(preguntas))
+
 @app.route("/resultado")
 @login_required
 def resultado():
-    examen = session.get('examen_actual')
-    tipo_examen = session.get('tipo_examen')
-    
-    if not examen:
+    if 'examen_actual' not in session:
         flash("No hay examen para mostrar.")
         return redirect(url_for('generar'))
     
-    return render_template("resultado.html", examen=examen, tipo_examen=tipo_examen)
+    examen = session['examen_actual']
+    respuestas_usuario = session.get('respuestas_usuario', {})
+    
+    # Calcular resultados
+    correctas = 0
+    parciales = 0
+    incorrectas = 0
+    total = len(examen['preguntas'])
+    
+    for i, pregunta in enumerate(examen['preguntas'], 1):
+        respuesta_usuario = respuestas_usuario.get(str(i))
+        if respuesta_usuario:
+            if pregunta.get('respuesta_correcta') == respuesta_usuario:
+                correctas += 1
+            else:
+                incorrectas += 1
+    
+    # Calcular nota (porcentaje)
+    nota = (correctas / total) * 100 if total > 0 else 0
+    
+    # Guardar resultado en sesión
+    session['resultado_examen'] = {
+        'nota': nota,
+        'correctas': correctas,
+        'parciales': parciales,
+        'incorrectas': incorrectas,
+        'total': total
+    }
+    
+    return render_template("resultado.html", 
+                         examen=examen, 
+                         respuestas_usuario=respuestas_usuario,
+                         nota=nota,
+                         correctas=correctas,
+                         parciales=parciales,
+                         incorrectas=incorrectas,
+                         total=total)
 
-@app.route("/resultado-matematico")
+@app.route("/cuestionario")
 @login_required
-def resultado_matematico():
-    return render_template("resultado_matematico.html")
+def cuestionario():
+    if 'examen_actual' not in session:
+        flash("No hay examen activo. Genera uno nuevo.")
+        return redirect(url_for('generar'))
+    
+    examen = session['examen_actual']
+    return render_template("cuestionario.html", examen=examen)
 
-@app.route("/resultado-abierto")
+@app.route("/reiniciar", methods=["POST"])
 @login_required
-def resultado_abierto():
-    return render_template("resultado_abierto.html")
-
-@app.route("/examen-matematico")
-@login_required
-def examen_matematico():
-    return render_template("examen_matematico.html")
-
-@app.route("/examen")
-@login_required
-def examen():
-    return render_template("examen.html")
-
-@app.route("/detalle-examen")
-@login_required
-def detalle_examen():
-    return render_template("detalle_examen.html")
+def reiniciar():
+    # Limpiar sesión del examen
+    session.pop('examen_actual', None)
+    session.pop('respuestas_usuario', None)
+    session.pop('resultado_examen', None)
+    session.pop('tipo_examen', None)
+    
+    flash("Examen reiniciado. Puedes generar uno nuevo.")
+    return redirect(url_for('generar'))
 
 @app.route("/historial")
 @login_required
 def historial():
+    # Por ahora, mostrar mensaje de que no hay historial
+    # En el futuro, esto se conectará con Supabase para mostrar exámenes previos
+    flash("El historial de exámenes estará disponible próximamente.")
     return render_template("historial.html")
+
+@app.route("/examen/<int:examen_id>")
+@login_required
+def examen_detalle(examen_id):
+    # Por ahora, mostrar mensaje de que no hay detalles
+    # En el futuro, esto se conectará con Supabase para mostrar detalles del examen
+    flash("Los detalles del examen estarán disponibles próximamente.")
+    return render_template("detalle_examen.html")
+
+@app.route("/wolfram", methods=["GET", "POST"])
+@login_required
+def wolfram_query():
+    if request.method == "POST":
+        query = request.form.get('query', '')
+        
+        if not query.strip():
+            flash("Por favor, ingresa una consulta matemática.")
+            return render_template("wolfram.html")
+        
+        try:
+            # Configuración de Wolfram Alpha
+            app_id = "AV6EGRRK9V"
+            base_url = "http://api.wolframalpha.com/v2/query"
+            
+            params = {
+                'input': query,
+                'appid': app_id,
+                'output': 'xml',
+                'format': 'plaintext'
+            }
+            
+            # Llamar a Wolfram Alpha con timeout
+            response = requests.get(base_url, params=params, timeout=30)
+            response.raise_for_status()
+            
+            # Procesar respuesta XML
+            root = ET.fromstring(response.content)
+            
+            # Extraer resultados
+            resultados = []
+            for pod in root.findall('.//pod'):
+                titulo = pod.get('title', '')
+                contenido = pod.find('.//plaintext')
+                if contenido is not None and contenido.text:
+                    resultados.append({
+                        'titulo': titulo,
+                        'contenido': contenido.text.strip()
+                    })
+            
+            if resultados:
+                return render_template("wolfram.html", resultados=resultados, query=query)
+            else:
+                flash("No se encontraron resultados para tu consulta.")
+                return render_template("wolfram.html")
+                
+        except requests.exceptions.Timeout:
+            flash("La consulta tardó demasiado. Intenta con una consulta más simple.")
+            return render_template("wolfram.html")
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Error en request a Wolfram: {e}")
+            flash("Error al consultar Wolfram Alpha. Intenta de nuevo.")
+            return render_template("wolfram.html")
+        except Exception as e:
+            print(f"❌ Error general en Wolfram: {e}")
+            flash("Error inesperado. Intenta de nuevo.")
+            return render_template("wolfram.html")
+    
+    return render_template("wolfram.html")
+
+@app.route("/examen_matematico/<int:numero>", methods=["GET", "POST"])
+@login_required
+def examen_matematico(numero):
+    # Por ahora, mostrar mensaje de que no hay exámenes matemáticos
+    # En el futuro, esto se conectará con Supabase para mostrar exámenes matemáticos
+    flash("Los exámenes matemáticos estarán disponibles próximamente.")
+    return render_template("examen_matematico.html")
+
+@app.route("/resultado_matematico")
+@login_required
+def resultado_matematico():
+    # Por ahora, mostrar mensaje de que no hay resultados matemáticos
+    # En el futuro, esto se conectará con Supabase para mostrar resultados matemáticos
+    flash("Los resultados matemáticos estarán disponibles próximamente.")
+    return render_template("resultado_matematico.html")
+
+@app.route('/como-funciona')
+def como_funciona():
+    return render_template("como_funciona.html")
 
 @app.route("/planificacion", methods=["GET", "POST"])
 @login_required
@@ -518,7 +675,7 @@ def planificacion():
                                 texto += paragraph.text + "\n"
                     except Exception as e:
                         print(f"❌ Error procesando DOCX: {e}")
-                        flash("Error al procesar el archivo DOCX. Intenta con otro archivo.")
+                        flash("Error al procesar el archivo DOCX. Intenta de nuevo.")
                         return render_template("planificacion.html")
             
             # Si no hay archivo, usar texto del formulario
@@ -612,73 +769,56 @@ def planificacion_resultado():
     
     return render_template("planificacion_resultado.html", plan=plan)
 
-@app.route("/como-funciona")
-def como_funciona():
-    return render_template("como_funciona.html")
-
-@app.route("/wolfram", methods=["GET", "POST"])
-@login_required
-def wolfram_query():
-    if request.method == "POST":
-        query = request.form.get('query', '')
-        
-        if not query.strip():
-            flash("Por favor, ingresa una consulta matemática.")
-            return render_template("wolfram.html")
-        
-        try:
-            # Configuración de Wolfram Alpha
-            app_id = "AV6EGRRK9V"
-            base_url = "http://api.wolframalpha.com/v2/query"
-            
-            params = {
-                'input': query,
-                'appid': app_id,
-                'output': 'xml',
-                'format': 'plaintext'
-            }
-            
-            # Llamar a Wolfram Alpha con timeout
-            response = requests.get(base_url, params=params, timeout=30)
-            response.raise_for_status()
-            
-            # Procesar respuesta XML
-            root = ET.fromstring(response.content)
-            
-            # Extraer resultados
-            resultados = []
-            for pod in root.findall('.//pod'):
-                titulo = pod.get('title', '')
-                contenido = pod.find('.//plaintext')
-                if contenido is not None and contenido.text:
-                    resultados.append({
-                        'titulo': titulo,
-                        'contenido': contenido.text.strip()
-                    })
-            
-            if resultados:
-                return render_template("wolfram.html", resultados=resultados, query=query)
-            else:
-                flash("No se encontraron resultados para tu consulta.")
-                return render_template("wolfram.html")
-                
-        except requests.exceptions.Timeout:
-            flash("La consulta tardó demasiado. Intenta con una consulta más simple.")
-            return render_template("wolfram.html")
-        except requests.exceptions.RequestException as e:
-            print(f"❌ Error en request a Wolfram: {e}")
-            flash("Error al consultar Wolfram Alpha. Intenta de nuevo.")
-            return render_template("wolfram.html")
-        except Exception as e:
-            print(f"❌ Error general en Wolfram: {e}")
-            flash("Error inesperado. Intenta de nuevo.")
-            return render_template("wolfram.html")
+@app.route("/sitemap.xml")
+def sitemap():
+    """Generar sitemap XML para SEO"""
+    urls = [
+        {
+            'loc': url_for('index', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'weekly',
+            'priority': '1.0'
+        },
+        {
+            'loc': url_for('registro', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'monthly',
+            'priority': '0.8'
+        },
+        {
+            'loc': url_for('generar', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'weekly',
+            'priority': '0.9'
+        },
+        {
+            'loc': url_for('planificacion', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'weekly',
+            'priority': '0.9'
+        },
+        {
+            'loc': url_for('como_funciona', _external=True),
+            'lastmod': datetime.utcnow().strftime('%Y-%m-%d'),
+            'changefreq': 'monthly',
+            'priority': '0.7'
+        }
+    ]
     
-    return render_template("wolfram.html")
+    sitemap_xml = render_template('sitemap.xml', urls=urls)
+    response = make_response(sitemap_xml)
+    response.headers["Content-Type"] = "application/xml"
+    return response
 
-@app.route("/cuestionario")
-def cuestionario():
-    return render_template("cuestionario.html")
+@app.route("/robots.txt")
+def robots():
+    """Servir robots.txt para SEO"""
+    return send_from_directory('static', 'robots.txt')
+
+@app.route("/google48eb92cb7318a041.html")
+def google_verification():
+    """Archivo de verificación de Google Search Console"""
+    return send_from_directory('static', 'google48eb92cb7318a041.html')
 
 if __name__ == '__main__':
     debug = os.environ.get('FLASK_ENV') == 'development'
