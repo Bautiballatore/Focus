@@ -843,9 +843,9 @@ def resultado():
                 'preguntas': json.dumps([p['enunciado'] for p in preguntas]),
                 'respuestas': json.dumps(respuestas),
                 'nota': nota,
-                'tiempo_duracion': resumen["tiempo_total"],
+                'tiempo_duracion': int(float(resumen["tiempo_total"])),
                 'estado': 'rendido',
-                'tiempo_total_segundos': int(resumen["tiempo_total"])
+                'tiempo_total_segundos': int(float(resumen["tiempo_total"]))
             }
             
             print(f"📊 Datos del examen: {examen_data}")
