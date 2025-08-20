@@ -1003,7 +1003,11 @@ def historial():
                         'nota': examen['nota'],
                         'materia': examen['materia'],
                         'tiempo_total': examen['tiempo_duracion'],
-                        'estado': examen['estado']
+                        'estado': examen['estado'],
+                        # Agregar métricas detalladas
+                        'correctas': examen.get('correctas', 0),
+                        'parciales': examen.get('parciales', 0),
+                        'incorrectas': examen.get('incorrectas', 0)
                     })
                 return render_template("historial.html", examenes=examenes)
             else:
