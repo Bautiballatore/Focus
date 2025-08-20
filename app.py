@@ -36,7 +36,10 @@ else:
     print("❌ Supabase credentials not found!")
     supabase = None
 
-# db = SQLAlchemy(app)  # Comentado: no se usa en Supabase
+# Configuración de Google OAuth
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -62,36 +65,28 @@ class User(UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-# Modelos SQLAlchemy comentados - no se usan en Supabase
-# class Examen(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-#     fecha = db.Column(db.DateTime, default=datetime.utcnow)
-#     nota = db.Column(db.Float)
-#     correctas = db.Column(db.Integer)
-#     parciales = db.Column(db.Integer)
-#     incorrectas = db.Column(db.Integer)
-#     total = db.Column(db.Integer)
-#     tiempo_total = db.Column(db.Float)
-#     feedback_general = db.Column(db.String(500))
-#     user = db.relationship('User', backref=db.backref('examenes', lazy=True))
-#     preguntas = db.relationship('PreguntaExamen', backref='examen', lazy=True)
-
-# class PreguntaExamen(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     examen_id = db.Column(db.Integer, db.ForeignKey('examen.id'), nullable=False)
-#     enunciado = db.Column(db.String(500))
-#     opciones = db.Column(db.Text)  # JSON string
-#     respuesta_usuario = db.Column(db.String(100))
-#     respuesta_correcta = db.Column(db.String(100))
-#     tipo = db.Column(db.String(20))
-#     tema = db.Column(db.String(100))
-#     feedback = db.Column(db.Text)
+# Modelo de Usuario para Supabase Auth
+class SupabaseUser(UserMixin):
+    def __init__(self, user_data):
+        self.id = user_data.get('id')
+        self.email = user_data.get('email')
+        self.nombre = user_data.get('user_metadata', {}).get('nombre', user_data.get('email', '').split('@')[0])
+        self.fecha_registro = datetime.fromisoformat(user_data.get('created_at', datetime.utcnow().isoformat()).replace('Z', '+00:00'))
+        self.como_nos_conociste = user_data.get('user_metadata', {}).get('como_nos_conociste')
+        self.uso_plataforma = user_data.get('user_metadata', {}).get('plataforma_uso')
+        self.preguntas_completadas = bool(user_data.get('user_metadata', {}).get('preguntas_completadas', 0))
+        self.provider = user_data.get('app_metadata', {}).get('provider', 'email')
 
 @login_manager.user_loader
 def load_user(user_id):
     try:
         if supabase:
+            # Obtener usuario desde Supabase Auth
+            response = supabase.auth.get_user()
+            if response.user and str(response.user.id) == str(user_id):
+                return SupabaseUser(response.user)
+            
+            # Fallback: buscar en tabla usuarios (para compatibilidad)
             response = supabase.table('usuarios').select('*').eq('id', user_id).execute()
             if response.data:
                 user_data = response.data[0]
@@ -112,96 +107,198 @@ def load_user(user_id):
 def index():
     return render_template("index.html")
 
-@app.route("/registro", methods=["GET", "POST"])
-def registro():
+# =====================================================
+# NUEVAS RUTAS DE AUTENTICACIÓN CON SUPABASE AUTH
+# =====================================================
+
+@app.route("/auth/signup", methods=["GET", "POST"])
+def signup():
     if request.method == "POST":
         email = request.form["email"].lower()
         password = request.form["password"]
         nombre = request.form["nombre"]
-
+        
         try:
             if supabase:
-                response = supabase.table('usuarios').select('*').eq('email', email).execute()
-                if response.data:
-                    flash("El email ya está registrado. Por favor, usa otro email.")
-                    return render_template("registro.html")
-
-                password_hash = generate_password_hash(password)
-                user_data = {
-                    'email': email,
-                    'nombre': nombre,
-                    'password_hash': password_hash,
-                    'fecha_registro': datetime.utcnow().isoformat(),
-                    'activo': True,
-                    'preguntas_completadas': 0  # En Supabase es INTEGER, no BOOLEAN
-                }
-
-                response = supabase.table('usuarios').insert(user_data).execute()
-
-                if response.data:
-                    flash("Usuario registrado exitosamente. Ahora puedes iniciar sesión.")
+                # Crear usuario con Supabase Auth
+                response = supabase.auth.sign_up({
+                    "email": email,
+                    "password": password,
+                    "options": {
+                        "data": {
+                            "nombre": nombre,
+                            "preguntas_completadas": 0
+                        }
+                    }
+                })
+                
+                if response.user:
+                    flash("Usuario registrado exitosamente. Revisa tu email para confirmar la cuenta.")
                     return redirect(url_for('login'))
                 else:
                     flash("Error al registrar usuario. Intenta de nuevo.")
-
+                    
         except Exception as e:
-            print(f"Error en registro: {e}")
-            flash("Error al registrar usuario. Intenta de nuevo.")
-
+            print(f"Error en signup: {e}")
+            if "already registered" in str(e).lower():
+                flash("El email ya está registrado. Por favor, usa otro email.")
+            else:
+                flash("Error al registrar usuario. Intenta de nuevo.")
+                
         return render_template("registro.html")
-
+    
     return render_template("registro.html")
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
+@app.route("/auth/signin", methods=["GET", "POST"])
+def signin():
     if request.method == "POST":
         email = request.form["email"].lower()
         password = request.form["password"]
-
+        
         try:
             if supabase:
-                response = supabase.table('usuarios').select('*').eq('email', email).execute()
-
-                if response.data and len(response.data) > 0:
-                    user_data = response.data[0]
-                    if check_password_hash(user_data['password_hash'], password):
-                        user = User(
-                            id=user_data['id'],
-                            email=user_data['email'],
-                            nombre=user_data['nombre'],
-                            fecha_registro=datetime.fromisoformat(user_data['fecha_registro'].replace('Z', '+00:00')),
-                            como_nos_conociste=user_data.get('como_nos_conociste'),
-                            uso_plataforma=user_data.get('plataforma_uso'),
-                            preguntas_completadas=bool(user_data.get('preguntas_completadas', 0))
-                        )
-                        login_user(user)
-
+                # Iniciar sesión con Supabase Auth
+                response = supabase.auth.sign_in_with_password({
+                    "email": email,
+                    "password": password
+                })
+                
+                if response.user:
+                    # Crear usuario de Flask-Login
+                    user = SupabaseUser(response.user)
+                    login_user(user)
+                    
+                    # Log de actividad
+                    try:
                         log_data = {
                             'usuario_id': user.id,
                             'tipo_actividad': 'login',
                             'fecha_actividad': datetime.utcnow().isoformat(),
-                            'detalles': {'accion': 'Usuario inició sesión'},
+                            'detalles': {'accion': 'Usuario inició sesión', 'provider': 'email'},
                             'ip_address': request.remote_addr
                         }
                         supabase.table('logs_actividad').insert(log_data).execute()
-
-                        # Verificar si el usuario ya completó las preguntas
-                        if not user.preguntas_completadas:
-                            return redirect(url_for("preguntas_usuario"))
-                        next_page = request.args.get('next')
-                        return redirect(next_page) if next_page else redirect(url_for('generar'))
-                    else:
-                        flash("Email o contraseña incorrectos")
+                    except Exception as e:
+                        print(f"Error logging login: {e}")
+                    
+                    # Verificar si el usuario ya completó las preguntas
+                    if not user.preguntas_completadas:
+                        return redirect(url_for("preguntas_usuario"))
+                    
+                    next_page = request.args.get('next')
+                    return redirect(next_page) if next_page else redirect(url_for('generar'))
                 else:
                     flash("Email o contraseña incorrectos")
-
+                    
         except Exception as e:
-            print(f"Error en login: {e}")
-            flash("Error al iniciar sesión. Intenta de nuevo.")
-
+            print(f"Error en signin: {e}")
+            flash("Email o contraseña incorrectos")
+            
         return render_template("login.html")
-
+    
     return render_template("login.html")
+
+@app.route("/auth/google")
+def google_auth():
+    """Iniciar autenticación con Google"""
+    try:
+        if supabase:
+            # Obtener URL de autenticación de Google
+            response = supabase.auth.sign_in_with_oauth({
+                "provider": "google",
+                "options": {
+                    "redirect_to": f"{request.host_url}auth/callback"
+                }
+            })
+            
+            if response.url:
+                return redirect(response.url)
+            else:
+                flash("Error al iniciar autenticación con Google")
+                return redirect(url_for('login'))
+                
+    except Exception as e:
+        print(f"Error iniciando Google auth: {e}")
+        flash("Error al conectar con Google")
+        return redirect(url_for('login'))
+
+@app.route("/auth/callback")
+def auth_callback():
+    """Callback después de autenticación OAuth"""
+    try:
+        if supabase:
+            # Obtener sesión del usuario
+            response = supabase.auth.get_session()
+            
+            if response.session and response.user:
+                # Crear usuario de Flask-Login
+                user = SupabaseUser(response.user)
+                login_user(user)
+                
+                # Log de actividad
+                try:
+                    log_data = {
+                        'usuario_id': user.id,
+                        'tipo_actividad': 'login',
+                        'fecha_actividad': datetime.utcnow().isoformat(),
+                        'detalles': {'accion': 'Usuario inició sesión', 'provider': 'google'},
+                        'ip_address': request.remote_addr
+                    }
+                    supabase.table('logs_actividad').insert(log_data).execute()
+                except Exception as e:
+                    print(f"Error logging Google login: {e}")
+                
+                # Verificar si el usuario ya completó las preguntas
+                if not user.preguntas_completadas:
+                    return redirect(url_for("preguntas_usuario"))
+                
+                return redirect(url_for('generar'))
+            else:
+                flash("Error en la autenticación con Google")
+                return redirect(url_for('login'))
+                
+    except Exception as e:
+        print(f"Error en auth callback: {e}")
+        flash("Error en la autenticación")
+        return redirect(url_for('login'))
+
+@app.route("/auth/logout")
+@login_required
+def auth_logout():
+    """Cerrar sesión con Supabase Auth"""
+    try:
+        if supabase:
+            # Log de actividad
+            try:
+                log_data = {
+                    'usuario_id': current_user.id,
+                    'tipo_actividad': 'logout',
+                    'fecha_actividad': datetime.utcnow().isoformat(),
+                    'detalles': {'accion': 'Usuario cerró sesión'},
+                    'ip_address': request.remote_addr
+                }
+                supabase.table('logs_actividad').insert(log_data).execute()
+            except Exception as e:
+                print(f"Error logging logout: {e}")
+            
+            # Cerrar sesión en Supabase
+            supabase.auth.sign_out()
+            
+    except Exception as e:
+        print(f"Error en logout: {e}")
+    
+    logout_user()
+    return redirect(url_for("index"))
+
+@app.route("/registro", methods=["GET", "POST"])
+def registro():
+    # Redirigir a la nueva ruta de Supabase Auth
+    return redirect(url_for('signup'))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # Redirigir a la nueva ruta de Supabase Auth
+    return redirect(url_for('signin'))
 
 @app.route("/preguntas-usuario", methods=["GET", "POST"])
 @login_required
@@ -1354,14 +1451,15 @@ def planificacion():
                     # Si no hay JSON, mostrar como texto plano
                     explicacion_ia = plan_json
                     plan = None
+        
         # Preparar datos para el calendario visual (igual que antes)
         days_list = []
         actividades_por_fecha = {}
         if plan and isinstance(plan, list) and len(plan) > 0 and 'fecha' in plan[0]:
             # (Eliminado el ajuste automático de fechas)
             pass # No hay ajuste automático de fechas aquí
+        
         # Procesar cada actividad para separar tema principal y subtemas (split inteligente)
-        import re
         def split_subtemas(text):
             subtemas = []
             buffer = ''
@@ -1378,6 +1476,7 @@ def planificacion():
             if buffer.strip():
                 subtemas.append(buffer.strip())
             return subtemas
+        
         if plan and isinstance(plan, list):
             for item in plan:
                 actividad = item.get('actividad', '')
@@ -1388,12 +1487,13 @@ def planificacion():
                 else:
                     item['tema_principal'] = actividad.strip()
                     item['subtemas'] = []
+        
         # Preparar datos para el calendario visual (solo fechas reales del plan, ordenadas)
         if plan and isinstance(plan, list) and len(plan) > 0 and 'fecha' in plan[0]:
             actividades_por_fecha = {item['fecha']: item['actividad'] for item in plan}
+        
         fechas_ordenadas = []
         if plan and isinstance(plan, list) and len(plan) > 0 and 'fecha' in plan[0]:
-            from datetime import datetime
             fechas_ordenadas = [
                 (datetime.strptime(item['fecha'], '%Y-%m-%d'), item['fecha'], actividades_por_fecha[item['fecha']])
                 for item in plan if item['fecha'] in actividades_por_fecha
@@ -1409,6 +1509,7 @@ def planificacion():
         print("--- FIN VALORES ---\n")
         
         return render_template("planificacion_resultado.html", plan=plan, plan_json=plan_json, days_list=days_list, actividades_por_fecha=actividades_por_fecha, explicacion_ia=explicacion_ia, fechas_ordenadas=fechas_ordenadas)
+    
     return render_template("planificacion.html")
 
 @app.errorhandler(404)
@@ -1469,8 +1570,6 @@ def sitemap():
     response.headers["Content-Type"] = "application/xml"
     return response
 
-
-
 @app.route("/robots.txt")
 def robots():
     """Servir robots.txt para SEO"""
@@ -1480,7 +1579,6 @@ def robots():
 def google_verification():
     """Archivo de verificación de Google Search Console"""
     return send_from_directory('static', 'google48eb92cb7318a041.html')
-
 
 if __name__ == '__main__':
     # Configuración para desarrollo

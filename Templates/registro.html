@@ -209,6 +209,12 @@
                 <i class="fas fa-user-plus"></i> Crear Cuenta
             </button>
         </form>
+        
+        <div class="divider">o</div>
+        
+        <a href="{{ url_for('google_auth') }}" class="google-btn">
+            <i class="fab fa-google"></i> Registrarse con Google
+        </a>
         <div class="divider">¿Ya tienes cuenta?</div>
         <div class="login-link">
             <a href="{{ url_for('login') }}">
