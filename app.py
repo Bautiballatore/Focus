@@ -807,16 +807,52 @@ def resultado():
         "feedback_general": feedback_general
     }
 
-    # GUARDAR EN BASE DE DATOS (TEMPORALMENTE DESHABILITADO PARA SUPABASE)
-    # TODO: Implementar guardado en Supabase cuando se creen las tablas
-    if current_user.is_authenticated:
+    # GUARDAR EN BASE DE DATOS SUPABASE
+    if current_user.is_authenticated and supabase:
         try:
-            # Intentar guardar en Supabase si las tablas existen
-            if supabase:
-                # Por ahora solo log, no guardar
-                print(f"Usuario {current_user.email} completó examen: {nota}/10")
+            # Guardar examen principal
+            examen_data = {
+                'usuario_id': current_user.id,
+                'titulo': f'Examen de {preguntas[0].get("tema", "General")}',
+                'materia': preguntas[0].get("tema", "General"),
+                'fecha_creacion': datetime.utcnow().isoformat(),
+                'fecha_rendido': datetime.utcnow().isoformat(),
+                'preguntas': json.dumps([p['enunciado'] for p in preguntas]),
+                'respuestas': json.dumps(respuestas),
+                'nota': nota,
+                'tiempo_duracion': resumen["tiempo_total"],
+                'estado': 'rendido',
+                'tiempo_total_segundos': int(resumen["tiempo_total"])
+            }
+            
+            examen_response = supabase.table('examenes').insert(examen_data).execute()
+            
+            if examen_response.data:
+                examen_id = examen_response.data[0]['id']
+                
+                # Guardar cada pregunta individual
+                for i, pregunta in enumerate(preguntas):
+                    pregunta_data = {
+                        'examen_id': examen_id,
+                        'enunciado': pregunta['enunciado'],
+                        'opciones': json.dumps(pregunta.get('opciones', [])),
+                        'respuesta_usuario': respuestas[i],
+                        'respuesta_correcta': pregunta['respuesta'],
+                        'tipo': pregunta['tipo'],
+                        'tema': pregunta.get('tema', 'General'),
+                        'orden': i + 1
+                    }
+                    supabase.table('preguntas_examen').insert(pregunta_data).execute()
+                
+                # Actualizar estadísticas del usuario
+                supabase.table('usuarios').update({
+                    'total_examenes_rendidos': supabase.rpc('increment_examenes', {'user_id': current_user.id}).execute()
+                }).eq('id', current_user.id).execute()
+                
+                print(f"✅ Examen guardado exitosamente en Supabase para usuario {current_user.email}")
+                
         except Exception as e:
-            print(f"Error al guardar examen en Supabase: {e}")
+            print(f"❌ Error al guardar examen en Supabase: {e}")
             # Continuar sin guardar
 
     # OPCIONAL: seguir guardando en JSON para legacy
@@ -853,18 +889,89 @@ def reiniciar():
 @app.route("/historial")
 @login_required
 def historial():
-    # TEMPORALMENTE DESHABILITADO PARA SUPABASE
-    # TODO: Implementar cuando se creen las tablas de exámenes
-    flash("El historial estará disponible próximamente cuando se configure la base de datos completa.")
-    return redirect(url_for('generar'))
+    try:
+        if supabase:
+            # Obtener exámenes del usuario desde Supabase
+            response = supabase.table('examenes').select('*').eq('usuario_id', current_user.id).order('fecha_rendido', desc=True).execute()
+            
+            if response.data:
+                examenes = []
+                for examen in response.data:
+                    # Formatear fecha para mostrar
+                    fecha = datetime.fromisoformat(examen['fecha_rendido'].replace('Z', '+00:00'))
+                    examenes.append({
+                        'id': examen['id'],
+                        'fecha': fecha,
+                        'nota': examen['nota'],
+                        'materia': examen['materia'],
+                        'tiempo_total': examen['tiempo_duracion'],
+                        'estado': examen['estado']
+                    })
+                return render_template("historial.html", examenes=examenes)
+            else:
+                flash("No tienes exámenes rendidos aún. ¡Genera tu primer examen!")
+                return redirect(url_for('generar'))
+                
+    except Exception as e:
+        print(f"Error obteniendo historial: {e}")
+        flash("Error al cargar el historial. Intenta nuevamente.")
+        return redirect(url_for('generar'))
 
-@app.route("/examen/<int:examen_id>")
+@app.route("/examen/<examen_id>")
 @login_required
 def detalle_examen(examen_id):
-    # TEMPORALMENTE DESHABILITADO PARA SUPABASE
-    # TODO: Implementar cuando se creen las tablas de exámenes
-    flash("Los detalles del examen estarán disponibles próximamente.")
-    return redirect(url_for('generar'))
+    try:
+        if supabase:
+            # Obtener examen desde Supabase
+            examen_response = supabase.table('examenes').select('*').eq('id', examen_id).eq('usuario_id', current_user.id).execute()
+            
+            if examen_response.data:
+                examen = examen_response.data[0]
+                
+                # Obtener preguntas del examen
+                preguntas_response = supabase.table('preguntas_examen').select('*').eq('examen_id', examen_id).order('orden').execute()
+                
+                if preguntas_response.data:
+                    preguntas = []
+                    for pregunta in preguntas_response.data:
+                        # Decodificar opciones JSON
+                        opciones = []
+                        if pregunta.get('opciones'):
+                            try:
+                                opciones = json.loads(pregunta['opciones'])
+                            except:
+                                opciones = []
+                        
+                        preguntas.append({
+                            'enunciado': pregunta['enunciado'],
+                            'opciones': opciones,
+                            'respuesta_usuario': pregunta['respuesta_usuario'],
+                            'respuesta_correcta': pregunta['respuesta_correcta'],
+                            'tipo': pregunta['tipo'],
+                            'tema': pregunta['tema']
+                        })
+                    
+                    # Formatear examen para el template
+                    examen_formateado = {
+                        'id': examen['id'],
+                        'fecha': datetime.fromisoformat(examen['fecha_rendido'].replace('Z', '+00:00')),
+                        'nota': examen['nota'],
+                        'materia': examen['materia'],
+                        'tiempo_total': examen['tiempo_duracion']
+                    }
+                    
+                    return render_template("detalle_examen.html", examen=examen_formateado, preguntas=preguntas)
+                else:
+                    flash("No se encontraron preguntas para este examen.")
+                    return redirect(url_for('historial'))
+            else:
+                flash("Examen no encontrado o no tienes acceso.")
+                return redirect(url_for('historial'))
+                
+    except Exception as e:
+        print(f"Error obteniendo detalle del examen: {e}")
+        flash("Error al cargar el examen. Intenta nuevamente.")
+        return redirect(url_for('historial'))
 
 @app.route("/wolfram", methods=["GET", "POST"])
 @login_required
