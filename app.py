@@ -810,6 +810,29 @@ def resultado():
     # GUARDAR EN BASE DE DATOS SUPABASE
     if current_user.is_authenticated and supabase:
         try:
+            print(f"\n🔍 INTENTANDO GUARDAR EXAMEN EN SUPABASE...")
+            print(f"Usuario: {current_user.email} (ID: {current_user.id})")
+            print(f"Nota: {nota}/10")
+            print(f"Tiempo: {resumen['tiempo_total']}s")
+            
+            # Verificar que las tablas existan
+            try:
+                # Verificar tabla examenes
+                examenes_check = supabase.table('examenes').select('id').limit(1).execute()
+                print(f"✅ Tabla 'examenes' existe")
+                
+                # Verificar tabla preguntas_examen
+                preguntas_check = supabase.table('preguntas_examen').select('id').limit(1).execute()
+                print(f"✅ Tabla 'preguntas_examen' existe")
+                
+                # Verificar tabla usuarios
+                usuarios_check = supabase.table('usuarios').select('id').eq('id', current_user.id).execute()
+                print(f"✅ Usuario encontrado en tabla 'usuarios'")
+                
+            except Exception as e:
+                print(f"❌ Error verificando tablas: {e}")
+                return render_template("resultado_abierto.html", respuestas=respuestas, preguntas=preguntas, feedbacks=feedbacks, resumen=resumen, respuestas_texto_usuario=respuestas_texto_usuario, respuestas_texto_correcta=respuestas_texto_correcta)
+            
             # Guardar examen principal
             examen_data = {
                 'usuario_id': current_user.id,
@@ -825,12 +848,16 @@ def resultado():
                 'tiempo_total_segundos': int(resumen["tiempo_total"])
             }
             
+            print(f"📊 Datos del examen: {examen_data}")
+            
             examen_response = supabase.table('examenes').insert(examen_data).execute()
             
             if examen_response.data:
                 examen_id = examen_response.data[0]['id']
+                print(f"✅ Examen guardado con ID: {examen_id}")
                 
                 # Guardar cada pregunta individual
+                print(f"📝 Guardando {len(preguntas)} preguntas...")
                 for i, pregunta in enumerate(preguntas):
                     pregunta_data = {
                         'examen_id': examen_id,
@@ -842,12 +869,32 @@ def resultado():
                         'tema': pregunta.get('tema', 'General'),
                         'orden': i + 1
                     }
-                    supabase.table('preguntas_examen').insert(pregunta_data).execute()
+                    
+                    print(f"  Pregunta {i+1}: {pregunta['enunciado'][:50]}...")
+                    pregunta_response = supabase.table('preguntas_examen').insert(pregunta_data).execute()
+                    
+                    if pregunta_response.data:
+                        print(f"    ✅ Pregunta {i+1} guardada")
+                    else:
+                        print(f"    ❌ Error guardando pregunta {i+1}")
                 
                 # Actualizar estadísticas del usuario
-                supabase.table('usuarios').update({
-                    'total_examenes_rendidos': supabase.rpc('increment_examenes', {'user_id': current_user.id}).execute()
-                }).eq('id', current_user.id).execute()
+                try:
+                    # Obtener el usuario actual
+                    user_response = supabase.table('usuarios').select('total_examenes_rendidos').eq('id', current_user.id).execute()
+                    if user_response.data:
+                        total_actual = user_response.data[0].get('total_examenes_rendidos', 0)
+                        nuevo_total = total_actual + 1
+                        
+                        # Actualizar el contador
+                        supabase.table('usuarios').update({
+                            'total_examenes_rendidos': nuevo_total,
+                            'ultima_actividad': datetime.utcnow().isoformat()
+                        }).eq('id', current_user.id).execute()
+                        
+                        print(f"✅ Estadísticas actualizadas: {nuevo_total} exámenes")
+                except Exception as e:
+                    print(f"⚠️ Error actualizando estadísticas: {e}")
                 
                 print(f"✅ Examen guardado exitosamente en Supabase para usuario {current_user.email}")
                 
