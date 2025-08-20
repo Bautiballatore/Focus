@@ -227,38 +227,69 @@ def auth_callback():
     """Callback después de autenticación OAuth"""
     try:
         if supabase:
-            # Obtener sesión del usuario
-            response = supabase.auth.get_session()
+            # Obtener parámetros de la URL (importante para OAuth)
+            code = request.args.get('code')
+            error = request.args.get('error')
             
-            if response.session and response.user:
-                # Crear usuario de Flask-Login
-                user = SupabaseUser(response.user)
-                login_user(user)
-                
-                # Log de actividad
+            print(f"🔍 Callback recibido - Code: {code}, Error: {error}")
+            
+            if error:
+                print(f"❌ Error en OAuth: {error}")
+                flash(f"Error en la autenticación: {error}")
+                return redirect(url_for('login'))
+            
+            if code:
+                # Intercambiar código por sesión
                 try:
-                    log_data = {
-                        'usuario_id': user.id,
-                        'tipo_actividad': 'login',
-                        'fecha_actividad': datetime.utcnow().isoformat(),
-                        'detalles': {'accion': 'Usuario inició sesión', 'provider': 'google'},
-                        'ip_address': request.remote_addr
-                    }
-                    supabase.table('logs_actividad').insert(log_data).execute()
+                    print(f"🔄 Intercambiando código por sesión...")
+                    response = supabase.auth.exchange_code_for_session(code)
+                    
+                    if response.session and response.user:
+                        print(f"✅ Sesión obtenida para usuario: {response.user.email}")
+                        
+                        # Crear usuario de Flask-Login
+                        user = SupabaseUser(response.user)
+                        login_user(user)
+                        
+                        print(f"✅ Usuario autenticado exitosamente: {user.email}")
+                        
+                        # Log de actividad
+                        try:
+                            log_data = {
+                                'usuario_id': user.id,
+                                'tipo_actividad': 'login',
+                                'fecha_actividad': datetime.utcnow().isoformat(),
+                                'detalles': {'accion': 'Usuario inició sesión', 'provider': 'google'},
+                                'ip_address': request.remote_addr
+                            }
+                            supabase.table('logs_actividad').insert(log_data).execute()
+                            print(f"✅ Log de actividad guardado")
+                        except Exception as e:
+                            print(f"⚠️ Error logging Google login: {e}")
+                        
+                        # Verificar si el usuario ya completó las preguntas
+                        if not user.preguntas_completadas:
+                            print(f"🔄 Redirigiendo a preguntas de usuario")
+                            return redirect(url_for("preguntas_usuario"))
+                        
+                        print(f"🔄 Redirigiendo a generar examen")
+                        return redirect(url_for('generar'))
+                    else:
+                        print(f"❌ No se pudo obtener sesión del usuario")
+                        flash("Error en la autenticación con Google")
+                        return redirect(url_for('login'))
+                        
                 except Exception as e:
-                    print(f"Error logging Google login: {e}")
-                
-                # Verificar si el usuario ya completó las preguntas
-                if not user.preguntas_completadas:
-                    return redirect(url_for("preguntas_usuario"))
-                
-                return redirect(url_for('generar'))
+                    print(f"❌ Error intercambiando código por sesión: {e}")
+                    flash("Error en la autenticación con Google")
+                    return redirect(url_for('login'))
             else:
+                print(f"❌ No se recibió código de autorización")
                 flash("Error en la autenticación con Google")
                 return redirect(url_for('login'))
                 
     except Exception as e:
-        print(f"Error en auth callback: {e}")
+        print(f"❌ Error en auth callback: {e}")
         flash("Error en la autenticación")
         return redirect(url_for('login'))
 
