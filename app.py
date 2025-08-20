@@ -845,7 +845,14 @@ def resultado():
                 'nota': nota,
                 'tiempo_duracion': int(float(resumen["tiempo_total"])),
                 'estado': 'rendido',
-                'tiempo_total_segundos': int(float(resumen["tiempo_total"]))
+                'tiempo_total_segundos': int(float(resumen["tiempo_total"])),
+                # Agregar métricas detalladas
+                'correctas': correctas,
+                'parciales': parciales,
+                'incorrectas': incorrectas,
+                'total_preguntas': total,
+                # Agregar feedback general
+                'feedback_general': feedback_general
             }
             
             print(f"📊 Datos del examen: {examen_data}")
@@ -881,20 +888,64 @@ def resultado():
                 # Actualizar estadísticas del usuario
                 try:
                     # Obtener el usuario actual
-                    user_response = supabase.table('usuarios').select('total_examenes_rendidos').eq('id', current_user.id).execute()
+                    user_response = supabase.table('usuarios').select('total_examenes_rendidos, correctas_total, parciales_total, incorrectas_total').eq('id', current_user.id).execute()
                     if user_response.data:
-                        total_actual = user_response.data[0].get('total_examenes_rendidos', 0)
+                        user_data = user_response.data[0]
+                        total_actual = user_data.get('total_examenes_rendidos', 0)
+                        correctas_actual = user_data.get('correctas_total', 0)
+                        parciales_actual = user_data.get('parciales_total', 0)
+                        incorrectas_actual = user_data.get('incorrectas_total', 0)
+                        
                         nuevo_total = total_actual + 1
+                        nuevo_correctas = correctas_actual + correctas
+                        nuevo_parciales = parciales_actual + parciales
+                        nuevo_incorrectas = incorrectas_actual + incorrectas
                         
                         # Actualizar el contador
                         supabase.table('usuarios').update({
                             'total_examenes_rendidos': nuevo_total,
+                            'correctas_total': nuevo_correctas,
+                            'parciales_total': nuevo_parciales,
+                            'incorrectas_total': nuevo_incorrectas,
                             'ultima_actividad': datetime.utcnow().isoformat()
                         }).eq('id', current_user.id).execute()
                         
-                        print(f"✅ Estadísticas actualizadas: {nuevo_total} exámenes")
+                        print(f"✅ Estadísticas actualizadas: {nuevo_total} exámenes, {nuevo_correctas} correctas, {nuevo_parciales} parciales, {nuevo_incorrectas} incorrectas")
                 except Exception as e:
                     print(f"⚠️ Error actualizando estadísticas: {e}")
+                
+                # Guardar estadísticas diarias
+                try:
+                    fecha_hoy = datetime.utcnow().date().isoformat()
+                    
+                    # Verificar si ya existen estadísticas para hoy
+                    stats_response = supabase.table('estadisticas_usuarios').select('*').eq('usuario_id', current_user.id).eq('fecha_estadistica', fecha_hoy).execute()
+                    
+                    if stats_response.data:
+                        # Actualizar estadísticas existentes
+                        stats_id = stats_response.data[0]['id']
+                        supabase.table('estadisticas_usuarios').update({
+                            'examenes_rendidos_hoy': stats_response.data[0].get('examenes_rendidos_hoy', 0) + 1,
+                            'preguntas_correctas_hoy': stats_response.data[0].get('preguntas_correctas_hoy', 0) + correctas,
+                            'preguntas_incorrectas_hoy': stats_response.data[0].get('preguntas_incorrectas_hoy', 0) + incorrectas,
+                            'tiempo_total_estudio_hoy': stats_response.data[0].get('tiempo_total_estudio_hoy', 0) + int(float(resumen["tiempo_total"])),
+                            'materias_estudiadas_hoy': [preguntas[0].get("tema", "General")]
+                        }).eq('id', stats_id).execute()
+                    else:
+                        # Crear nuevas estadísticas para hoy
+                        supabase.table('estadisticas_usuarios').insert({
+                            'usuario_id': current_user.id,
+                            'fecha_estadistica': fecha_hoy,
+                            'examenes_rendidos_hoy': 1,
+                            'preguntas_correctas_hoy': correctas,
+                            'preguntas_incorrectas_hoy': incorrectas,
+                            'tiempo_total_estudio_hoy': int(float(resumen["tiempo_total"])),
+                            'materias_estudiadas_hoy': [preguntas[0].get("tema", "General")]
+                        }).execute()
+                    
+                    print(f"✅ Estadísticas diarias guardadas para {fecha_hoy}")
+                except Exception as e:
+                    print(f"⚠️ Error guardando estadísticas diarias: {e}")
                 
                 print(f"✅ Examen guardado exitosamente en Supabase para usuario {current_user.email}")
                 
@@ -989,13 +1040,22 @@ def detalle_examen(examen_id):
                             except:
                                 opciones = []
                         
+                        # Determinar el feedback basado en la respuesta
+                        feedback = ""
+                        if pregunta.get('respuesta_usuario') == pregunta.get('respuesta_correcta'):
+                            feedback = "✔️ CORRECTA"
+                        else:
+                            feedback = "❌ INCORRECTA"
+                        
                         preguntas.append({
                             'enunciado': pregunta['enunciado'],
                             'opciones': opciones,
+                            'opciones_decoded': opciones,  # Para el template
                             'respuesta_usuario': pregunta['respuesta_usuario'],
                             'respuesta_correcta': pregunta['respuesta_correcta'],
                             'tipo': pregunta['tipo'],
-                            'tema': pregunta['tema']
+                            'tema': pregunta['tema'],
+                            'feedback': feedback
                         })
                     
                     # Formatear examen para el template
@@ -1004,7 +1064,12 @@ def detalle_examen(examen_id):
                         'fecha': datetime.fromisoformat(examen['fecha_rendido'].replace('Z', '+00:00')),
                         'nota': examen['nota'],
                         'materia': examen['materia'],
-                        'tiempo_total': examen['tiempo_duracion']
+                        'tiempo_total': examen['tiempo_duracion'],
+                        # Agregar métricas detalladas
+                        'correctas': examen.get('correctas', 0),
+                        'parciales': examen.get('parciales', 0),
+                        'incorrectas': examen.get('incorrectas', 0),
+                        'feedback_general': examen.get('feedback_general', 'Sin feedback disponible')
                     }
                     
                     return render_template("detalle_examen.html", examen=examen_formateado, preguntas=preguntas)
