@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash, make_response, send_from_directory
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 # from flask_sqlalchemy import SQLAlchemy  # Comentado: no se usa en Supabase
 from werkzeug.security import generate_password_hash, check_password_hash
 from openai import OpenAI
@@ -25,6 +24,26 @@ app = Flask(__name__, template_folder='Templates')
 app.config.from_object('config.ProductionConfig' if os.environ.get('FLASK_ENV') == 'production' else 'config.DevelopmentConfig')
 app.jinja_env.globals.update(range=range)
 
+# Context processor para pasar información del usuario a todos los templates
+@app.context_processor
+def inject_user():
+    """Inyectar información del usuario en todos los templates"""
+    if is_authenticated():
+        current_user = get_current_user()
+        return {
+            'current_user': {
+                'id': current_user['id'],
+                'email': current_user['email'],
+                'nombre': current_user['nombre'],
+                'is_authenticated': True
+            }
+        }
+    return {
+        'current_user': {
+            'is_authenticated': False
+        }
+    }
+
 # Inicializar Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
@@ -40,54 +59,9 @@ else:
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app_id = "AV6EGRRK9V"
-
-# Modelo de Usuario simplificado para Supabase
-class User(UserMixin):
-    def __init__(self, id, email, nombre, fecha_registro, como_nos_conociste=None, uso_plataforma=None, preguntas_completadas=False):
-        self.id = id
-        self.email = email
-        self.nombre = nombre
-        self.fecha_registro = fecha_registro
-        self.como_nos_conociste = como_nos_conociste
-        self.uso_plataforma = uso_plataforma
-        self.preguntas_completadas = preguntas_completadas
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-# Modelo de Usuario para Supabase Auth (simplificado)
-class SupabaseUser(UserMixin):
-    def __init__(self, user_data):
-        self.id = user_data.get('id')
-        self.email = user_data.get('email')
-        self.nombre = user_data.get('user_metadata', {}).get('nombre', user_data.get('email', '').split('@')[0])
-        self.fecha_registro = datetime.fromisoformat(user_data.get('created_at', datetime.utcnow().isoformat()).replace('Z', '+00:00'))
-        self.como_nos_conociste = user_data.get('user_metadata', {}).get('como_nos_conociste')
-        self.uso_plataforma = user_data.get('user_metadata', {}).get('plataforma_uso')
-        self.preguntas_completadas = bool(user_data.get('user_metadata', {}).get('preguntas_completadas', 0))
-        self.provider = user_data.get('app_metadata', {}).get('provider', 'email')
-
-@login_manager.user_loader
-def load_user(user_id):
-    try:
-        if supabase:
-            # Obtener usuario desde Supabase Auth
-            response = supabase.auth.get_user()
-            if response.user and str(response.user.id) == str(user_id):
-                return SupabaseUser(response.user)
-    except Exception as e:
-        print(f"Error loading user: {e}")
-    return None
 
 @app.route("/")
 def index():
