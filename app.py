@@ -960,7 +960,31 @@ def resultado():
                 
             except Exception as e:
                 print(f"❌ Error verificando tablas: {e}")
-                return render_template("resultado_abierto.html", respuestas=respuestas, preguntas=preguntas, feedbacks=feedbacks, resumen=resumen, respuestas_texto_usuario=respuestas_texto_usuario, respuestas_texto_correcta=respuestas_texto_correcta)
+                print(f"🔍 Intentando crear tabla 'examenes' si no existe...")
+                try:
+                    # Crear tabla examenes si no existe
+                    supabase.table('examenes').insert({
+                        'usuario_id': current_user['id'],
+                        'titulo': 'Test',
+                        'materia': 'Test',
+                        'fecha_creacion': datetime.utcnow().isoformat(),
+                        'fecha_rendido': datetime.utcnow().isoformat(),
+                        'preguntas': '[]',
+                        'respuestas': '[]',
+                        'nota': 0,
+                        'tiempo_duracion': 0,
+                        'estado': 'test',
+                        'tiempo_total_segundos': 0,
+                        'correctas': 0,
+                        'parciales': 0,
+                        'incorrectas': 0,
+                        'total_preguntas': 0,
+                        'feedback_general': 'Test'
+                    }).execute()
+                    print(f"✅ Tabla 'examenes' creada/verificada")
+                except Exception as e2:
+                    print(f"❌ No se pudo crear tabla 'examenes': {e2}")
+                    return render_template("resultado_abierto.html", respuestas=respuestas, preguntas=preguntas, feedbacks=feedbacks, resumen=resumen, respuestas_texto_usuario=respuestas_texto_usuario, respuestas_texto_correcta=respuestas_texto_correcta)
             
             # Guardar examen principal
             examen_data = {
