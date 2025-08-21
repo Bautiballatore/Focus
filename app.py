@@ -238,12 +238,21 @@ def auth_callback():
                         # Guardar usuario en sesión de Flask
                         session['user_id'] = response.user.id
                         session['user_email'] = response.user.email
-                        session['user_nombre'] = response.user.user_metadata.get('nombre', response.user.email.split('@')[0])
+                        
+                        # Verificar que user_metadata sea un diccionario
+                        if hasattr(response.user, 'user_metadata') and isinstance(response.user.user_metadata, dict):
+                            session['user_nombre'] = response.user.user_metadata.get('nombre', response.user.email.split('@')[0])
+                        else:
+                            session['user_nombre'] = response.user.email.split('@')[0]
                         
                         print(f"✅ Usuario autenticado exitosamente: {response.user.email}")
                         
                         # Verificar si el usuario ya completó las preguntas
-                        preguntas_completadas = response.user.user_metadata.get('preguntas_completadas', 0)
+                        if hasattr(response.user, 'user_metadata') and isinstance(response.user.user_metadata, dict):
+                            preguntas_completadas = response.user.user_metadata.get('preguntas_completadas', 0)
+                        else:
+                            preguntas_completadas = 0
+                            
                         if not preguntas_completadas:
                             print(f"🔄 Redirigiendo a preguntas de usuario")
                             return redirect(url_for("preguntas_usuario"))
@@ -914,10 +923,11 @@ def resultado():
     }
 
     # GUARDAR EN BASE DE DATOS SUPABASE
-    if current_user.is_authenticated and supabase:
+    if is_authenticated() and supabase:
         try:
+            current_user = get_current_user()
             print(f"\n🔍 INTENTANDO GUARDAR EXAMEN EN SUPABASE...")
-            print(f"Usuario: {current_user.email} (ID: {current_user.id})")
+            print(f"Usuario: {current_user['email']} (ID: {current_user['id']})")
             print(f"Nota: {nota}/10")
             print(f"Tiempo: {resumen['tiempo_total']}s")
             
@@ -932,7 +942,7 @@ def resultado():
                 print(f"✅ Tabla 'preguntas_examen' existe")
                 
                 # Verificar tabla usuarios
-                usuarios_check = supabase.table('usuarios').select('id').eq('id', current_user.id).execute()
+                usuarios_check = supabase.table('usuarios').select('id').eq('id', current_user['id']).execute()
                 print(f"✅ Usuario encontrado en tabla 'usuarios'")
                 
             except Exception as e:
@@ -941,7 +951,7 @@ def resultado():
             
             # Guardar examen principal
             examen_data = {
-                'usuario_id': current_user.id,
+                'usuario_id': current_user['id'],
                 'titulo': f'Examen de {preguntas[0].get("tema", "General")}',
                 'materia': preguntas[0].get("tema", "General"),
                 'fecha_creacion': datetime.utcnow().isoformat(),
@@ -994,7 +1004,7 @@ def resultado():
                 # Actualizar estadísticas del usuario
                 try:
                     # Obtener el usuario actual
-                    user_response = supabase.table('usuarios').select('total_examenes_rendidos, correctas_total, parciales_total, incorrectas_total').eq('id', current_user.id).execute()
+                    user_response = supabase.table('usuarios').select('total_examenes_rendidos, correctas_total, parciales_total, incorrectas_total').eq('id', current_user['id']).execute()
                     if user_response.data:
                         user_data = user_response.data[0]
                         total_actual = user_data.get('total_examenes_rendidos', 0)
@@ -1014,7 +1024,7 @@ def resultado():
                             'parciales_total': nuevo_parciales,
                             'incorrectas_total': nuevo_incorrectas,
                             'ultima_actividad': datetime.utcnow().isoformat()
-                        }).eq('id', current_user.id).execute()
+                        }).eq('id', current_user['id']).execute()
                         
                         print(f"✅ Estadísticas actualizadas: {nuevo_total} exámenes, {nuevo_correctas} correctas, {nuevo_parciales} parciales, {nuevo_incorrectas} incorrectas")
                 except Exception as e:
@@ -1025,7 +1035,7 @@ def resultado():
                     fecha_hoy = datetime.utcnow().date().isoformat()
                     
                     # Verificar si ya existen estadísticas para hoy
-                    stats_response = supabase.table('estadisticas_usuarios').select('*').eq('usuario_id', current_user.id).eq('fecha_estadistica', fecha_hoy).execute()
+                    stats_response = supabase.table('estadisticas_usuarios').select('*').eq('usuario_id', current_user['id']).eq('fecha_estadistica', fecha_hoy).execute()
                     
                     if stats_response.data:
                         # Actualizar estadísticas existentes
@@ -1040,7 +1050,7 @@ def resultado():
                     else:
                         # Crear nuevas estadísticas para hoy
                         supabase.table('estadisticas_usuarios').insert({
-                            'usuario_id': current_user.id,
+                            'usuario_id': current_user['id'],
                             'fecha_estadistica': fecha_hoy,
                             'examenes_rendidos_hoy': 1,
                             'preguntas_correctas_hoy': correctas,
@@ -1053,7 +1063,7 @@ def resultado():
                 except Exception as e:
                     print(f"⚠️ Error guardando estadísticas diarias: {e}")
                 
-                print(f"✅ Examen guardado exitosamente en Supabase para usuario {current_user.email}")
+                print(f"✅ Examen guardado exitosamente en Supabase para usuario {current_user['email']}")
                 
         except Exception as e:
             print(f"❌ Error al guardar examen en Supabase: {e}")
