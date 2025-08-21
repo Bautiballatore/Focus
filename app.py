@@ -65,7 +65,7 @@ class User(UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-# Modelo de Usuario para Supabase Auth
+# Modelo de Usuario para Supabase Auth (simplificado)
 class SupabaseUser(UserMixin):
     def __init__(self, user_data):
         self.id = user_data.get('id')
@@ -85,20 +85,6 @@ def load_user(user_id):
             response = supabase.auth.get_user()
             if response.user and str(response.user.id) == str(user_id):
                 return SupabaseUser(response.user)
-            
-            # Fallback: buscar en tabla usuarios (para compatibilidad)
-            response = supabase.table('usuarios').select('*').eq('id', user_id).execute()
-            if response.data:
-                user_data = response.data[0]
-                return User(
-                    id=user_data['id'],
-                    email=user_data['email'],
-                    nombre=user_data['nombre'],
-                    fecha_registro=datetime.fromisoformat(user_data['fecha_registro'].replace('Z', '+00:00')),
-                    como_nos_conociste=user_data.get('como_nos_conociste'),
-                    uso_plataforma=user_data.get('plataforma_uso'),
-                    preguntas_completadas=bool(user_data.get('preguntas_completadas', 0))
-                )
     except Exception as e:
         print(f"Error loading user: {e}")
     return None
@@ -133,13 +119,15 @@ def signup():
                 })
                 
                 if user.user:
+                    print(f"✅ Usuario registrado exitosamente: {user.user.email}")
                     flash("Usuario registrado exitosamente. Revisa tu email para confirmar la cuenta.")
                     return redirect(url_for('login'))
                 else:
+                    print(f"❌ No se pudo crear usuario")
                     flash("Error al registrar usuario. Intenta de nuevo.")
                     
         except Exception as e:
-            print(f"Error en signup: {e}")
+            print(f"❌ Error en signup: {e}")
             if "already registered" in str(e).lower():
                 flash("El email ya está registrado. Por favor, usa otro email.")
             else:
@@ -164,21 +152,32 @@ def signin():
                 })
                 
                 if user.user:
+                    print(f"✅ Usuario autenticado exitosamente: {user.user.email}")
+                    
                     # Crear usuario de Flask-Login
                     flask_user = SupabaseUser(user.user)
                     login_user(flask_user)
                     
+                    print(f"✅ Usuario logueado en Flask-Login: {flask_user.email}")
+                    
                     # Verificar si el usuario ya completó las preguntas
                     if not flask_user.preguntas_completadas:
+                        print(f"🔄 Redirigiendo a preguntas de usuario")
                         return redirect(url_for("preguntas_usuario"))
                     
                     next_page = request.args.get('next')
-                    return redirect(next_page) if next_page else redirect(url_for('generar'))
+                    if next_page:
+                        print(f"🔄 Redirigiendo a: {next_page}")
+                        return redirect(next_page)
+                    else:
+                        print(f"🔄 Redirigiendo a generar examen")
+                        return redirect(url_for('generar'))
                 else:
+                    print(f"❌ No se pudo autenticar usuario")
                     flash("Email o contraseña incorrectos")
                     
         except Exception as e:
-            print(f"Error en signin: {e}")
+            print(f"❌ Error en signin: {e}")
             flash("Email o contraseña incorrectos")
             
         return render_template("login.html")
@@ -234,25 +233,11 @@ def auth_callback():
                     if response.session and response.user:
                         print(f"✅ Sesión obtenida para usuario: {response.user.email}")
                         
-                        # Crear usuario de Flask-Login
+                        # Crear usuario de Flask-Login (simplificado)
                         user = SupabaseUser(response.user)
                         login_user(user)
                         
                         print(f"✅ Usuario autenticado exitosamente: {user.email}")
-                        
-                        # Log de actividad
-                        try:
-                            log_data = {
-                                'usuario_id': user.id,
-                                'tipo_actividad': 'login',
-                                'fecha_actividad': datetime.utcnow().isoformat(),
-                                'detalles': {'accion': 'Usuario inició sesión', 'provider': 'google'},
-                                'ip_address': request.remote_addr
-                            }
-                            supabase.table('logs_actividad').insert(log_data).execute()
-                            print(f"✅ Log de actividad guardado")
-                        except Exception as e:
-                            print(f"⚠️ Error logging Google login: {e}")
                         
                         # Verificar si el usuario ya completó las preguntas
                         if not user.preguntas_completadas:
@@ -286,26 +271,15 @@ def auth_logout():
     """Cerrar sesión con Supabase Auth"""
     try:
         if supabase:
-            # Log de actividad
-            try:
-                log_data = {
-                    'usuario_id': current_user.id,
-                    'tipo_actividad': 'logout',
-                    'fecha_actividad': datetime.utcnow().isoformat(),
-                    'detalles': {'accion': 'Usuario cerró sesión'},
-                    'ip_address': request.remote_addr
-                }
-                supabase.table('logs_actividad').insert(log_data).execute()
-            except Exception as e:
-                print(f"Error logging logout: {e}")
-            
             # Cerrar sesión en Supabase
             supabase.auth.sign_out()
+            print(f"✅ Usuario cerró sesión en Supabase")
             
     except Exception as e:
-        print(f"Error en logout: {e}")
+        print(f"❌ Error en logout: {e}")
     
     logout_user()
+    print(f"✅ Usuario cerró sesión en Flask-Login")
     return redirect(url_for("index"))
 
 @app.route("/registro", methods=["GET", "POST"])
