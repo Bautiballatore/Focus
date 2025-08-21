@@ -1187,7 +1187,10 @@ def historial():
         if supabase:
             # Obtener exámenes del usuario desde Supabase
             current_user = get_current_user()
+            print(f"🔍 Buscando exámenes para usuario: {current_user['id']}")
+            
             response = supabase.table('examenes').select('*').eq('usuario_id', current_user['id']).order('fecha_rendido', desc=True).execute()
+            print(f"📊 Respuesta de Supabase: {len(response.data) if response.data else 0} exámenes encontrados")
             
             if response.data:
                 examenes = []
