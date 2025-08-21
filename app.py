@@ -30,14 +30,53 @@ def inject_user():
     """Inyectar información del usuario en todos los templates"""
     if is_authenticated():
         current_user = get_current_user()
+        
+        # Obtener información adicional del usuario desde Supabase
+        try:
+            if supabase:
+                # Obtener datos del usuario desde la tabla usuarios
+                user_response = supabase.table('usuarios').select('*').eq('id', current_user['id']).execute()
+                if user_response.data:
+                    user_data = user_response.data[0]
+                    return {
+                        'current_user': {
+                            'id': current_user['id'],
+                            'email': current_user['email'],
+                            'nombre': current_user['nombre'],
+                            'fecha_registro': datetime.fromisoformat(user_data.get('fecha_registro', datetime.utcnow().isoformat()).replace('Z', '+00:00')),
+                            'como_nos_conociste': user_data.get('como_nos_conociste'),
+                            'uso_plataforma': user_data.get('plataforma_uso'),
+                            'preguntas_completadas': user_data.get('preguntas_completadas', 0),
+                            'total_examenes_rendidos': user_data.get('total_examenes_rendidos', 0),
+                            'correctas_total': user_data.get('correctas_total', 0),
+                            'parciales_total': user_data.get('parciales_total', 0),
+                            'incorrectas_total': user_data.get('incorrectas_total', 0),
+                            'ultima_actividad': user_data.get('ultima_actividad'),
+                            'is_authenticated': True
+                        }
+                    }
+        except Exception as e:
+            print(f"Error obteniendo datos del usuario para template: {e}")
+        
+        # Fallback si no se pueden obtener los datos adicionales
         return {
             'current_user': {
                 'id': current_user['id'],
                 'email': current_user['email'],
                 'nombre': current_user['nombre'],
+                'fecha_registro': datetime.utcnow(),
+                'como_nos_conociste': None,
+                'uso_plataforma': None,
+                'preguntas_completadas': 0,
+                'total_examenes_rendidos': 0,
+                'correctas_total': 0,
+                'parciales_total': 0,
+                'incorrectas_total': 0,
+                'ultima_actividad': None,
                 'is_authenticated': True
             }
         }
+    
     return {
         'current_user': {
             'is_authenticated': False
