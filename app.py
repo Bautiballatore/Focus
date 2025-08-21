@@ -120,8 +120,8 @@ def signup():
         
         try:
             if supabase:
-                # Crear usuario con Supabase Auth
-                response = supabase.auth.sign_up({
+                # Crear usuario con Supabase Auth (simple y directo)
+                user = supabase.auth.sign_up({
                     "email": email,
                     "password": password,
                     "options": {
@@ -132,35 +132,14 @@ def signup():
                     }
                 })
                 
-                if response.user:
-                    print(f"✅ Usuario registrado exitosamente: {response.user.email}")
-                    
-                    # Crear usuario en la tabla usuarios si no existe
-                    try:
-                        user_data = {
-                            'id': response.user.id,
-                            'email': response.user.email,
-                            'nombre': nombre,
-                            'fecha_registro': datetime.utcnow().isoformat(),
-                            'preguntas_completadas': 0,
-                            'activo': True
-                        }
-                        
-                        supabase.table('usuarios').insert(user_data).execute()
-                        print(f"✅ Usuario creado en tabla usuarios: {response.user.id}")
-                        
-                    except Exception as e:
-                        print(f"⚠️ Error creando usuario en tabla: {e}")
-                        # No es crítico, el trigger debería manejarlo
-                    
+                if user.user:
                     flash("Usuario registrado exitosamente. Revisa tu email para confirmar la cuenta.")
                     return redirect(url_for('login'))
                 else:
-                    print(f"❌ No se pudo crear usuario")
                     flash("Error al registrar usuario. Intenta de nuevo.")
                     
         except Exception as e:
-            print(f"❌ Error en signup: {e}")
+            print(f"Error en signup: {e}")
             if "already registered" in str(e).lower():
                 flash("El email ya está registrado. Por favor, usa otro email.")
             else:
@@ -178,80 +157,29 @@ def signin():
         
         try:
             if supabase:
-                # Iniciar sesión con Supabase Auth
-                response = supabase.auth.sign_in_with_password({
+                # Iniciar sesión con Supabase Auth (simple y directo)
+                user = supabase.auth.sign_in_with_password({
                     "email": email,
                     "password": password
                 })
                 
-                if response.user:
-                    print(f"✅ Usuario autenticado exitosamente: {response.user.email}")
-                    
-                    # Verificar que el usuario exista en la tabla usuarios
-                    try:
-                        user_result = supabase.table('usuarios').select('*').eq('id', response.user.id).execute()
-                        
-                        if not user_result.data:
-                            print(f"⚠️ Usuario no encontrado en tabla usuarios, creando...")
-                            # Crear usuario en la tabla usuarios si no existe
-                            user_data = {
-                                'id': response.user.id,
-                                'email': response.user.email,
-                                'nombre': response.user.user_metadata.get('nombre', email.split('@')[0]),
-                                'fecha_registro': datetime.utcnow().isoformat(),
-                                'preguntas_completadas': 0,
-                                'activo': True
-                            }
-                            
-                            supabase.table('usuarios').insert(user_data).execute()
-                            print(f"✅ Usuario creado en tabla usuarios: {response.user.id}")
-                        
-                    except Exception as e:
-                        print(f"⚠️ Error verificando/creando usuario en tabla: {e}")
-                        # No es crítico, continuamos con el login
-                    
+                if user.user:
                     # Crear usuario de Flask-Login
-                    user = SupabaseUser(response.user)
-                    login_user(user)
-                    
-                    print(f"✅ Usuario logueado en Flask-Login: {user.email}")
-                    
-                    # Log de actividad
-                    try:
-                        log_data = {
-                            'usuario_id': user.id,
-                            'tipo_actividad': 'login',
-                            'fecha_actividad': datetime.utcnow().isoformat(),
-                            'detalles': {'accion': 'Usuario inició sesión', 'provider': 'email'},
-                            'ip_address': request.remote_addr
-                        }
-                        supabase.table('logs_actividad').insert(log_data).execute()
-                        print(f"✅ Log de actividad guardado")
-                    except Exception as e:
-                        print(f"⚠️ Error logging login: {e}")
+                    flask_user = SupabaseUser(user.user)
+                    login_user(flask_user)
                     
                     # Verificar si el usuario ya completó las preguntas
-                    if not user.preguntas_completadas:
-                        print(f"🔄 Redirigiendo a preguntas de usuario")
+                    if not flask_user.preguntas_completadas:
                         return redirect(url_for("preguntas_usuario"))
                     
                     next_page = request.args.get('next')
-                    if next_page:
-                        print(f"🔄 Redirigiendo a: {next_page}")
-                        return redirect(next_page)
-                    else:
-                        print(f"🔄 Redirigiendo a generar examen")
-                        return redirect(url_for('generar'))
+                    return redirect(next_page) if next_page else redirect(url_for('generar'))
                 else:
-                    print(f"❌ No se pudo autenticar usuario")
                     flash("Email o contraseña incorrectos")
                     
         except Exception as e:
-            print(f"❌ Error en signin: {e}")
-            if "invalid login credentials" in str(e).lower():
-                flash("Email o contraseña incorrectos")
-            else:
-                flash("Error al iniciar sesión. Intenta de nuevo.")
+            print(f"Error en signin: {e}")
+            flash("Email o contraseña incorrectos")
             
         return render_template("login.html")
     
