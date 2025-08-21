@@ -988,7 +988,7 @@ def resultado():
             print(f"Nota: {nota}/10")
             print(f"Tiempo: {resumen['tiempo_total']}s")
             
-            # Verificar que las tablas existan
+            # Verificar que las tablas existan y crear usuario si no existe
             try:
                 # Verificar tabla examenes
                 examenes_check = supabase.table('examenes').select('id').limit(1).execute()
@@ -998,37 +998,34 @@ def resultado():
                 preguntas_check = supabase.table('preguntas_examen').select('id').limit(1).execute()
                 print(f"✅ Tabla 'preguntas_examen' existe")
                 
-                # Verificar tabla usuarios
-                usuarios_check = supabase.table('usuarios').select('id').eq('id', current_user['id']).execute()
-                print(f"✅ Usuario encontrado en tabla 'usuarios'")
+                # Verificar si el usuario existe en public.usuarios, si no, crearlo
+                try:
+                    usuario_check = supabase.table('usuarios').select('id').eq('id', current_user['id']).execute()
+                    if not usuario_check.data:
+                        print(f"🔄 Usuario no existe en public.usuarios, creándolo...")
+                        nuevo_usuario = {
+                            'id': current_user['id'],
+                            'email': current_user['email'],
+                            'nombre': current_user['nombre'],
+                            'fecha_registro': datetime.utcnow().isoformat(),
+                            'preguntas_completadas': 0,
+                            'total_examenes_rendidos': 0,
+                            'correctas_total': 0,
+                            'parciales_total': 0,
+                            'incorrectas_total': 0,
+                            'ultima_actividad': datetime.utcnow().isoformat()
+                        }
+                        supabase.table('usuarios').insert(nuevo_usuario).execute()
+                        print(f"✅ Usuario creado en public.usuarios: {current_user['email']}")
+                    else:
+                        print(f"✅ Usuario encontrado en tabla 'usuarios'")
+                except Exception as e:
+                    print(f"⚠️ Error verificando/creando usuario en public.usuarios: {e}")
+                    return render_template("resultado_abierto.html", respuestas=respuestas, preguntas=preguntas, feedbacks=feedbacks, resumen=resumen, respuestas_texto_usuario=respuestas_texto_usuario, respuestas_texto_correcta=respuestas_texto_correcta)
                 
             except Exception as e:
                 print(f"❌ Error verificando tablas: {e}")
-                print(f"🔍 Intentando crear tabla 'examenes' si no existe...")
-                try:
-                    # Crear tabla examenes si no existe
-                    supabase.table('examenes').insert({
-                        'usuario_id': current_user['id'],
-                        'titulo': 'Test',
-                        'materia': 'Test',
-                        'fecha_creacion': datetime.utcnow().isoformat(),
-                        'fecha_rendido': datetime.utcnow().isoformat(),
-                        'preguntas': '[]',
-                        'respuestas': '[]',
-                        'nota': 0,
-                        'tiempo_duracion': 0,
-                        'estado': 'test',
-                        'tiempo_total_segundos': 0,
-                        'correctas': 0,
-                        'parciales': 0,
-                        'incorrectas': 0,
-                        'total_preguntas': 0,
-                        'feedback_general': 'Test'
-                    }).execute()
-                    print(f"✅ Tabla 'examenes' creada/verificada")
-                except Exception as e2:
-                    print(f"❌ No se pudo crear tabla 'examenes': {e2}")
-                    return render_template("resultado_abierto.html", respuestas=respuestas, preguntas=preguntas, feedbacks=feedbacks, resumen=resumen, respuestas_texto_usuario=respuestas_texto_usuario, respuestas_texto_correcta=respuestas_texto_correcta)
+                return render_template("resultado_abierto.html", respuestas=respuestas, preguntas=preguntas, feedbacks=feedbacks, resumen=resumen, respuestas_texto_usuario=respuestas_texto_usuario, respuestas_texto_correcta=respuestas_texto_correcta)
             
             # Guardar examen principal
             examen_data = {
