@@ -297,34 +297,35 @@ def login():
     return redirect(url_for('signin'))
 
 @app.route("/preguntas-usuario", methods=["GET", "POST"])
-@login_required
 def preguntas_usuario():
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
     if request.method == "POST":
         como_nos_conociste = request.form.get("como_nos_conociste")
         uso_plataforma = request.form.get("uso_plataforma")
 
         try:
             if supabase:
+                # Obtener usuario actual
+                current_user = get_current_user()
+                
                 update_data = {
                     'como_nos_conociste': como_nos_conociste,
                     'plataforma_uso': uso_plataforma,
-                    'preguntas_completadas': 1,  # En Supabase es INTEGER, no BOOLEAN
+                    'preguntas_completadas': 1,
                     'ultima_actividad': datetime.utcnow().isoformat()
                 }
 
-                supabase.table('usuarios').update(update_data).eq('id', current_user.id).execute()
-
-                log_data = {
-                    'usuario_id': current_user.id,
-                    'tipo_actividad': 'completar_perfil',
-                    'fecha_actividad': datetime.utcnow().isoformat(),
-                    'detalles': {
-                        'como_nos_conociste': como_nos_conociste,
-                        'uso_plataforma': uso_plataforma
-                    },
-                    'ip_address': request.remote_addr
-                }
-                supabase.table('logs_actividad').insert(log_data).execute()
+                # Actualizar metadata del usuario en Supabase Auth
+                supabase.auth.update_user({
+                    "data": {
+                        "como_nos_conociste": como_nos_conociste,
+                        "plataforma_uso": uso_plataforma,
+                        "preguntas_completadas": 1
+                    }
+                })
 
                 flash("Información guardada exitosamente!")
                 return redirect(url_for('generar'))
@@ -338,12 +339,16 @@ def preguntas_usuario():
     return render_template("preguntas_usuario.html")
 
 @app.route("/logout")
-@login_required
 def logout():
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
     try:
         if supabase:
+            current_user = get_current_user()
             log_data = {
-                'usuario_id': current_user.id,
+                'usuario_id': current_user['id'],
                 'tipo_actividad': 'logout',
                 'fecha_actividad': datetime.utcnow().isoformat(),
                 'detalles': {'accion': 'Usuario cerró sesión'},
@@ -353,17 +358,23 @@ def logout():
     except Exception as e:
         print(f"Error logging logout: {e}")
 
-    logout_user()
+    # Limpiar sesión de Flask
+    session.clear()
     return redirect(url_for("index"))
 
 @app.route("/perfil")
-@login_required
 def perfil():
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
     return render_template("perfil.html")
 
 @app.route("/generar", methods=["GET", "POST"])
-@login_required
 def generar():
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
     if request.method == "GET":
         return render_template("generar.html")
 
@@ -730,8 +741,10 @@ def pregunta(numero):
     return render_template("examen.html", pregunta=pregunta, numero=numero + 1, total=len(preguntas), actual=numero, respuesta_actual=respuesta_actual)
 
 @app.route("/resultado")
-@login_required
 def resultado():
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
     preguntas = session.get("preguntas", [])
     respuestas = session.get("respuestas", [])
     tiempos = session.get("pregunta_times", [])
@@ -1078,12 +1091,15 @@ def reiniciar():
     return redirect(url_for("pregunta", numero=0))
 
 @app.route("/historial")
-@login_required
 def historial():
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
     try:
         if supabase:
             # Obtener exámenes del usuario desde Supabase
-            response = supabase.table('examenes').select('*').eq('usuario_id', current_user.id).order('fecha_rendido', desc=True).execute()
+            current_user = get_current_user()
+            response = supabase.table('examenes').select('*').eq('usuario_id', current_user['id']).order('fecha_rendido', desc=True).execute()
             
             if response.data:
                 examenes = []
@@ -1113,12 +1129,15 @@ def historial():
         return redirect(url_for('generar'))
 
 @app.route("/examen/<examen_id>")
-@login_required
 def detalle_examen(examen_id):
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
     try:
         if supabase:
             # Obtener examen desde Supabase
-            examen_response = supabase.table('examenes').select('*').eq('id', examen_id).eq('usuario_id', current_user.id).execute()
+            current_user = get_current_user()
+            examen_response = supabase.table('examenes').select('*').eq('id', examen_id).eq('usuario_id', current_user['id']).execute()
             
             if examen_response.data:
                 examen = examen_response.data[0]
@@ -1183,8 +1202,10 @@ def detalle_examen(examen_id):
         return redirect(url_for('historial'))
 
 @app.route("/wolfram", methods=["GET", "POST"])
-@login_required
 def wolfram_query():
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
     resultado = None
     imagen_url = None
     error = None
@@ -1270,8 +1291,10 @@ def wolfram_query():
     return render_template("wolfram.html", resultado=resultado, imagen_url=imagen_url, error=error, pods=pods)
 
 @app.route("/examen_matematico/<int:numero>", methods=["GET", "POST"])
-@login_required
 def examen_matematico(numero):
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
     ejercicios = session.get("ejercicios_matematicos", [])
     if not ejercicios or numero >= len(ejercicios):
         return redirect(url_for("resultado_matematico"))
@@ -1286,8 +1309,10 @@ def examen_matematico(numero):
     return render_template("examen_matematico.html", ejercicio=ejercicio, numero=numero + 1, total=len(ejercicios), actual=numero)
 
 @app.route("/resultado_matematico")
-@login_required
 def resultado_matematico():
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
     ejercicios = session.get("ejercicios_matematicos", [])
     for ejercicio in ejercicios:
         usuario = ejercicio.get("respuesta_usuario", "").strip()
