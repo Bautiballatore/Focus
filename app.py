@@ -167,6 +167,28 @@ def signin():
                 if user.user:
                     print(f"✅ Usuario autenticado exitosamente: {user.user.email}")
                     
+                    # Verificar si el usuario existe en public.usuarios, si no, crearlo
+                    try:
+                        usuario_check = supabase.table('usuarios').select('id').eq('id', user.user.id).execute()
+                        if not usuario_check.data:
+                            print(f"🔄 Usuario no existe en public.usuarios, creándolo...")
+                            nuevo_usuario = {
+                                'id': user.user.id,
+                                'email': user.user.email,
+                                'nombre': user.user.user_metadata.get('nombre', email.split('@')[0]),
+                                'fecha_registro': datetime.utcnow().isoformat(),
+                                'preguntas_completadas': 0,
+                                'total_examenes_rendidos': 0,
+                                'correctas_total': 0,
+                                'parciales_total': 0,
+                                'incorrectas_total': 0,
+                                'ultima_actividad': datetime.utcnow().isoformat()
+                            }
+                            supabase.table('usuarios').insert(nuevo_usuario).execute()
+                            print(f"✅ Usuario creado en public.usuarios: {user.user.email}")
+                    except Exception as e:
+                        print(f"⚠️ Error verificando/creando usuario en public.usuarios: {e}")
+                    
                     # Guardar usuario en sesión de Flask
                     session['user_id'] = user.user.id
                     session['user_email'] = user.user.email
@@ -247,6 +269,28 @@ def auth_callback():
                     
                     if response.session and response.user:
                         print(f"✅ Sesión obtenida para usuario: {response.user.email}")
+                        
+                        # Verificar si el usuario existe en public.usuarios, si no, crearlo
+                        try:
+                            usuario_check = supabase.table('usuarios').select('id').eq('id', response.user.id).execute()
+                            if not usuario_check.data:
+                                print(f"🔄 Usuario no existe en public.usuarios, creándolo...")
+                                nuevo_usuario = {
+                                    'id': response.user.id,
+                                    'email': response.user.email,
+                                    'nombre': response.user.user_metadata.get('nombre', response.user.email.split('@')[0]) if hasattr(response.user, 'user_metadata') and isinstance(response.user.user_metadata, dict) else response.user.email.split('@')[0],
+                                    'fecha_registro': datetime.utcnow().isoformat(),
+                                    'preguntas_completadas': 0,
+                                    'total_examenes_rendidos': 0,
+                                    'correctas_total': 0,
+                                    'parciales_total': 0,
+                                    'incorrectas_total': 0,
+                                    'ultima_actividad': datetime.utcnow().isoformat()
+                                }
+                                supabase.table('usuarios').insert(nuevo_usuario).execute()
+                                print(f"✅ Usuario creado en public.usuarios: {response.user.email}")
+                        except Exception as e:
+                            print(f"⚠️ Error verificando/creando usuario en public.usuarios: {e}")
                         
                         # Guardar usuario en sesión de Flask
                         session['user_id'] = response.user.id
