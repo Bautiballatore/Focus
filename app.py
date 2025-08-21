@@ -106,7 +106,7 @@ def signup():
         
         try:
             if supabase:
-                # Crear usuario con Supabase Auth (simple y directo)
+                # Crear usuario con Supabase Auth
                 user = supabase.auth.sign_up({
                     "email": email,
                     "password": password,
@@ -145,7 +145,7 @@ def signin():
         
         try:
             if supabase:
-                # Iniciar sesión con Supabase Auth (simple y directo)
+                # Iniciar sesión con Supabase Auth
                 user = supabase.auth.sign_in_with_password({
                     "email": email,
                     "password": password
@@ -154,14 +154,16 @@ def signin():
                 if user.user:
                     print(f"✅ Usuario autenticado exitosamente: {user.user.email}")
                     
-                    # Crear usuario de Flask-Login
-                    flask_user = SupabaseUser(user.user)
-                    login_user(flask_user)
+                    # Guardar usuario en sesión de Flask
+                    session['user_id'] = user.user.id
+                    session['user_email'] = user.user.email
+                    session['user_nombre'] = user.user.user_metadata.get('nombre', email.split('@')[0])
                     
-                    print(f"✅ Usuario logueado en Flask-Login: {flask_user.email}")
+                    print(f"✅ Usuario logueado en sesión Flask: {user.user.email}")
                     
                     # Verificar si el usuario ya completó las preguntas
-                    if not flask_user.preguntas_completadas:
+                    preguntas_completadas = user.user.user_metadata.get('preguntas_completadas', 0)
+                    if not preguntas_completadas:
                         print(f"🔄 Redirigiendo a preguntas de usuario")
                         return redirect(url_for("preguntas_usuario"))
                     
@@ -233,14 +235,16 @@ def auth_callback():
                     if response.session and response.user:
                         print(f"✅ Sesión obtenida para usuario: {response.user.email}")
                         
-                        # Crear usuario de Flask-Login (simplificado)
-                        user = SupabaseUser(response.user)
-                        login_user(user)
+                        # Guardar usuario en sesión de Flask
+                        session['user_id'] = response.user.id
+                        session['user_email'] = response.user.email
+                        session['user_nombre'] = response.user.user_metadata.get('nombre', response.user.email.split('@')[0])
                         
-                        print(f"✅ Usuario autenticado exitosamente: {user.email}")
+                        print(f"✅ Usuario autenticado exitosamente: {response.user.email}")
                         
                         # Verificar si el usuario ya completó las preguntas
-                        if not user.preguntas_completadas:
+                        preguntas_completadas = response.user.user_metadata.get('preguntas_completadas', 0)
+                        if not preguntas_completadas:
                             print(f"🔄 Redirigiendo a preguntas de usuario")
                             return redirect(url_for("preguntas_usuario"))
                         
@@ -266,7 +270,6 @@ def auth_callback():
         return redirect(url_for('login'))
 
 @app.route("/auth/logout")
-@login_required
 def auth_logout():
     """Cerrar sesión con Supabase Auth"""
     try:
@@ -278,8 +281,9 @@ def auth_logout():
     except Exception as e:
         print(f"❌ Error en logout: {e}")
     
-    logout_user()
-    print(f"✅ Usuario cerró sesión en Flask-Login")
+    # Limpiar sesión de Flask
+    session.clear()
+    print(f"✅ Sesión de Flask limpiada")
     return redirect(url_for("index"))
 
 @app.route("/registro", methods=["GET", "POST"])
@@ -1571,6 +1575,24 @@ def robots():
 def google_verification():
     """Archivo de verificación de Google Search Console"""
     return send_from_directory('static', 'google48eb92cb7318a041.html')
+
+# =====================================================
+# SISTEMA SIMPLE DE AUTENTICACIÓN CON SUPABASE AUTH
+# =====================================================
+
+def is_authenticated():
+    """Verificar si el usuario está autenticado"""
+    return 'user_id' in session and 'user_email' in session
+
+def get_current_user():
+    """Obtener datos del usuario actual desde la sesión"""
+    if is_authenticated():
+        return {
+            'id': session.get('user_id'),
+            'email': session.get('user_email'),
+            'nombre': session.get('user_nombre')
+        }
+    return None
 
 if __name__ == '__main__':
     # Configuración para desarrollo
