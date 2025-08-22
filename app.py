@@ -10,7 +10,7 @@ import docx
 import re
 import time
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 import requests
 import base64
@@ -23,6 +23,12 @@ load_dotenv()
 app = Flask(__name__, template_folder='Templates')
 app.config.from_object('config.ProductionConfig' if os.environ.get('FLASK_ENV') == 'production' else 'config.DevelopmentConfig')
 app.jinja_env.globals.update(range=range)
+
+# Configuración de sesiones seguras
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Sesiones expiran en 7 días
+app.config['SESSION_COOKIE_SECURE'] = True  # Solo HTTPS en producción
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Previene acceso JavaScript a cookies
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protección CSRF básica
 
 # Context processor para pasar información del usuario a todos los templates
 @app.context_processor
@@ -413,6 +419,14 @@ def logout():
     try:
         if supabase:
             current_user = get_current_user()
+            # Invalidar sesión en Supabase (más seguro)
+            try:
+                supabase.auth.sign_out()
+                print(f"✅ Sesión de Supabase invalidada para usuario {current_user['email']}")
+            except Exception as e:
+                print(f"⚠️ Error invalidando sesión de Supabase: {e}")
+            
+            # Log de la actividad
             log_data = {
                 'usuario_id': current_user['id'],
                 'tipo_actividad': 'logout',
@@ -424,9 +438,11 @@ def logout():
     except Exception as e:
         print(f"Error logging logout: {e}")
 
-    # Limpiar sesión de Flask
+    # Limpiar sesión de Flask y invalidar cookie
     session.clear()
-    return redirect(url_for("index"))
+    response = redirect(url_for("index"))
+    response.delete_cookie('session')  # Eliminar cookie de sesión
+    return response
 
 @app.route("/perfil")
 def perfil():
@@ -1722,6 +1738,15 @@ def get_current_user():
             'nombre': session.get('user_nombre')
         }
     return None
+
+# Headers de seguridad básicos
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Frame-Options'] = 'DENY'  # Previene clickjacking
+    response.headers['X-Content-Type-Options'] = 'nosniff'  # Previene MIME sniffing
+    response.headers['X-XSS-Protection'] = '1; mode=block'  # Protección XSS básica
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'  # Control de referrer
+    return response
 
 if __name__ == '__main__':
     # Configuración para desarrollo
