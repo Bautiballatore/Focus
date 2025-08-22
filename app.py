@@ -24,11 +24,15 @@ app = Flask(__name__, template_folder='Templates')
 app.config.from_object('config.ProductionConfig' if os.environ.get('FLASK_ENV') == 'production' else 'config.DevelopmentConfig')
 app.jinja_env.globals.update(range=range)
 
+# Configuración de clave secreta para sesiones
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
 # Configuración de sesiones seguras
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Sesiones expiran en 7 días
-app.config['SESSION_COOKIE_SECURE'] = True  # Solo HTTPS en producción
+app.config['SESSION_COOKIE_SECURE'] = False  # Permitir HTTP para desarrollo y Heroku
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Previene acceso JavaScript a cookies
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protección CSRF básica
+app.config['SESSION_COOKIE_DOMAIN'] = None  # No restringir dominio
 
 # Context processor para pasar información del usuario a todos los templates
 @app.context_processor
