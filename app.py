@@ -139,7 +139,7 @@ def signup():
                 
                 if user.user:
                     print(f"✅ Usuario registrado exitosamente: {user.user.email}")
-                    flash("Usuario registrado exitosamente. Revisa tu email para confirmar la cuenta.")
+                    flash("Usuario registrado exitosamente. ")
                     return redirect(url_for('login'))
                 else:
                     print(f"❌ No se pudo crear usuario")
