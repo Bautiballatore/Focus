@@ -1062,13 +1062,15 @@ def resultado():
                 for i, pregunta in enumerate(preguntas):
                     pregunta_data = {
                         'examen_id': examen_id,
-                        'enunciado': pregunta['enunciado'],
+                        'pregunta': pregunta['enunciado'],
                         'opciones': json.dumps(pregunta.get('opciones', [])),
                         'respuesta_usuario': respuestas[i],
                         'respuesta_correcta': pregunta['respuesta'],
-                        'tipo': pregunta['tipo'],
-                        'tema': pregunta.get('tema', 'General'),
-                        'orden': i + 1
+                        'es_correcta': respuestas[i] == pregunta['respuesta'],
+                        'es_parcial': False,  # Por defecto, puedes ajustar según tu lógica
+                        'feedback': '',  # Por defecto vacío
+                        'orden': i + 1,
+                        'tiempo_respuesta': 0  # Por defecto 0, puedes ajustar si tienes este dato
                     }
                     
                     print(f"  Pregunta {i+1}: {pregunta['enunciado'][:50]}...")
@@ -1255,13 +1257,13 @@ def detalle_examen(examen_id):
                             feedback = "❌ INCORRECTA"
                         
                         preguntas.append({
-                            'enunciado': pregunta['enunciado'],
+                            'enunciado': pregunta['pregunta'],
                             'opciones': opciones,
                             'opciones_decoded': opciones,  # Para el template
                             'respuesta_usuario': pregunta['respuesta_usuario'],
                             'respuesta_correcta': pregunta['respuesta_correcta'],
-                            'tipo': pregunta['tipo'],
-                            'tema': pregunta['tema'],
+                            'tipo': 'multiple_choice',  # Por defecto
+                            'tema': 'General',  # Por defecto
                             'feedback': feedback
                         })
                     
