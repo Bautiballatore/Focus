@@ -383,24 +383,22 @@ def preguntas_usuario():
                 # Obtener usuario actual
                 current_user = get_current_user()
                 
-                update_data = {
+                # Actualizar la tabla usuarios en Supabase
+                update_response = supabase.table('usuarios').update({
                     'como_nos_conociste': como_nos_conociste,
                     'plataforma_uso': uso_plataforma,
                     'preguntas_completadas': 1,
                     'ultima_actividad': datetime.utcnow().isoformat()
-                }
-
-                # Actualizar metadata del usuario en Supabase Auth
-                supabase.auth.update_user({
-                    "data": {
-                        "como_nos_conociste": como_nos_conociste,
-                        "plataforma_uso": uso_plataforma,
-                        "preguntas_completadas": 1
-                    }
-                })
-
-                flash("Información guardada exitosamente!")
-                return redirect(url_for('generar'))
+                }).eq('id', current_user['id']).execute()
+                
+                if update_response.data:
+                    print(f"✅ Información actualizada para usuario {current_user['email']}: como_nos_conociste={como_nos_conociste}, plataforma_uso={uso_plataforma}")
+                    flash("Información guardada exitosamente!")
+                    return redirect(url_for('generar'))
+                else:
+                    print(f"❌ No se pudo actualizar información para usuario {current_user['email']}")
+                    flash("Error al guardar información. Intenta de nuevo.")
+                    return render_template("preguntas_usuario.html")
 
         except Exception as e:
             print(f"Error guardando preguntas: {e}")
