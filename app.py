@@ -312,20 +312,25 @@ def auth_callback():
                         
                         # Verificar si el usuario ya completó las preguntas desde la tabla usuarios
                         try:
+                            print(f"🔍 Verificando preguntas completadas para usuario {response.user.id}")
                             user_response = supabase.table('usuarios').select('preguntas_completadas').eq('id', response.user.id).execute()
+                            print(f"📊 Respuesta de la base de datos: {user_response.data}")
+                            
                             if user_response.data:
                                 preguntas_completadas = user_response.data[0].get('preguntas_completadas', 0)
+                                print(f"✅ Usuario ya completó preguntas: {preguntas_completadas}")
                             else:
                                 preguntas_completadas = 0
+                                print(f"⚠️ Usuario no encontrado en la base de datos")
                         except Exception as e:
-                            print(f"⚠️ Error verificando preguntas completadas: {e}")
+                            print(f"❌ Error verificando preguntas completadas: {e}")
                             preguntas_completadas = 0
                             
                         if not preguntas_completadas:
-                            print(f"🔄 Redirigiendo a preguntas de usuario")
+                            print(f"🔄 Redirigiendo a preguntas de usuario (preguntas_completadas={preguntas_completadas})")
                             return redirect(url_for("preguntas_usuario"))
                         
-                        print(f"🔄 Redirigiendo a generar examen")
+                        print(f"🔄 Redirigiendo a generar examen (preguntas_completadas={preguntas_completadas})")
                         return redirect(url_for('generar'))
                     else:
                         print(f"❌ No se pudo obtener sesión del usuario")
@@ -389,12 +394,15 @@ def preguntas_usuario():
                 current_user = get_current_user()
                 
                 # Actualizar la tabla usuarios en Supabase
+                print(f"🔄 Actualizando preguntas completadas para usuario {current_user['id']}")
                 update_response = supabase.table('usuarios').update({
                     'como_nos_conociste': como_nos_conociste,
                     'plataforma_uso': uso_plataforma,
                     'preguntas_completadas': 1,
                     'ultima_actividad': datetime.utcnow().isoformat()
                 }).eq('id', current_user['id']).execute()
+                
+                print(f"📊 Respuesta de actualización: {update_response.data}")
                 
                 if update_response.data:
                     print(f"✅ Información actualizada para usuario {current_user['email']}: como_nos_conociste={como_nos_conociste}, plataforma_uso={uso_plataforma}")
