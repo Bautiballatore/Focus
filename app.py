@@ -310,10 +310,15 @@ def auth_callback():
                         
                         print(f"✅ Usuario autenticado exitosamente: {response.user.email}")
                         
-                        # Verificar si el usuario ya completó las preguntas
-                        if hasattr(response.user, 'user_metadata') and isinstance(response.user.user_metadata, dict):
-                            preguntas_completadas = response.user.user_metadata.get('preguntas_completadas', 0)
-                        else:
+                        # Verificar si el usuario ya completó las preguntas desde la tabla usuarios
+                        try:
+                            user_response = supabase.table('usuarios').select('preguntas_completadas').eq('id', response.user.id).execute()
+                            if user_response.data:
+                                preguntas_completadas = user_response.data[0].get('preguntas_completadas', 0)
+                            else:
+                                preguntas_completadas = 0
+                        except Exception as e:
+                            print(f"⚠️ Error verificando preguntas completadas: {e}")
                             preguntas_completadas = 0
                             
                         if not preguntas_completadas:
