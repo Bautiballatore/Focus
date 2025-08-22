@@ -202,10 +202,24 @@ def signin():
                     
                     print(f"✅ Usuario logueado en sesión Flask: {user.user.email}")
                     
-                    # Verificar si el usuario ya completó las preguntas
-                    preguntas_completadas = user.user.user_metadata.get('preguntas_completadas', 0)
+                    # Verificar si el usuario ya completó las preguntas desde la tabla usuarios
+                    try:
+                        print(f"🔍 Verificando preguntas completadas para usuario {user.user.id}")
+                        user_response = supabase.table('usuarios').select('preguntas_completadas').eq('id', user.user.id).execute()
+                        print(f"📊 Respuesta de la base de datos: {user_response.data}")
+                        
+                        if user_response.data:
+                            preguntas_completadas = user_response.data[0].get('preguntas_completadas', 0)
+                            print(f"✅ Usuario ya completó preguntas: {preguntas_completadas}")
+                        else:
+                            preguntas_completadas = 0
+                            print(f"⚠️ Usuario no encontrado en la base de datos")
+                    except Exception as e:
+                        print(f"❌ Error verificando preguntas completadas: {e}")
+                        preguntas_completadas = 0
+                        
                     if not preguntas_completadas:
-                        print(f"🔄 Redirigiendo a preguntas de usuario")
+                        print(f"🔄 Redirigiendo a preguntas de usuario (preguntas_completadas={preguntas_completadas})")
                         return redirect(url_for("preguntas_usuario"))
                     
                     next_page = request.args.get('next')
@@ -213,7 +227,7 @@ def signin():
                         print(f"🔄 Redirigiendo a: {next_page}")
                         return redirect(next_page)
                     else:
-                        print(f"🔄 Redirigiendo a generar examen")
+                        print(f"🔄 Redirigiendo a generar examen (preguntas_completadas={preguntas_completadas})")
                         return redirect(url_for('generar'))
                 else:
                     print(f"❌ No se pudo autenticar usuario")
