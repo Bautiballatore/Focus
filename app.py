@@ -397,7 +397,12 @@ def login():
 @app.route("/preguntas-usuario", methods=["GET", "POST"])
 def preguntas_usuario():
     # Verificar autenticación simple
+    print(f"🔍 Verificando autenticación en preguntas_usuario")
+    print(f"🔍 Session data: {session}")
+    print(f"🔍 is_authenticated(): {is_authenticated()}")
+    
     if not is_authenticated():
+        print(f"❌ Usuario no autenticado, redirigiendo a login")
         return redirect(url_for('login'))
     
     if request.method == "POST":
@@ -1754,7 +1759,10 @@ def google_verification():
 
 def is_authenticated():
     """Verificar si el usuario está autenticado"""
-    return 'user_id' in session and 'user_email' in session
+    has_user_id = 'user_id' in session
+    has_user_email = 'user_email' in session
+    print(f"🔍 is_authenticated() - user_id: {has_user_id}, user_email: {has_user_email}")
+    return has_user_id and has_user_email
 
 def get_current_user():
     """Obtener datos del usuario actual desde la sesión"""
