@@ -235,6 +235,8 @@ def signin():
                     
         except Exception as e:
             print(f"❌ Error en signin: {e}")
+            print(f"🔍 Email intentado: {email}")
+            print(f"🔍 Tipo de error: {type(e).__name__}")
             flash("Email o contraseña incorrectos")
             
         return render_template("login.html")
