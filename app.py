@@ -1197,11 +1197,15 @@ def historial():
             if response.data:
                 examenes = []
                 for examen in response.data:
-                    # Formatear fecha para mostrar
-                    fecha = datetime.fromisoformat(examen['fecha_rendido'].replace('Z', '+00:00'))
+                    # Formatear fecha para mostrar en hora de Argentina (GMT-3)
+                    from datetime import timezone, timedelta
+                    fecha_utc = datetime.fromisoformat(examen['fecha_rendido'].replace('Z', '+00:00'))
+                    zona_horaria_argentina = timezone(timedelta(hours=-3))
+                    fecha_argentina = fecha_utc.astimezone(zona_horaria_argentina)
+                    
                     examenes.append({
                         'id': examen['id'],
-                        'fecha': fecha,
+                        'fecha': fecha_argentina,
                         'nota': examen['nota'],
                         'materia': examen['materia'],
                         'tiempo_total': examen['tiempo_duracion'],
@@ -1268,9 +1272,16 @@ def detalle_examen(examen_id):
                         })
                     
                     # Formatear examen para el template
+                    from datetime import timezone, timedelta
+                    
+                    # Convertir UTC a hora de Argentina (GMT-3)
+                    fecha_utc = datetime.fromisoformat(examen['fecha_rendido'].replace('Z', '+00:00'))
+                    zona_horaria_argentina = timezone(timedelta(hours=-3))
+                    fecha_argentina = fecha_utc.astimezone(zona_horaria_argentina)
+                    
                     examen_formateado = {
                         'id': examen['id'],
-                        'fecha': datetime.fromisoformat(examen['fecha_rendido'].replace('Z', '+00:00')),
+                        'fecha': fecha_argentina,
                         'nota': examen['nota'],
                         'materia': examen['materia'],
                         'tiempo_total': examen['tiempo_duracion'],
