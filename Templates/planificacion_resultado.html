@@ -561,6 +561,100 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
         }
+
+        /* Estilos para el formulario de guardar planificación */
+        .save-planification-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #1a202c, #2d3748);
+            border-radius: 16px;
+            border: 2px solid #4a5568;
+        }
+
+        .save-planification-section h3 {
+            color: #38bdf8;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.3rem;
+        }
+
+        .save-form {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: #2d3748;
+            border: 2px solid #4a5568;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
+        }
     </style>
 {% endblock %}
 
@@ -568,12 +662,16 @@
     <div class="container">
         <h1>Planificación generada</h1>
         
+
+        
+        {# Nota de la IA oculta - comentada temporalmente
         {% if explicacion_ia and not (explicacion_ia.strip().startswith('[') and 'fecha' in explicacion_ia and 'actividad' in explicacion_ia) %}
             <div class="plan-text" style="background:#23263a; color:#38bdf8; border:1.5px solid #38bdf8; margin-bottom:18px;">
                 <b>Nota de la IA:</b><br>
                 {{ explicacion_ia }}
             </div>
         {% endif %}
+        #}
         
         {% if plan is none %}
             <div class="plan-text" style="color:#e74c3c; background:#23263a; border:1.5px solid #e74c3c; margin-bottom:18px;">
@@ -631,11 +729,48 @@
                 <div class="calendar-activity-data" data-fecha="{{ item.fecha }}" data-tipo="{% if 'evaluación' in item.actividad.lower() or 'evaluacion' in item.actividad.lower() %}eval{% elif 'repaso' in item.actividad.lower() %}repaso{% else %}estudio{% endif %}" data-icon="{% if 'evaluación' in item.actividad.lower() or 'evaluacion' in item.actividad.lower() %}📝{% elif 'repaso' in item.actividad.lower() %}🔄{% else %}📚{% endif %}">{{ actividad_bullets(item) }}</div>
                 {% endfor %}
             </div>
-        {% endif %}
         
-        <div style="text-align: center;">
-            <a href="{{ url_for('planificacion') }}" class="btn-main">Volver a planificar</a>
+        {% if not es_planificacion_guardada %}
+        <!-- Formulario para guardar planificación -->
+        <div class="save-planification-section">
+            <h3>💾 ¿Quieres guardar esta planificación?</h3>
+            <form method="POST" action="{{ url_for('guardar_planificacion') }}" class="save-form">
+                <div class="form-group">
+                    <label for="titulo">Título de tu plan:</label>
+                    <input type="text" id="titulo" name="titulo" value="Mi plan de estudio - {{ plan[0].fecha if plan else '' }}" required>
+                </div>
+                
+                <!-- Campos ocultos con los datos de la planificación -->
+                <input type="hidden" name="fecha_examen" value="{{ request.form.get('fecha_examen', '') }}">
+                <input type="hidden" name="dias_no" value="{{ request.form.get('dias_no', '') }}">
+                <input type="hidden" name="tiempo_dia" value="{{ request.form.get('tiempo_dia', '') }}">
+                <input type="hidden" name="aclaraciones" value="{{ request.form.get('aclaraciones', '') }}">
+                <input type="hidden" name="plan_json" value="{{ plan_json }}">
+                <input type="hidden" name="explicacion_ia" value="{{ explicacion_ia }}">
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">💾 Guardar planificación</button>
+                    <a href="{{ url_for('planificacion') }}" class="btn-secondary">Volver a planificar</a>
+                </div>
+            </form>
         </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{{ url_for('mi_calendario') }}" class="btn-main">📅 Ver mi calendario personal</a>
+        </div>
+        {% else %}
+        <!-- Información para planificación ya guardada -->
+        <div class="save-planification-section" style="background: linear-gradient(135deg, #1a202c, #2d3748); border: 2px solid #38bdf8; padding: 25px; border-radius: 16px; text-align: center;">
+            <h3 style="color: #38bdf8; margin-bottom: 20px;">📋 Planificación Guardada</h3>
+            <p style="color: #e2e8f0; margin-bottom: 25px;">Esta es tu planificación guardada. Puedes revisarla cuando quieras desde tu calendario personal.</p>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('mi_calendario') }}" class="btn-main">📅 Volver a Mi Calendario</a>
+                <a href="{{ url_for('planificacion') }}" class="btn-secondary">🔄 Crear Nueva Planificación</a>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
     </div>
 
     <!-- Single tooltip element -->

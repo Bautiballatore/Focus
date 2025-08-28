@@ -1685,13 +1685,228 @@ def planificacion():
         print(f"plan_json: {plan_json[:200]}...")
         print("--- FIN VALORES ---\n")
         
-        return render_template("planificacion_resultado.html", plan=plan, plan_json=plan_json, days_list=days_list, actividades_por_fecha=actividades_por_fecha, explicacion_ia=explicacion_ia, fechas_ordenadas=fechas_ordenadas)
+        return render_template("planificacion_resultado.html", plan=plan, plan_json=plan_json, days_list=days_list, actividades_por_fecha=actividades_por_fecha, explicacion_ia=explicacion_ia, fechas_ordenadas=fechas_ordenadas, es_planificacion_guardada=False)
     
     return render_template("planificacion.html")
+
+@app.route("/guardar-planificacion", methods=["POST"])
+def guardar_planificacion():
+    """Guardar una planificación de estudio en la base de datos"""
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    try:
+        current_user = get_current_user()
+        
+        # Obtener datos del formulario
+        titulo = request.form.get("titulo", "Mi plan de estudio")
+        fecha_examen = request.form.get("fecha_examen")
+        dias_no = request.form.get("dias_no", "")
+        tiempo_dia = request.form.get("tiempo_dia")
+        aclaraciones = request.form.get("aclaraciones", "")
+        plan_json = request.form.get("plan_json")
+        explicacion_ia = request.form.get("explicacion_ia", "")
+        
+        # Validar datos requeridos
+        if not all([fecha_examen, tiempo_dia, plan_json]):
+            flash("Faltan datos requeridos para guardar la planificación")
+            return redirect(url_for('planificacion'))
+        
+        # Procesar días no disponibles
+        dias_no_disponibles = []
+        if dias_no:
+            dias_no_disponibles = [dia.strip() for dia in dias_no.split(',') if dia.strip()]
+        
+        # Crear planificación en la base de datos
+        nueva_planificacion = {
+            'usuario_id': current_user['id'],
+            'titulo': titulo,
+            'fecha_examen': fecha_examen,
+            'dias_no_disponibles': dias_no_disponibles,
+            'tiempo_por_dia': float(tiempo_dia),
+            'aclaraciones': aclaraciones,
+            'plan_json': plan_json,
+            'explicacion_ia': explicacion_ia,
+            'ultima_actividad': datetime.utcnow().isoformat()
+        }
+        
+        print(f"🔍 Intentando guardar planificación: {nueva_planificacion}")
+        
+        # Usar el usuario autenticado en Supabase para evitar problemas de RLS
+        try:
+            response = supabase.table('planificaciones').insert(nueva_planificacion).execute()
+            print(f"✅ Respuesta de Supabase: {response}")
+        except Exception as e:
+            print(f"❌ Error en Supabase: {e}")
+            # Intentar con el usuario autenticado
+            response = supabase.auth.get_user()
+            if response.user:
+                print(f"🔍 Usuario autenticado en Supabase: {response.user.id}")
+                response = supabase.table('planificaciones').insert(nueva_planificacion).execute()
+            else:
+                raise e
+        
+        if response.data:
+            print(f"✅ Planificación guardada para usuario {current_user['email']}")
+            flash("¡Planificación guardada exitosamente! Puedes verla en 'Mi Calendario'")
+            return redirect(url_for('mi_calendario'))
+        else:
+            print(f"❌ Error guardando planificación para usuario {current_user['email']}")
+            flash("Error al guardar la planificación. Intenta de nuevo.")
+            return redirect(url_for('planificacion'))
+            
+    except Exception as e:
+        print(f"❌ Error en guardar_planificacion: {e}")
+        flash("Error interno al guardar la planificación")
+        return redirect(url_for('planificacion'))
+
+@app.route("/mi-calendario")
+def mi_calendario():
+    """Mostrar el calendario personal del usuario con todas sus planificaciones"""
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    try:
+        current_user = get_current_user()
+        
+        # Obtener todas las planificaciones del usuario
+        response = supabase.table('planificaciones').select('*').eq('usuario_id', current_user['id']).order('fecha_creacion', desc=True).execute()
+        
+        planificaciones = response.data if response.data else []
+        
+        print(f"📅 Planificaciones encontradas para usuario {current_user['email']}: {len(planificaciones)}")
+        
+        return render_template("mi_calendario.html", planificaciones=planificaciones)
+        
+    except Exception as e:
+        print(f"❌ Error en mi_calendario: {e}")
+        flash("Error al cargar tu calendario personal")
+        return redirect(url_for('generar'))
+
+@app.route("/ver-planificacion/<plan_id>")
+def ver_planificacion(plan_id):
+    """Mostrar una planificación específica guardada"""
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    try:
+        current_user = get_current_user()
+        
+        # Obtener la planificación específica
+        response = supabase.table('planificaciones').select('*').eq('id', plan_id).eq('usuario_id', current_user['id']).execute()
+        
+        if not response.data:
+            flash("Planificación no encontrada")
+            return redirect(url_for('mi_calendario'))
+        
+        planificacion = response.data[0]
+        
+        # Convertir el plan_json de vuelta a formato usable
+        import json
+        try:
+            # El plan_json puede venir en formato string o ya como objeto
+            if isinstance(planificacion['plan_json'], str):
+                # Limpiar el string de markdown si viene con ```json
+                clean_json = planificacion['plan_json']
+                if clean_json.startswith('```json'):
+                    clean_json = clean_json.replace('```json', '').replace('```', '').strip()
+                elif clean_json.startswith('```'):
+                    clean_json = clean_json.replace('```', '').strip()
+                
+                print(f"🔍 JSON limpio: {clean_json}")
+                plan_data = json.loads(clean_json)
+            else:
+                plan_data = planificacion['plan_json']
+        except Exception as e:
+            print(f"❌ Error parseando JSON: {e}")
+            plan_data = []
+        
+        print(f"🔍 Plan JSON original: {planificacion['plan_json']}")
+        print(f"🔍 Plan data procesado: {plan_data}")
+        
+        # Preparar datos para el template usando la misma lógica del historial
+        plan = []
+        if plan_data and isinstance(plan_data, list):
+            for item in plan_data:
+                if isinstance(item, dict) and 'fecha' in item and 'actividad' in item:
+                    # Extraer tema principal y subtemas
+                    actividad = item['actividad']
+                    if '|' in actividad:
+                        partes = actividad.split('|')
+                        tema_principal = partes[0].strip()
+                        subtemas = [s.strip() for s in partes[1].split(',')] if len(partes) > 1 else []
+                    else:
+                        tema_principal = actividad
+                        subtemas = []
+                    
+                    plan.append({
+                        'fecha': item['fecha'],
+                        'actividad': actividad,
+                        'tema_principal': tema_principal,
+                        'subtemas': subtemas
+                    })
+        
+        print(f"📋 Plan procesado final: {len(plan)} elementos")
+        for p in plan[:3]:  # Mostrar solo los primeros 3 para debug
+            print(f"  - {p['fecha']}: {p['tema_principal']}")
+        
+        print(f"📋 Plan final para template: {plan}")
+        print(f"📋 Mostrando planificación {plan_id} para usuario {current_user['email']}")
+        
+        return render_template("planificacion_resultado.html", 
+                             plan=plan,
+                             explicacion_ia=planificacion.get('explicacion_ia'),
+                             plan_json=planificacion['plan_json'],
+                             fecha_examen=planificacion['fecha_examen'],
+                             dias_no=','.join(planificacion.get('dias_no_disponibles', [])),
+                             tiempo_dia=planificacion['tiempo_por_dia'],
+                             aclaraciones=planificacion.get('aclaraciones', ''),
+                             es_planificacion_guardada=True,
+                             days_list=[],
+                             actividades_por_fecha={},
+                             fechas_ordenadas=[])
+        
+    except Exception as e:
+        print(f"❌ Error en ver_planificacion: {e}")
+        flash("Error al cargar la planificación")
+        return redirect(url_for('mi_calendario'))
 
 @app.errorhandler(404)
 def pagina_no_encontrada(e):
     return render_template('404.html'), 404
+
+@app.route("/eliminar-planificacion/<plan_id>", methods=["POST"])
+def eliminar_planificacion(plan_id):
+    """Eliminar una planificación específica"""
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    try:
+        current_user = get_current_user()
+        
+        # Verificar que la planificación pertenece al usuario
+        response = supabase.table('planificaciones').select('id, titulo').eq('id', plan_id).eq('usuario_id', current_user['id']).execute()
+        
+        if not response.data:
+            flash("Planificación no encontrada")
+            return redirect(url_for('mi_calendario'))
+        
+        # Eliminar la planificación
+        delete_response = supabase.table('planificaciones').delete().eq('id', plan_id).eq('usuario_id', current_user['id']).execute()
+        
+        if delete_response.data:
+            flash("✅ Planificación eliminada exitosamente")
+            print(f"🗑️ Planificación {plan_id} eliminada para usuario {current_user['email']}")
+        else:
+            flash("❌ Error al eliminar la planificación")
+            print(f"❌ Error eliminando planificación {plan_id} para usuario {current_user['email']}")
+        
+        return redirect(url_for('mi_calendario'))
+        
+    except Exception as e:
+        print(f"❌ Error en eliminar_planificacion: {e}")
+        flash("Error interno al eliminar la planificación")
+        return redirect(url_for('mi_calendario'))
 
 @app.errorhandler(500)
 def error_interno(e):
