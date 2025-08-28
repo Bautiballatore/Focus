@@ -319,7 +319,7 @@ def google_auth():
             # Usar el método simple y directo de Supabase para OAuth
             response = supabase.auth.sign_in_with_oauth({
                 "provider": "google",
-                "options": {"redirect_to": "http://127.0.0.1:8080/auth/callback"}
+                "options": {"redirect_to": "https://www.focusstudio.pw/auth/callback"}
             })
             
             print(f"🔄 Redirigiendo a Google OAuth...")
