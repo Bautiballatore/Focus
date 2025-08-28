@@ -31,7 +31,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-producti
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Sesiones expiran en 7 días
 app.config['SESSION_COOKIE_SECURE'] = False  # Permitir HTTP para desarrollo y Heroku
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Previene acceso JavaScript a cookies
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protección CSRF básica
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protección CSRF básica para desarrollo
 app.config['SESSION_COOKIE_DOMAIN'] = None  # No restringir dominio
 
 # Context processor para pasar información del usuario a todos los templates
@@ -120,6 +120,60 @@ app_id = "AV6EGRRK9V"
 
 @app.route("/")
 def index():
+    """Página principal que también maneja el callback de OAuth"""
+    # Verificar si hay un código de autorización en la URL (callback de OAuth)
+    code = request.args.get('code')
+    
+    if code:
+        print(f"🔍 Código de autorización recibido en index: {code}")
+        print(f"🔄 Procesando callback de Google OAuth desde index...")
+        
+        try:
+            # Intentar obtener el usuario autenticado directamente
+            print(f"🔍 Intentando obtener usuario con supabase.auth.get_user()...")
+            current_user = supabase.auth.get_user()
+            print(f"🔍 Tipo de current_user: {type(current_user)}")
+            print(f"🔍 Valor de current_user: {current_user}")
+            
+            if current_user is None:
+                print(f"❌ supabase.auth.get_user() devolvió None - OAuth no completado correctamente")
+                print(f"🔍 Esto puede indicar un problema con la configuración de OAuth en Supabase")
+                raise Exception("OAuth no completado - usuario no disponible")
+            
+            if hasattr(current_user, 'user') and current_user.user:
+                print(f"✅ Usuario obtenido después de OAuth: {current_user.user.email}")
+            else:
+                print(f"❌ Usuario no tiene estructura válida")
+                raise Exception("Estructura de usuario inválida")
+            
+            # Usar directamente la información de auth.users - mucho más simple
+            print(f"✅ Usando información directa de auth.users")
+            
+            # Guardar usuario en sesión de Flask
+            session['user_id'] = current_user.user.id
+            session['user_email'] = current_user.user.email
+            
+            # Obtener nombre del user_metadata o usar email como fallback
+            if hasattr(current_user.user, 'user_metadata') and isinstance(current_user.user.user_metadata, dict):
+                session['user_nombre'] = current_user.user.user_metadata.get('nombre', current_user.user.email.split('@')[0])
+            else:
+                session['user_nombre'] = current_user.user.email.split('@')[0]
+            
+            print(f"✅ Usuario autenticado exitosamente: {current_user.user.email}")
+            print(f"🔍 ID: {current_user.user.id}")
+            print(f"🔍 Nombre: {session['user_nombre']}")
+            
+            # Para usuarios nuevos de Google, siempre ir a preguntas primero
+            print(f"🔄 Usuario nuevo de Google - redirigiendo a preguntas de usuario")
+            return redirect(url_for("preguntas_usuario"))
+            
+        except Exception as e:
+            print(f"❌ Error obteniendo usuario después de OAuth: {e}")
+            print(f"🔍 Tipo de error: {type(e)}")
+            # Si falla, mostrar la página principal normalmente
+            print(f"⚠️ Fallback: mostrando página principal sin autenticación")
+    
+    # Si no hay código o falló la autenticación, mostrar página principal normal
     return render_template("index.html")
 
 @app.route("/favicon.ico")
@@ -259,25 +313,27 @@ def signin():
 
 @app.route("/auth/google")
 def google_auth():
-    """Iniciar autenticación con Google"""
+    """Iniciar autenticación con Google usando Supabase Auth"""
     try:
         if supabase:
-            # Obtener URL de autenticación de Google
+            # Usar el método simple y directo de Supabase para OAuth
             response = supabase.auth.sign_in_with_oauth({
                 "provider": "google",
-                "options": {
-                    "redirect_to": f"{request.host_url}auth/callback"
-                }
+                "options": {"redirect_to": "http://127.0.0.1:8080/auth/callback"}
             })
+            
+            print(f"🔄 Redirigiendo a Google OAuth...")
+            print(f"🔍 URL de redirección: {response.url}")
             
             if response.url:
                 return redirect(response.url)
             else:
+                print(f"❌ No se obtuvo URL de redirección")
                 flash("Error al iniciar autenticación con Google")
                 return redirect(url_for('login'))
                 
     except Exception as e:
-        print(f"Error iniciando Google auth: {e}")
+        print(f"❌ Error iniciando Google OAuth: {e}")
         flash("Error al conectar con Google")
         return redirect(url_for('login'))
 
@@ -286,7 +342,7 @@ def auth_callback():
     """Callback después de autenticación OAuth"""
     try:
         if supabase:
-            # Obtener parámetros de la URL (importante para OAuth)
+            # Obtener el código de autorización
             code = request.args.get('code')
             error = request.args.get('error')
             
@@ -298,23 +354,25 @@ def auth_callback():
                 return redirect(url_for('login'))
             
             if code:
-                # Intercambiar código por sesión
+                print(f"🔄 Procesando callback de Google OAuth...")
+                
+                # Intercambiar el code por una sesión en Supabase
                 try:
-                    print(f"🔄 Intercambiando código por sesión...")
-                    response = supabase.auth.exchange_code_for_session(code)
+                    supabase.auth.exchange_code_for_session({"auth_code": code})
+                    user = supabase.auth.get_user()
                     
-                    if response.session and response.user:
-                        print(f"✅ Sesión obtenida para usuario: {response.user.email}")
+                    if user and hasattr(user, 'user'):
+                        print(f"✅ Usuario obtenido después de OAuth: {user.user.email}")
                         
                         # Verificar si el usuario existe en public.usuarios, si no, crearlo
                         try:
-                            usuario_check = supabase.table('usuarios').select('id').eq('id', response.user.id).execute()
+                            usuario_check = supabase.table('usuarios').select('id').eq('id', user.user.id).execute()
                             if not usuario_check.data:
                                 print(f"🔄 Usuario no existe en public.usuarios, creándolo...")
                                 nuevo_usuario = {
-                                    'id': response.user.id,
-                                    'email': response.user.email,
-                                    'nombre': response.user.user_metadata.get('nombre', response.user.email.split('@')[0]) if hasattr(response.user, 'user_metadata') and isinstance(response.user.user_metadata, dict) else response.user.email.split('@')[0],
+                                    'id': user.user.id,
+                                    'email': user.user.email,
+                                    'nombre': user.user.user_metadata.get('nombre', user.user.email.split('@')[0]) if hasattr(user.user, 'user_metadata') and isinstance(user.user.user_metadata, dict) else user.user.email.split('@')[0],
                                     'fecha_registro': datetime.utcnow().isoformat(),
                                     'preguntas_completadas': 0,
                                     'total_examenes_rendidos': 0,
@@ -324,46 +382,39 @@ def auth_callback():
                                     'ultima_actividad': datetime.utcnow().isoformat()
                                 }
                                 supabase.table('usuarios').insert(nuevo_usuario).execute()
-                                print(f"✅ Usuario creado en public.usuarios: {response.user.email}")
+                                print(f"✅ Usuario creado en public.usuarios: {user.user.email}")
                         except Exception as e:
                             print(f"⚠️ Error verificando/creando usuario en public.usuarios: {e}")
                         
                         # Guardar usuario en sesión de Flask
-                        session['user_id'] = response.user.id
-                        session['user_email'] = response.user.email
+                        session['user_id'] = user.user.id
+                        session['user_email'] = user.user.email
                         
-                        # Verificar que user_metadata sea un diccionario
-                        if hasattr(response.user, 'user_metadata') and isinstance(response.user.user_metadata, dict):
-                            session['user_nombre'] = response.user.user_metadata.get('nombre', response.user.email.split('@')[0])
+                        # Obtener nombre del user_metadata o usar email como fallback
+                        if hasattr(user.user, 'user_metadata') and isinstance(user.user.user_metadata, dict):
+                            session['user_nombre'] = user.user.user_metadata.get('nombre', user.user.email.split('@')[0])
                         else:
-                            session['user_nombre'] = response.user.email.split('@')[0]
+                            session['user_nombre'] = user.user.email.split('@')[0]
                         
-                        print(f"✅ Usuario autenticado exitosamente: {response.user.email}")
+                        print(f"✅ Usuario autenticado exitosamente: {user.user.email}")
                         
-                        # Verificar si el usuario ya completó las preguntas desde la tabla usuarios
+                        # Verificar si el usuario ya completó las preguntas
                         try:
-                            print(f"🔍 Verificando preguntas completadas para usuario {response.user.id}")
-                            user_response = supabase.table('usuarios').select('preguntas_completadas').eq('id', response.user.id).execute()
-                            print(f"📊 Respuesta de la base de datos: {user_response.data}")
+                            user_response = supabase.table('usuarios').select('preguntas_completadas').eq('id', user.user.id).execute()
+                            preguntas_completadas = user_response.data[0].get('preguntas_completadas', 0) if user_response.data else 0
                             
-                            if user_response.data:
-                                preguntas_completadas = user_response.data[0].get('preguntas_completadas', 0)
-                                print(f"✅ Usuario ya completó preguntas: {preguntas_completadas}")
-                            else:
-                                preguntas_completadas = 0
-                                print(f"⚠️ Usuario no encontrado en la base de datos")
+                            if not preguntas_completadas:
+                                print(f"🔄 Redirigiendo a preguntas de usuario")
+                                return redirect(url_for("preguntas_usuario"))
+                            
+                            print(f"🔄 Redirigiendo a generar examen")
+                            return redirect(url_for('generar'))
+                            
                         except Exception as e:
-                            print(f"❌ Error verificando preguntas completadas: {e}")
-                            preguntas_completadas = 0
-                            
-                        if not preguntas_completadas:
-                            print(f"🔄 Redirigiendo a preguntas de usuario (preguntas_completadas={preguntas_completadas})")
+                            print(f"⚠️ Error verificando preguntas completadas: {e}")
                             return redirect(url_for("preguntas_usuario"))
-                        
-                        print(f"🔄 Redirigiendo a generar examen (preguntas_completadas={preguntas_completadas})")
-                        return redirect(url_for('generar'))
                     else:
-                        print(f"❌ No se pudo obtener sesión del usuario")
+                        print(f"❌ No se pudo obtener usuario válido")
                         flash("Error en la autenticación con Google")
                         return redirect(url_for('login'))
                         

@@ -20,12 +20,12 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Strict'  # Más estricto para evitar sesiones cruzadas
     PERMANENT_SESSION_LIFETIME = 3600  # Sesiones expiran en 1 hora
     SESSION_COOKIE_MAX_AGE = 3600  # Cookies expiran en 1 hora
-
+    
 class DevelopmentConfig(Config):
     DEBUG = True
     FLASK_ENV = 'development'
     SESSION_COOKIE_SECURE = False  # HTTP para desarrollo
-    SESSION_COOKIE_SAMESITE = 'Strict'  # Más estricto para evitar sesiones cruzadas
+    SESSION_COOKIE_SAMESITE = 'Lax'  # Menos estricto para desarrollo local
     PERMANENT_SESSION_LIFETIME = 3600  # Sesiones expiran en 1 hora
     SESSION_COOKIE_MAX_AGE = 3600  # Cookies expiran en 1 hora
 
