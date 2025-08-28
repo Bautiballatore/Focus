@@ -38,24 +38,28 @@ app.config['SESSION_COOKIE_DOMAIN'] = None  # No restringir dominio
 @app.context_processor
 def inject_user():
     """Inyectar información del usuario en todos los templates"""
-    if is_authenticated():
-        current_user = get_current_user()
-        
+    # Verificar directamente la sesión de Flask
+    has_user_id = 'user_id' in session
+    has_user_email = 'user_email' in session
+    is_auth = has_user_id and has_user_email
+    
+    print(f"🔍 Context processor - has_user_id: {has_user_id}, has_user_email: {has_user_email}, is_auth: {is_auth}")
+    
+    if is_auth:
         # Obtener información adicional del usuario desde Supabase
         try:
             if supabase:
-                # Obtener datos del usuario desde la tabla usuarios
-                user_response = supabase.table('usuarios').select('*').eq('id', current_user['id']).execute()
+                user_response = supabase.table('usuarios').select('*').eq('id', session.get('user_id')).execute()
                 if user_response.data:
                     user_data = user_response.data[0]
                     return {
                         'current_user': {
-                            'id': current_user['id'],
-                            'email': current_user['email'],
-                            'nombre': current_user['nombre'],
+                            'id': session.get('user_id'),
+                            'email': session.get('user_email'),
+                            'nombre': session.get('user_nombre'),
                             'fecha_registro': datetime.fromisoformat(user_data.get('fecha_registro', datetime.utcnow().isoformat()).replace('Z', '+00:00')),
                             'como_nos_conociste': user_data.get('como_nos_conociste'),
-                            'uso_plataforma': user_data.get('plataforma_uso'),
+                            'plataforma_uso': user_data.get('plataforma_uso'),
                             'preguntas_completadas': user_data.get('preguntas_completadas', 0),
                             'total_examenes_rendidos': user_data.get('total_examenes_rendidos', 0),
                             'correctas_total': user_data.get('correctas_total', 0),
@@ -69,14 +73,15 @@ def inject_user():
             print(f"Error obteniendo datos del usuario para template: {e}")
         
         # Fallback si no se pueden obtener los datos adicionales
+        print(f"🔄 Context processor - Fallback para usuario: {session.get('user_email')}")
         return {
             'current_user': {
-                'id': current_user['id'],
-                'email': current_user['email'],
-                'nombre': current_user['nombre'],
+                'id': session.get('user_id'),
+                'email': session.get('user_email'),
+                'nombre': session.get('user_nombre'),
                 'fecha_registro': datetime.utcnow(),
                 'como_nos_conociste': None,
-                'uso_plataforma': None,
+                'plataforma_uso': None,
                 'preguntas_completadas': 0,
                 'total_examenes_rendidos': 0,
                 'correctas_total': 0,
@@ -87,6 +92,7 @@ def inject_user():
             }
         }
     
+    print(f"❌ Context processor - Usuario no autenticado")
     return {
         'current_user': {
             'is_authenticated': False
@@ -115,6 +121,10 @@ app_id = "AV6EGRRK9V"
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@app.route("/favicon.ico")
+def favicon():
+    return redirect(url_for('static', filename='favicon.ico'))
 
 # =====================================================
 # NUEVAS RUTAS DE AUTENTICACIÓN CON SUPABASE AUTH
