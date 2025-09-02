@@ -45,6 +45,9 @@ def inject_user():
     
     print(f"🔍 Context processor - has_user_id: {has_user_id}, has_user_email: {has_user_email}, is_auth: {is_auth}")
     
+    # Agregar fecha de hoy para los inputs de fecha
+    today = datetime.now().strftime('%Y-%m-%d')
+    
     if is_auth:
         # Obtener información adicional del usuario desde Supabase
         try:
@@ -52,6 +55,11 @@ def inject_user():
                 user_response = supabase.table('usuarios').select('*').eq('id', session.get('user_id')).execute()
                 if user_response.data:
                     user_data = user_response.data[0]
+                    
+                    # Obtener carpetas del usuario
+                    carpetas_response = supabase.table('carpetas').select('id, nombre, color').eq('usuario_id', session.get('user_id')).order('nombre').execute()
+                    carpetas = carpetas_response.data if carpetas_response.data else []
+                    
                     return {
                         'current_user': {
                             'id': session.get('user_id'),
@@ -67,7 +75,9 @@ def inject_user():
                             'incorrectas_total': user_data.get('incorrectas_total', 0),
                             'ultima_actividad': user_data.get('ultima_actividad'),
                             'is_authenticated': True
-                        }
+                        },
+                        'user_carpetas': carpetas,
+                        'today': today
                     }
         except Exception as e:
             print(f"Error obteniendo datos del usuario para template: {e}")
@@ -89,14 +99,18 @@ def inject_user():
                 'incorrectas_total': 0,
                 'ultima_actividad': None,
                 'is_authenticated': True
-            }
+            },
+            'user_carpetas': [],
+            'today': today
         }
     
     print(f"❌ Context processor - Usuario no autenticado")
     return {
         'current_user': {
             'is_authenticated': False
-        }
+        },
+        'user_carpetas': [],
+        'today': today
     }
 
 # Inicializar Supabase
@@ -1752,6 +1766,7 @@ def planificacion():
     if request.method == "POST":
         fecha_examen = request.form.get("fecha_examen")
         dias_no = request.form.get("dias_no", "")
+        dias_no_multiple = request.form.get("dias_no_multiple", "")
         tiempo_dia = request.form.get("tiempo_dia")
         aclaraciones = request.form.get("aclaraciones", "")
         resumen = request.form.get("resumen", "")
@@ -1774,12 +1789,24 @@ def planificacion():
                 doc = docx.Document(docx_stream)
                 texto_resumen = "\n".join([p.text for p in doc.paragraphs])
         print("\n--- TEXTO EXTRAÍDO DEL ARCHIVO (PLANIFICACIÓN) ---\n", texto_resumen, "\n--- FIN TEXTO EXTRAÍDO ---\n")
+        # Procesar días no disponibles (usar múltiples fechas si están disponibles)
+        print(f"🔍 DEBUG - dias_no: '{dias_no}'")
+        print(f"🔍 DEBUG - dias_no_multiple: '{dias_no_multiple}'")
+        
+        dias_no_final = dias_no
+        if dias_no_multiple:
+            dias_no_final = dias_no_multiple
+        elif dias_no:
+            dias_no_final = dias_no
+            
+        print(f"🔍 DEBUG - dias_no_final: '{dias_no_final}'")
+        
         # Armar prompt para la IA
         from datetime import date
         fecha_actual = date.today().strftime('%Y-%m-%d')
         prompt = (
             f"Sos un planificador de estudio. El usuario tiene un examen el día {fecha_examen}. "
-            f"No puede estudiar los días: {dias_no}. Puede dedicar {tiempo_dia} horas por día. "
+            f"No puede estudiar los días: {dias_no_final}. Puede dedicar {tiempo_dia} horas por día. "
             f"Aclaraciones: {aclaraciones}. Temario/resumen: {texto_resumen}\n"
             f"El primer día del plan debe ser la fecha de hoy: {fecha_actual}. "
             "ES OBLIGATORIO que todos los temas, unidades o títulos del resumen estén incluidos en el plan, aunque implique agrupar varios temas en un mismo día. "
@@ -1924,6 +1951,7 @@ def guardar_planificacion():
         titulo = request.form.get("titulo", "Mi plan de estudio")
         fecha_examen = request.form.get("fecha_examen")
         dias_no = request.form.get("dias_no", "")
+        dias_no_multiple = request.form.get("dias_no_multiple", "")
         tiempo_dia = request.form.get("tiempo_dia")
         aclaraciones = request.form.get("aclaraciones", "")
         plan_json = request.form.get("plan_json")
@@ -1934,10 +1962,23 @@ def guardar_planificacion():
             flash("Faltan datos requeridos para guardar la planificación")
             return redirect(url_for('planificacion'))
         
-        # Procesar días no disponibles
+        # Procesar días no disponibles (usar múltiples fechas si están disponibles)
+        print(f"🔍 GUARDAR DEBUG - dias_no: '{dias_no}'")
+        print(f"🔍 GUARDAR DEBUG - dias_no_multiple: '{dias_no_multiple}'")
+        
         dias_no_disponibles = []
-        if dias_no:
-            dias_no_disponibles = [dia.strip() for dia in dias_no.split(',') if dia.strip()]
+        dias_no_final = dias_no
+        if dias_no_multiple:
+            dias_no_final = dias_no_multiple
+        elif dias_no:
+            dias_no_final = dias_no
+            
+        print(f"🔍 GUARDAR DEBUG - dias_no_final: '{dias_no_final}'")
+            
+        if dias_no_final:
+            dias_no_disponibles = [dia.strip() for dia in dias_no_final.split(',') if dia.strip()]
+            
+        print(f"🔍 GUARDAR DEBUG - dias_no_disponibles: {dias_no_disponibles}")
         
         # Crear planificación en la base de datos
         nueva_planificacion = {

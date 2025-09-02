@@ -43,14 +43,15 @@
         .container { 
             max-width: 1200px; 
             margin: 40px auto 40px calc(280px + (100vw - 280px - 1200px) / 2); 
-            background: #23263a; 
+            background: var(--bg-card); 
             border-radius: 18px; 
             padding: 36px 44px 30px 44px; 
-            box-shadow: 0 4px 24px #0008; 
+            box-shadow: var(--shadow-lg); 
+            border: 1px solid var(--border-subtle);
         }
         
         h1 { 
-            color: #7c3aed; 
+            color: var(--primary); 
             font-size: 2rem; 
             margin-bottom: 18px; 
             font-family: 'Montserrat', Arial, sans-serif; 
@@ -58,11 +59,13 @@
         }
         
         .plan-text { 
-            background: #18181b; 
+            background: var(--bg-section); 
             border-radius: 10px; 
             padding: 18px; 
             margin-bottom: 24px; 
             font-size: 1.08em; 
+            color: var(--text-light);
+            border: 1px solid var(--border-subtle);
         }
 
         /* Timeline Styles */
@@ -72,7 +75,7 @@
         }
 
         .timeline-title {
-            color: #38bdf8;
+            color: var(--primary);
             text-align: center;
             margin-bottom: 40px;
             font-size: 1.5rem;
@@ -101,7 +104,7 @@
             left: 40px;
             right: 40px;
             height: 3px;
-            background: linear-gradient(90deg, #7c3aed, #38bdf8, #4ade80);
+            background: var(--gradient-primary);
             border-radius: 2px;
             z-index: 1;
         }
@@ -121,36 +124,36 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            border: 4px solid #23263a;
+            border: 4px solid var(--bg-card);
             transition: all 0.3s ease;
             position: relative;
             z-index: 3;
         }
 
         .timeline-dot.estudio {
-            background: #38bdf8;
-            box-shadow: 0 0 0 3px #38bdf822;
+            background: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
 
         .timeline-dot.eval {
-            background: #a259f7;
-            box-shadow: 0 0 0 3px #a259f722;
+            background: var(--text-accent);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
         }
 
         .timeline-dot.repaso {
-            background: #4ade80;
-            box-shadow: 0 0 0 3px #4ade8022;
+            background: var(--success);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
         }
 
         .timeline-dot:hover {
             transform: scale(1.3);
-            box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.2);
+            box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.2);
         }
 
         .timeline-date {
             margin-top: 15px;
             font-size: 0.9rem;
-            color: #a0aec0;
+            color: var(--text-muted);
             font-weight: 600;
             white-space: nowrap;
             text-align: center;
@@ -160,11 +163,11 @@
         .calendar-section {
             margin: 60px 0 40px 0;
             padding: 30px 0;
-            border-top: 2px solid #4a5568;
+            border-top: 2px solid var(--border-subtle);
         }
 
         .calendar-title {
-            color: #38bdf8;
+            color: var(--primary);
             text-align: center;
             margin-bottom: 30px;
             font-size: 1.4rem;
@@ -180,9 +183,9 @@
         }
 
         .calendar-nav-button {
-            background: #4a5568;
-            border: none;
-            color: #e2e8f0;
+            background: var(--bg-section);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-light);
             padding: 8px 12px;
             border-radius: 6px;
             cursor: pointer;
@@ -194,7 +197,7 @@
         }
 
         .calendar-nav-button:hover:not(:disabled) {
-            background: #7c3aed;
+            background: var(--primary);
             transform: translateY(-1px);
         }
 
@@ -206,7 +209,7 @@
         .calendar-month-display {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #e2e8f0;
+            color: var(--text-light);
             text-align: center;
             flex: 1;
         }
@@ -214,32 +217,33 @@
         .calendar-container {
             max-width: 800px;
             margin: 0 auto;
-            background: #2d3748;
+            background: var(--bg-section);
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-subtle);
         }
 
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 2px;
-            background: #4a5568;
+            background: var(--bg-card);
             border-radius: 8px;
             padding: 2px;
         }
 
         .calendar-day-header {
-            background: #374151;
+            background: var(--bg-card);
             padding: 12px 8px;
             text-align: center;
             font-weight: 600;
             font-size: 0.9rem;
-            color: #9ca3af;
+            color: var(--text-muted);
         }
 
         .calendar-day {
-            background: #2d3748;
+            background: var(--bg-section);
             padding: 12px 8px;
             text-align: center;
             min-height: 40px;
@@ -249,56 +253,57 @@
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
+            color: var(--text-light);
         }
 
         .calendar-day:hover {
-            background: #374151;
+            background: var(--bg-card);
         }
 
         .calendar-day.other-month {
-            color: #6b7280;
-            background: #1f2937;
+            color: var(--text-muted);
+            background: var(--bg-dark);
         }
 
         .calendar-day.has-activity {
-            background: linear-gradient(135deg, #7c3aed22, #38bdf822);
-            border: 2px solid #7c3aed;
+            background: var(--bg-section);
+            border: 2px solid var(--primary);
             font-weight: 600;
-            color: #e2e8f0;
+            color: var(--text-light);
         }
 
         .calendar-day.has-activity.estudio {
-            border-color: #38bdf8;
-            background: linear-gradient(135deg, #38bdf822, #38bdf811);
+            border-color: var(--primary);
+            background: var(--bg-section);
         }
 
         .calendar-day.has-activity.eval {
-            border-color: #a259f7;
-            background: linear-gradient(135deg, #a259f722, #a259f711);
+            border-color: var(--text-accent);
+            background: var(--bg-section);
         }
 
         .calendar-day.has-activity.repaso {
-            border-color: #4ade80;
-            background: linear-gradient(135deg, #4ade8022, #4ade8011);
+            border-color: var(--success);
+            background: var(--bg-section);
         }
 
         .calendar-day.has-activity:hover {
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
         /* TOOLTIP/POPUP STYLES - COMPLETELY FIXED */
         .activity-tooltip {
             position: fixed;
-            background: #1a202c;
-            border: 2px solid #4a5568;
+            background: var(--bg-card);
+            border: 2px solid var(--border-subtle);
             border-radius: 12px;
             padding: 16px 20px;
             min-width: 300px;
             max-width: 450px;
             max-height: 400px;
             overflow-y: auto;
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+            box-shadow: var(--shadow-xl);
             z-index: 10000;
             opacity: 0;
             visibility: hidden;
@@ -328,28 +333,28 @@
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            border-bottom-color: #4a5568;
+            border-bottom-color: var(--border-subtle);
         }
 
         .activity-tooltip.arrow-bottom::before {
             top: 100%;
             left: 50%;
             transform: translateX(-50%);
-            border-top-color: #4a5568;
+            border-top-color: var(--border-subtle);
         }
 
         .activity-tooltip.arrow-left::before {
             right: 100%;
             top: 50%;
             transform: translateY(-50%);
-            border-right-color: #4a5568;
+            border-right-color: var(--border-subtle);
         }
 
         .activity-tooltip.arrow-right::before {
             left: 100%;
             top: 50%;
             transform: translateY(-50%);
-            border-left-color: #4a5568;
+            border-left-color: var(--border-subtle);
         }
 
         .tooltip-header {
@@ -357,7 +362,7 @@
             align-items: center;
             margin-bottom: 12px;
             padding-bottom: 8px;
-            border-bottom: 1px solid #4a5568;
+            border-bottom: 1px solid var(--border-subtle);
         }
 
         .tooltip-icon {
@@ -367,12 +372,12 @@
 
         .tooltip-date {
             font-size: 0.9rem;
-            color: #a0aec0;
+            color: var(--text-muted);
             font-weight: 600;
         }
 
         .tooltip-content {
-            color: #e2e8f0;
+            color: var(--text-light);
         }
 
         .tooltip-content ul {
@@ -385,7 +390,7 @@
         }
 
         .tooltip-content b {
-            color: #fff;
+            color: var(--text-light);
         }
 
         /* Hidden data containers */
@@ -417,15 +422,15 @@
         }
 
         .modal-content {
-            background: #1a202c;
-            border: 2px solid #4a5568;
+            background: var(--bg-card);
+            border: 2px solid var(--border-subtle);
             border-radius: 16px;
             padding: 24px;
             max-width: 500px;
             width: 100%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            box-shadow: var(--shadow-xl);
             transform: scale(0.8) translateY(20px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -441,7 +446,7 @@
             justify-content: space-between;
             margin-bottom: 16px;
             padding-bottom: 12px;
-            border-bottom: 2px solid #4a5568;
+            border-bottom: 2px solid var(--border-subtle);
         }
 
         .modal-title {
@@ -456,14 +461,14 @@
 
         .modal-date {
             font-size: 1.2rem;
-            color: #e2e8f0;
+            color: var(--text-light);
             font-weight: 600;
         }
 
         .modal-close {
             background: none;
             border: none;
-            color: #a0aec0;
+            color: var(--text-muted);
             font-size: 1.5rem;
             cursor: pointer;
             padding: 4px;
@@ -477,12 +482,12 @@
         }
 
         .modal-close:hover {
-            background: #4a5568;
-            color: #fff;
+            background: var(--bg-section);
+            color: var(--text-light);
         }
 
         .modal-body {
-            color: #e2e8f0;
+            color: var(--text-light);
             font-size: 1rem;
             line-height: 1.5;
         }
@@ -497,7 +502,7 @@
         }
 
         .modal-body b {
-            color: #fff;
+            color: var(--text-light);
         }
 
         @media (max-width: 768px) {
@@ -552,8 +557,8 @@
         }
 
         .btn-main {
-            background: linear-gradient(135deg, #7c3aed, #38bdf8);
-            color: white;
+            background: var(--gradient-primary);
+            color: var(--button-text);
             padding: 12px 24px;
             border-radius: 8px;
             text-decoration: none;
@@ -565,20 +570,20 @@
 
         .btn-main:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
         }
 
         /* Estilos para el formulario de guardar planificación */
         .save-planification-section {
             margin: 40px 0;
             padding: 30px;
-            background: linear-gradient(135deg, #1a202c, #2d3748);
+            background: var(--bg-section);
             border-radius: 16px;
-            border: 2px solid #4a5568;
+            border: 2px solid var(--border-subtle);
         }
 
         .save-planification-section h3 {
-            color: #38bdf8;
+            color: var(--primary);
             text-align: center;
             margin-bottom: 25px;
             font-size: 1.3rem;
@@ -595,7 +600,7 @@
 
         .form-group label {
             display: block;
-            color: #e2e8f0;
+            color: var(--text-light);
             margin-bottom: 8px;
             font-weight: 500;
         }
@@ -603,18 +608,18 @@
         .form-group input[type="text"] {
             width: 100%;
             padding: 12px 16px;
-            background: #2d3748;
-            border: 2px solid #4a5568;
+            background: var(--bg-card);
+            border: 2px solid var(--border-subtle);
             border-radius: 8px;
-            color: #e2e8f0;
+            color: var(--text-light);
             font-size: 1rem;
             transition: all 0.3s ease;
         }
 
         .form-group input[type="text"]:focus {
             outline: none;
-            border-color: #38bdf8;
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
         .form-actions {
@@ -625,8 +630,8 @@
         }
 
         .btn-save {
-            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-            color: white;
+            background: var(--gradient-primary);
+            color: var(--button-text);
             border: none;
             padding: 12px 24px;
             border-radius: 8px;
@@ -640,13 +645,13 @@
 
         .btn-save:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.3);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-            color: white;
-            border: none;
+            background: var(--bg-section);
+            color: var(--button-text);
+            border: 1px solid var(--border-subtle);
             padding: 12px 24px;
             border-radius: 8px;
             font-size: 1rem;
@@ -659,7 +664,7 @@
 
         .btn-secondary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
         }
     </style>
 {% endblock %}
@@ -680,7 +685,7 @@
         #}
         
         {% if plan is none %}
-            <div class="plan-text" style="color:#e74c3c; background:#23263a; border:1.5px solid #e74c3c; margin-bottom:18px;">
+            <div class="plan-text" style="color:var(--text-accent); background:var(--bg-card); border:1.5px solid var(--text-accent); margin-bottom:18px;">
                 <b>❌ Ocurrió un error al generar la planificación.</b><br>
                 Por favor, intentá nuevamente o revisá el temario cargado.
             </div>
@@ -766,9 +771,9 @@
         </div>
         {% else %}
         <!-- Información para planificación ya guardada -->
-        <div class="save-planification-section" style="background: linear-gradient(135deg, #1a202c, #2d3748); border: 2px solid #38bdf8; padding: 25px; border-radius: 16px; text-align: center;">
-            <h3 style="color: #38bdf8; margin-bottom: 20px;">📋 Planificación Guardada</h3>
-            <p style="color: #e2e8f0; margin-bottom: 25px;">Esta es tu planificación guardada. Puedes revisarla cuando quieras desde tu calendario personal.</p>
+        <div class="save-planification-section" style="background: var(--bg-section); border: 2px solid var(--primary); padding: 25px; border-radius: 16px; text-align: center;">
+            <h3 style="color: var(--primary); margin-bottom: 20px;">📋 Planificación Guardada</h3>
+            <p style="color: var(--text-light); margin-bottom: 25px;">Esta es tu planificación guardada. Puedes revisarla cuando quieras desde tu calendario personal.</p>
             
             <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <a href="{{ url_for('mi_calendario') }}" class="btn-main">📅 Volver a Mi Calendario</a>
@@ -1162,20 +1167,5 @@
     </script>
 {% endblock %}
 
-{% block nav_buttons %}
-<div class="nav-buttons">
-    <a href="{{ url_for('planificacion') }}" class="nav-btn">
-        <i class="fa-solid fa-calendar-days"></i> Nueva planificación
-    </a>
-    <a href="{{ url_for('generar') }}" class="nav-btn secondary">
-        <i class="fa-solid fa-file-lines"></i> Generar examen
-    </a>
-    <a href="{{ url_for('historial') }}" class="nav-btn accent">
-        <i class="fa-solid fa-history"></i> Ver historial
-    </a>
-    <a href="{{ url_for('perfil') }}" class="nav-btn outline">
-        <i class="fa-solid fa-user"></i> Mi perfil
-    </a>
-</div>
-{% endblock %}
+
 

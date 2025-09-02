@@ -15,11 +15,12 @@
         text-align: center;
         margin-bottom: 40px;
         padding: 20px;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--bg-section);
         border-radius: 15px;
         backdrop-filter: blur(10px);
-        margin-left: 360px;
+        margin-left: 300px;
         margin-right: 40px;
+        border: 1px solid var(--border-subtle);
     }
     
     .page-title {
@@ -27,27 +28,26 @@
         font-size: 2.5rem;
         margin-bottom: 10px;
         font-family: 'Montserrat', Arial, sans-serif;
+        margin-left: 20px;
     }
     
     .page-subtitle {
         color: var(--text-light);
         font-size: 1.2rem;
         opacity: 0.9;
+        margin-left: 20px;
     }
     
     .container {
         max-width: 1800px;
         margin: 40px calc((100vw - 280px - 1800px) / 2) 40px calc(280px + (100vw - 280px - 1800px) / 2);
-        background: linear-gradient(135deg, rgba(35, 38, 58, 0.95) 0%, rgba(45, 48, 68, 0.95) 100%);
+        background: var(--bg-card);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border-radius: 24px;
         padding: 48px 56px;
-        box-shadow: 
-            0 12px 40px rgba(0, 0, 0, 0.4),
-            0 4px 12px rgba(124, 58, 237, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(148, 163, 184, 0.1);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-subtle);
         position: relative;
         overflow: hidden;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -70,10 +70,10 @@
     select, input[type="text"] {
         padding: 18px 24px;
         border-radius: 16px;
-        border: 2px solid rgba(148, 163, 184, 0.2);
+        border: 2px solid var(--border-subtle);
         font-size: 1.1rem;
-        background: linear-gradient(135deg, rgba(35, 38, 58, 0.8) 0%, rgba(45, 48, 68, 0.8) 100%);
-        color: #fff;
+        background: var(--bg-section);
+        color: var(--text-light);
         outline: none;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         backdrop-filter: blur(10px);
@@ -90,12 +90,12 @@
             0 0 0 4px rgba(99, 102, 241, 0.15),
             0 8px 24px rgba(124, 58, 237, 0.2),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        background: linear-gradient(135deg, rgba(35, 38, 58, 0.9) 0%, rgba(45, 48, 68, 0.9) 100%);
+        background: var(--bg-card);
         transform: translateY(-1px);
     }
     
     select:hover, input[type="text"]:hover {
-        border-color: rgba(148, 163, 184, 0.3);
+        border-color: var(--primary);
         transform: translateY(-1px);
         box-shadow: 
             0 6px 16px rgba(0, 0, 0, 0.15),
@@ -117,9 +117,9 @@
         gap: 12px;
         margin-bottom: 16px;
         padding: 24px;
-        background: linear-gradient(135deg, rgba(35, 38, 58, 0.4) 0%, rgba(45, 48, 68, 0.4) 100%);
+        background: var(--bg-section);
         border-radius: 20px;
-        border: 1px solid rgba(148, 163, 184, 0.15);
+        border: 1px solid var(--border-subtle);
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
         box-shadow: 
@@ -129,7 +129,7 @@
     }
     
     .symbol-btn {
-        background: linear-gradient(135deg, rgba(35, 38, 58, 0.9) 0%, rgba(45, 48, 68, 0.9) 100%);
+        background: var(--bg-card);
         color: var(--primary-light);
         border: 1px solid rgba(99, 102, 241, 0.25);
         border-radius: 12px;
@@ -149,7 +149,7 @@
     
     .symbol-btn:hover {
         background: transparent;
-        color: #fff;
+        color: var(--text-light);
         transform: translateY(-3px) scale(1.05);
         box-shadow: 
             0 12px 24px rgba(99, 102, 241, 0.3),
@@ -160,7 +160,7 @@
     
     button[type="submit"] {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 30%, var(--secondary) 100%);
-        color: #fff;
+        color: var(--text-light);
         font-size: 1.2rem;
         font-weight: 700;
         border: none;
@@ -188,33 +188,31 @@
     }
     
     .sugerencias {
-        color: rgba(160, 174, 192, 0.9);
+        color: var(--text-accent);
         font-size: 1rem;
         margin-bottom: 24px;
         padding: 24px;
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        background: var(--bg-card);
         border-radius: 20px;
-        border: 1px solid rgba(99, 102, 241, 0.15);
+        border: 1px solid var(--border-subtle);
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
-        box-shadow: 
-            0 8px 24px rgba(0, 0, 0, 0.05),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        box-shadow: var(--shadow-md);
         position: relative;
     }
     
     .sugerencias b {
-        color: var(--primary-light);
+        color: var(--primary);
         font-weight: 600;
     }
     
     .sugerencias span {
-        color: rgba(160, 174, 192, 0.8);
+        color: var(--text-muted);
         font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
-        background: rgba(35, 38, 58, 0.3);
+        background: var(--bg-section);
         padding: 2px 6px;
         border-radius: 4px;
-        border: 1px solid rgba(148, 163, 184, 0.1);
+        border: 1px solid var(--border-subtle);
     }
     
     .ejercicios-sugeridos {
@@ -246,20 +244,20 @@
     
     .btn-main-examen {
         display: inline-block;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-        color: #fff;
+        background: var(--gradient-accent);
+        color: var(--button-text);
         padding: 12px 24px;
         border-radius: 12px;
         text-decoration: none;
         font-weight: 600;
         margin-bottom: 24px;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        box-shadow: var(--shadow-sm);
     }
     
     .btn-main-examen:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(74, 222, 128, 0.4);
+        box-shadow: var(--shadow-md);
     }
     
     .pods {
@@ -267,7 +265,7 @@
     }
     
     .pod {
-        background: linear-gradient(135deg, rgba(35, 38, 58, 0.95) 0%, rgba(45, 48, 68, 0.95) 100%);
+        background: var(--bg-card);
         border-radius: 20px;
         box-shadow: 
             0 12px 32px rgba(124, 58, 237, 0.15),
@@ -275,7 +273,7 @@
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
         margin-bottom: 24px;
         padding: 28px;
-        border: 1px solid rgba(148, 163, 184, 0.15);
+        border: 1px solid var(--border-subtle);
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
         position: relative;
@@ -310,14 +308,14 @@
     .pod-content img {
         margin-top: 20px;
         max-width: 100%;
-        background: #fff;
+        background: var(--bg-card);
         border-radius: 16px;
         box-shadow: 
             0 12px 32px rgba(0, 0, 0, 0.3),
             0 4px 12px rgba(0, 0, 0, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid rgba(148, 163, 184, 0.1);
+        border: 1px solid var(--border-subtle);
     }
     
     .pod-content img:hover {
@@ -328,8 +326,8 @@
     }
     
     .error {
-        color: #f87171;
-        background: linear-gradient(135deg, rgba(45, 26, 26, 0.9) 0%, rgba(55, 30, 30, 0.9) 100%);
+        color: var(--text-muted);
+        background: var(--bg-section);
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 20px;
@@ -338,7 +336,7 @@
     
     .error h3 {
         margin-top: 0;
-        color: #fca5a5;
+        color: var(--text-accent);
     }
 
     .dropdown-toggle {

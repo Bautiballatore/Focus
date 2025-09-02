@@ -3,190 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Planificación de estudio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% extends "base.html" %}
+
+    {% block title %}Planificación de estudio{% endblock %}
+
+    {% block breadcrumbs %}{% endblock %}
+
+    {% block extra_styles %}
+
     <style>
-        /* Sidebar independiente - CSS idéntico a base.html */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 280px;
-            height: 100vh;
-            background: rgba(15, 15, 35, 0.95);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(148, 163, 184, 0.1);
-            z-index: 1000;
-            overflow-y: auto;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-header {
-            padding: 24px 20px;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-        }
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            text-decoration: none;
-        }
-
-        .sidebar-brand i {
-            font-size: 1.8rem;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .sidebar-search {
-            padding: 20px;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-        }
-
-        .search-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .search-container i {
-            position: absolute;
-            left: 12px;
-            color: rgba(148, 163, 184, 0.6);
-            font-size: 0.9rem;
-            z-index: 1;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 16px 12px 40px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            border-radius: 8px;
-            color: #f8fafc;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #6366f1;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .search-shortcuts {
-            position: absolute;
-            right: 8px;
-            display: flex;
-            gap: 4px;
-        }
-
-        .shortcut {
-            background: rgba(148, 163, 184, 0.2);
-            color: rgba(148, 163, 184, 0.8);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-
-        .sidebar-nav {
-            padding: 20px 0;
-        }
-
-        .nav-section {
-            margin-bottom: 32px;
-        }
-
-        .nav-section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0 20px 12px 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: rgba(148, 163, 184, 0.8);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0;
-        }
-
-        .nav-section-title i {
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
-
-        .nav-section-items {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: rgba(248, 250, 252, 0.8);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .nav-item:hover {
-            color: #f8fafc;
-            background: rgba(99, 102, 241, 0.1);
-            transform: translateX(8px);
-        }
-
-        .nav-item.active {
-            color: #f8fafc;
-            background: rgba(99, 102, 241, 0.15);
-            border-right: 3px solid #6366f1;
-        }
-
-        .nav-item i {
-            width: 20px;
-            text-align: center;
-            font-size: 1rem;
-            color: #6366f1;
-            flex-shrink: 0;
-        }
-
-        .nav-item.active i {
-            color: #8b5cf6;
-        }
-
-        .nav-item span {
-            flex: 1;
-        }
-
-        /* Ajustar contenido principal para la sidebar fija */
-        body {
-            padding-left: 280px;
-        }
-
         * {
             box-sizing: border-box;
         }
         
         body { 
             font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-            color: #fff; 
+            background: var(--gradient-hero);
+            color: var(--text-light); 
             min-height: 100vh; 
             margin: 0;
             padding: 20px;
@@ -194,7 +27,7 @@
             overflow-x: hidden;
         }
         
-        /* Animated background particles */
+        /* Enhanced dynamic background with theme colors (same as carpetas) */
         body::before {
             content: '';
             position: fixed;
@@ -202,125 +35,55 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(16, 163, 127, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 60% 40%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+            pointer-events: none;
             z-index: -1;
-            animation: float 20s ease-in-out infinite;
+            animation: backgroundFloat 20s ease-in-out infinite;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
+        /* Add floating animation for background (same as carpetas) */
+        @keyframes backgroundFloat {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(-10px, -10px) scale(1.05);
+            }
+            50% {
+                transform: translate(10px, -5px) scale(0.95);
+            }
+            75% {
+                transform: translate(-5px, 10px) scale(1.02);
+            }
         }
         
+                /* Container with proper sidebar margins */
         .container { 
             max-width: 650px; 
-            /* centering the container in the right panel area */
-            margin: 20px auto 20px calc(280px + (100vw - 280px - 650px) / 2); 
-            background: rgba(30, 30, 50, 0.95);
+            margin: 40px auto 40px calc(280px + (100vw - 280px - 1200px) / 2);
+            background: var(--bg-card); 
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; 
-            padding: 40px 50px 80px 50px; 
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.05),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-radius: 20px; 
+            padding: 40px; 
+            box-shadow: var(--shadow-lg); 
+            border: 1px solid var(--border-subtle);
             position: relative; 
-            overflow: hidden;
+            overflow: visible;
+            min-height: 500px;
         }
 
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            border-radius: 24px 24px 0 0;
-        }
-        
-        h1 { 
-            color: transparent;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            font-size: 2.5rem; 
-            margin-bottom: 30px; 
-            font-family: 'Poppins', sans-serif; 
-            font-weight: 800;
-            text-align: center;
-            letter-spacing: -0.02em;
-            position: relative;
+        /* Mobile responsive margins */
+        @media (max-width: 1024px) { 
+            .container { 
+                margin: 40px auto; 
+            } 
         }
 
-        h1::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea, #f093fb);
-            border-radius: 2px;
-        }
-        
-        label { 
-            color: #e2e8f0;
-            font-weight: 600; 
-            font-size: 1.1rem;
-            display: block;
-            margin-bottom: 12px;
-            position: relative;
-            padding-left: 8px;
-        }
-
-        label::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 3px;
-            height: 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 2px;
-        }
-        
-        input, textarea { 
-            padding: 16px 20px; 
-            border-radius: 12px; 
-            border: 2px solid rgba(255, 255, 255, 0.1); 
-            font-size: 1.1rem; 
-            background: rgba(20, 20, 40, 0.8);
-            backdrop-filter: blur(10px);
-            color: #fff; 
-            margin-bottom: 20px; 
-            width: 100%; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: 'Inter', sans-serif;
-        }
-
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-            transform: translateY(-2px);
-        }
-
-        input:hover, textarea:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-        
-        textarea { 
-            resize: vertical;
-            min-height: 48px; /* Más compacto */
-            line-height: 1.6;
-        }
-        
+        /* Wizard slide styling */
         .wizard-slide {
             position: absolute;
             top: 0; 
@@ -332,6 +95,7 @@
             transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1;
             padding: 20px 0;
+            min-height: 300px;
         }
         
         .wizard-slide.active {
@@ -339,6 +103,7 @@
             pointer-events: auto;
             transform: translateX(0) scale(1);
             z-index: 2;
+            position: relative;
         }
         
         .wizard-slide.slide-in-left {
@@ -361,66 +126,69 @@
             opacity: 0;
         }
         
+        /* Wizard navigation styling */
         .wizard-nav { 
             display: flex; 
             justify-content: space-between; /* Siempre space-between */
             align-items: center;
             padding: 30px 0 0 0;
-            position: absolute;
-            left: 50px; 
-            right: 50px; 
-            bottom: 30px;
-            background: linear-gradient(0deg, rgba(30, 30, 50, 0.98) 80%, transparent 100%);
+            position: relative;
+            margin-top: 40px;
             z-index: 10;
         }
         
+                /* Main button styling */
         .btn-main { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff; 
+            background: var(--primary);
+            color: var(--button-text); 
             font-size: 1rem; 
             font-weight: 600; 
             border: none; 
             border-radius: 12px; 
             padding: 14px 28px; 
             cursor: pointer; 
-            box-shadow: 
-                0 4px 15px rgba(102, 126, 234, 0.2),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow-md);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             margin-top: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: inherit;
             position: relative;
             overflow: hidden;
         }
 
-        .btn-main::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
+        .btn-main:hover { 
+            background: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+            opacity: 0.9;
         }
 
-        .btn-main:hover::before {
-            left: 100%;
+        /* Dark theme button adjustments */
+        [data-theme="dark"] .btn-main {
+            background: var(--primary);
+            color: var(--button-text);
         }
-        
-        .btn-main:hover { 
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-            box-shadow: 
-                0 6px 20px rgba(102, 126, 234, 0.3),
-                0 0 0 1px rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
+
+        [data-theme="dark"] .btn-main:hover {
+            background: var(--primary);
+            opacity: 0.8;
+        }
+
+        /* Light theme button adjustments */
+        [data-theme="light"] .btn-main {
+            background: var(--primary);
+            color: var(--button-text);
+        }
+
+        [data-theme="light"] .btn-main:hover {
+            background: var(--primary);
+            opacity: 0.9;
         }
 
         .btn-main:active {
             transform: translateY(0);
         }
 
-        /* Botón invisible para mantener el espacio */
+        /* Invisible button placeholder for spacing */
         .btn-placeholder {
             opacity: 0;
             pointer-events: none;
@@ -439,43 +207,419 @@
             } 
         }
         
-        .flatpickr-calendar { 
-            color: #1a1a2e !important;
-            border-radius: 12px !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
-            z-index: 99999 !important;
-        }
-        
-        .flatpickr-calendar .flatpickr-month {
-            background: #f8f9fa !important;
-            color: #1a1a2e !important;
-        }
-        
-        .flatpickr-calendar .flatpickr-weekday {
-            background: #e9ecef !important;
-            color: #495057 !important;
-        }
-        
-        .flatpickr-calendar .flatpickr-day {
-            color: #495057 !important;
-        }
-        
-        .flatpickr-calendar .flatpickr-day:hover {
-            background: #e9ecef !important;
-        }
-        
-        .flatpickr-calendar .flatpickr-day.selected {
-            background: #007bff !important;
-            color: white !important;
-        }
-        
-        form { 
-            position: relative; 
-            min-height: 400px;
+        /* Calendar box styling */
+        .calendario-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-section);
+            border: 2px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
-        .input-error { 
-            border: 2px solid #ef4444 !important; 
+        /* Light theme adjustments for calendar box */
+        [data-theme="light"] .calendario-box {
+            background: var(--bg-section);
+            border-color: var(--border-subtle);
+        }
+
+        .calendario-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), transparent);
+        }
+        
+        .calendario-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-alpha);
+            transform: translateY(-2px);
+        }
+
+        .calendario-box:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+        
+        /* Calendar icon styling */
+        .cal-icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+            color: var(--primary);
+            user-select: none;
+        }
+
+        /* Light theme calendar icon */
+        [data-theme="light"] .cal-icon {
+            color: var(--primary);
+        }
+        
+        /* Calendar input styling */
+        .calendario-box input[type="text"] {
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            outline: none;
+            width: 100%;
+            padding: 8px 0;
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        .calendario-box input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+        
+        /* Calendar tip styling */
+        .cal-tip {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            margin-top: -10px;
+            text-align: left;
+            padding: 12px 16px;
+            background: var(--bg-section);
+            border-left: 3px solid var(--primary);
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Light theme tip */
+        [data-theme="light"] .cal-tip {
+            color: var(--text-muted);
+            background: var(--bg-section);
+            border-left-color: var(--primary);
+        }
+
+        /* Progress indicator styling */
+        .progress-container {
+            position: relative;
+            margin-bottom: 20px;
+            height: 4px;
+            background: var(--border-subtle);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 2px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Step indicator styling */
+        .step-indicator {
+            position: absolute;
+            top: 20px;
+            right: 0;
+            background: var(--bg-section);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Light theme step indicator */
+        [data-theme="light"] .step-indicator {
+            background: var(--bg-section);
+            border-color: var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        /* File upload styling */
+        input[type="file"] {
+            background: var(--bg-section);
+            border: 2px dashed var(--border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            color: var(--text-light);
+        }
+
+        input[type="file"]:hover {
+            border-color: var(--primary);
+            background: var(--bg-section);
+        }
+
+        /* Light theme file upload */
+        [data-theme="light"] input[type="file"] {
+            background: var(--bg-section);
+            border-color: var(--border-subtle);
+            color: var(--text-light);
+        }
+
+        [data-theme="light"] input[type="file"]:hover {
+            border-color: var(--primary);
+            background: var(--bg-section);
+        }
+
+        /* Uploaded file state styling */
+        input[type="file"].file-uploaded {
+            background: var(--primary-alpha);
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-alpha);
+        }
+
+        input[type="file"].file-uploaded:hover {
+            background: var(--primary-alpha);
+            border-color: var(--primary);
+        }
+
+        /* Hidden confirmation text */
+        #archivo-nombre {
+            display: none !important;
+        }
+
+        /* Examples grid styling */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 8px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        
+        /* Example button styling */
+        .example-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 8px;
+            border: 2px solid var(--border-subtle);
+            border-radius: 8px;
+            background: var(--bg-section);
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.8rem;
+            text-align: center;
+            min-height: 60px;
+            justify-content: center;
+        }
+        
+        .example-btn:hover {
+            border-color: var(--primary);
+            background: var(--bg-section);
+            transform: translateY(-2px);
+        }
+        
+        .example-btn.selected {
+            border-color: var(--primary);
+            background: var(--bg-section);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Light theme example buttons */
+        [data-theme="light"] .example-btn {
+            background: var(--bg-section);
+            border-color: var(--border-subtle);
+            color: var(--text-light);
+        }
+
+        [data-theme="light"] .example-btn:hover {
+            border-color: var(--primary);
+            background: var(--bg-section);
+        }
+
+        [data-theme="light"] .example-btn.selected {
+            border-color: var(--primary);
+            background: var(--bg-section);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .example-btn i {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        
+        .example-btn span {
+            font-weight: 500;
+            line-height: 1.1;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 30px 25px 70px 25px;
+            }
+
+            .wizard-nav {
+                margin-top: 20px;
+            }
+
+            .progress-container {
+                margin-bottom: 15px;
+            }
+
+            .step-indicator {
+                top: 15px;
+                right: 0;
+            }
+
+            .examples-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Native date input styling */
+        input[type="date"] {
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            outline: none;
+            width: 100%;
+            padding: 8px 0;
+            margin-bottom: 0;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            min-height: 24px;
+        }
+
+        /* Webkit browsers (Chrome, Safari, Edge) */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+            padding: 4px;
+            margin-left: 8px;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+                opacity: 1;
+        }
+
+        /* For light theme */
+        [data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+            color: var(--text-light);
+            filter: invert(0);
+        }
+
+        /* Firefox date input styling */
+        input[type="date"]::-moz-calendar-picker-indicator {
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 4px;
+            margin-left: 8px;
+        }
+
+        [data-theme="light"] input[type="date"]::-moz-calendar-picker-indicator {
+            color: var(--text-light);
+            filter: invert(0);
+        }
+
+        /* Ensure the input is clickable and visible */
+        .calendario-box input[type="date"] {
+                position: relative;
+            z-index: 2;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            outline: none;
+            width: 100%;
+            padding: 8px 0;
+            margin-bottom: 0;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            min-height: 24px;
+        }
+
+        /* Placeholder styling for date inputs */
+        .calendario-box input[type="date"]:invalid {
+            color: var(--text-muted);
+        }
+
+        .calendario-box input[type="date"]:valid {
+            color: var(--text-light);
+        }
+
+        /* Add a visual hint when no date is selected */
+        .calendario-box input[type="date"]:not(:valid)::before {
+            content: "Seleccioná una fecha";
+            color: var(--text-muted);
+            position: absolute;
+            left: 0;
+                top: 0;
+            pointer-events: none;
+        }
+
+        /* Make sure the calendar box is properly styled */
+        .calendario-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-section);
+            border: 2px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 16px 20px;
+                margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            min-height: 60px;
+        }
+
+        .calendario-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .calendario-box:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        /* Visual feedback when date is selected */
+        .calendario-box.date-selected {
+            border-color: var(--primary);
+            background: var(--bg-section);
+        }
+
+        .calendario-box.date-selected .cal-icon {
+            color: var(--primary);
+        }
+
+        /* Light theme selected state */
+        [data-theme="light"] .calendario-box.date-selected {
+            border-color: var(--primary);
+            background: var(--bg-section);
+        }
+
+        [data-theme="light"] .calendario-box.date-selected .cal-icon {
+            color: var(--primary);
+        }
+
+        /* Error styling for inputs */
+        .input-error {
+            border: 2px solid #ef4444 !important;
             box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
             animation: shake 0.5s ease-in-out;
         }
@@ -493,447 +637,242 @@
             display: block;
             animation: fadeInUp 0.3s ease;
         }
-        
-        .calendario-box {
-            display: flex;
-            align-items: center;
-            background: rgba(20, 20, 40, 0.8);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            border-radius: 16px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            box-shadow: 
-                0 8px 25px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* Label styling for better contrast */
+        label {
+            color: var(--text-light);
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 12px;
             position: relative;
-            overflow: hidden;
+            padding-left: 8px;
         }
 
-        .calendario-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), transparent);
+        /* Light theme labels */
+        [data-theme="light"] label {
+            color: var(--text-light);
         }
-        
-        .calendario-box:focus-within {
-            border-color: #667eea;
-            box-shadow: 
-                0 0 0 3px rgba(102, 126, 234, 0.2),
-                0 12px 35px rgba(0, 0, 0, 0.3);
+
+        /* Input and textarea styling */
+        input[type="number"], input[type="text"], textarea {
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 2px solid var(--border-subtle);
+            font-size: 1.1rem;
+            background: var(--bg-section);
+            color: var(--text-light);
+            margin-bottom: 20px;
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
             transform: translateY(-2px);
         }
 
-        .calendario-box:hover {
-            border-color: rgba(102, 126, 234, 0.5);
-            transform: translateY(-1px);
-        }
-        
-        .cal-icon {
-            font-size: 1.8rem;
-            margin-right: 15px;
-            background: linear-gradient(135deg, #667eea, #f093fb);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            user-select: none;
-            animation: pulse 2s ease-in-out infinite;
+        input[type="number"]:hover, input[type="text"]:hover, textarea:hover {
+            border-color: var(--primary);
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .calendario-box input[type="text"] {
-            background: transparent;
-            border: none;
-            color: #e2e8f0;
-            font-size: 1.1rem;
-            outline: none;
-            width: 100%;
-            padding: 8px 0;
-            margin-bottom: 0;
-            font-weight: 500;
+        /* Light theme inputs */
+        [data-theme="light"] input[type="number"], 
+        [data-theme="light"] input[type="text"], 
+        [data-theme="light"] textarea {
+            background: var(--bg-section);
+            border-color: var(--border-subtle);
+            color: var(--text-light);
         }
 
-        .calendario-box input[type="text"]::placeholder {
-            color: rgba(226, 232, 240, 0.6);
-        }
-        
-        .cal-tip {
-            color: #38bdf8;
-            font-size: 0.95rem;
-            margin-bottom: 15px;
-            margin-top: -10px;
-            text-align: left;
-            padding: 12px 16px;
-            background: rgba(56, 189, 248, 0.1);
-            border-left: 3px solid #38bdf8;
-            border-radius: 0 8px 8px 0;
-            animation: fadeInUp 0.5s ease;
+        [data-theme="light"] input[type="number"]:focus, 
+        [data-theme="light"] input[type="text"]:focus, 
+        [data-theme="light"] textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
         }
 
-        /* Progress indicator */
-        .progress-container {
-            position: absolute;
-            top: 20px;
-            left: 50px;
-            right: 50px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #f093fb);
-            border-radius: 2px;
-            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Title styling */
+        h1 {
+            color: var(--text-light);
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: -0.02em;
             position: relative;
         }
 
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shimmer 2s infinite;
+        /* Light theme title */
+        [data-theme="light"] h1 {
+            color: var(--text-light);
         }
 
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        /* Step indicator */
-        .step-indicator {
-            position: absolute;
-            top: 40px;
-            right: 50px;
-            background: rgba(20, 20, 40, 0.8);
-            backdrop-filter: blur(10px);
+        /* Multiple dates functionality */
+        .btn-add-date {
+            background: var(--bg-section);
+            color: var(--text-light);
+            border: 2px dashed var(--border-subtle);
+            border-radius: 8px;
             padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 10px;
+            cursor: pointer;
             font-size: 0.9rem;
-            color: #a0aec0;
-            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-add-date:hover {
+            background: var(--primary);
+            color: var(--button-text);
+            border-color: var(--primary);
+        }
+
+        .selected-dates {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .date-tag {
+            background: var(--primary);
+            color: var(--button-text);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .date-tag .remove-date {
+            background: none;
+            border: none;
+            color: var(--button-text);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+
+        .date-tag .remove-date:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* File upload styling */
-        input[type="file"] {
-            background: rgba(20, 20, 40, 0.8);
-            border: 2px dashed rgba(102, 126, 234, 0.3);
-            border-radius: 12px;
+        .file-upload-container {
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .file-upload-label {
+            display: block;
+            background: var(--bg-section);
+            border: 2px dashed var(--border-subtle);
+            border-radius: 8px;
             padding: 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 20px;
+            color: var(--text-light);
         }
 
-        input[type="file"]:hover {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
+        .file-upload-label:hover {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--button-text);
         }
 
-        /* Estado cuando hay archivo subido */
-        input[type="file"].file-uploaded {
-            background: rgba(118, 75, 162, 0.2);
-            border: 2px solid #764ba2;
-            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+        .file-upload-label.dragover {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--button-text);
         }
 
-        input[type="file"].file-uploaded:hover {
-            background: rgba(118, 75, 162, 0.3);
-            border-color: #667eea;
+        .file-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--bg-section);
+            border-radius: 6px;
+            border: 1px solid var(--border-subtle);
+            display: none;
         }
 
-        /* Ocultar el texto de confirmación */
-        #archivo-nombre {
-            display: none !important;
+        .file-info.show {
+            display: block;
         }
 
-        /* Responsive design */
-        @media (max-width: 1024px) {
-            .container {
-                /* responsive fallback for smaller screens */
-                margin: 20px auto;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                margin: 10px;
-                padding: 30px 25px 70px 25px;
-                border-radius: 20px;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            .wizard-nav {
-                left: 25px;
-                right: 25px;
-            }
-
-            .progress-container,
-            .step-indicator {
-                left: 25px;
-                right: 25px;
-            }
-
-            .step-indicator {
-                right: 25px;
-                position: relative;
-                top: 0;
-                margin-bottom: 20px;
-                text-align: center;
-            }
-
-            .btn-main {
-                padding: 12px 20px;
-                font-size: 0.95rem;
-            }
-
-            form {
-                min-height: 350px; /* Reducido para móvil */
-            }
+        .file-name {
+            font-weight: 600;
+            color: var(--text-light);
         }
 
-        /* Enhanced animations */
-        .wizard-slide.active {
-            animation: slideInScale 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        .file-size {
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
 
-        @keyframes slideInScale {
-            0% {
-                opacity: 0;
-                transform: translateX(50px) scale(0.95);
-            }
-            100% {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-            }
+        /* Light theme adjustments for new elements */
+        [data-theme="light"] .btn-add-date {
+            background: var(--bg-section);
+            color: var(--text-light);
+            border-color: var(--border-subtle);
         }
 
-        /* Enhanced focus states */
-        input:focus, textarea:focus {
-            background: rgba(20, 20, 40, 0.95);
+        [data-theme="light"] .btn-add-date:hover {
+            background: var(--primary);
+            color: var(--button-text);
+            border-color: var(--primary);
         }
 
-        /* Loading state for submit button */
-        .btn-main.loading {
-            pointer-events: none;
-            opacity: 0.8;
+        [data-theme="light"] .file-upload-label {
+            background: var(--bg-section);
+            color: var(--text-light);
+            border-color: var(--border-subtle);
         }
 
-        .btn-main.loading::after {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            margin: auto;
-            border: 2px solid transparent;
-            border-top-color: #ffffff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        [data-theme="light"] .file-upload-label:hover {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--button-text);
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        [data-theme="light"] .file-info {
+            background: var(--bg-section);
+            border-color: var(--border-subtle);
         }
 
-        #slide-5 textarea {
-            margin-bottom: 20px; /* Reducido de 30px a 20px */
+        [data-theme="light"] .file-name {
+            color: var(--text-light);
         }
-        
-        /* Ejemplos predefinidos para aclaraciones */
-        .examples-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 8px;
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .example-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px 8px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            background: rgba(20, 20, 40, 0.8);
-            color: #e2e8f0;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 0.8rem;
-            text-align: center;
-            min-height: 60px;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-        
-        .example-btn:hover {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .example-btn.selected {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.2);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .example-btn i {
-            font-size: 1.1rem;
-            color: #667eea;
-            margin-bottom: 4px;
-        }
-        
-        .example-btn span {
-            font-weight: 500;
-            line-height: 1.1;
-        }
-        
-        @media (max-width: 768px) {
-            .examples-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .examples-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-
     </style>
+    {% endblock %}
 </head>
 <body>
-    <!-- Sidebar Navigation -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <a href="{{ url_for('index') }}" class="sidebar-brand">
-                <i class="fa-solid fa-brain"></i>
-                <span>Focus Studio</span>
-            </a>
-        </div>
-
-        <div class="sidebar-search">
-            <div class="search-container">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" placeholder="Buscar..." class="search-input">
-                <div class="search-shortcuts">
-                    <span class="shortcut">⌘</span>
-                    <span class="shortcut">K</span>
-                </div>
-            </div>
-        </div>
-
-        <nav class="sidebar-nav">
-            {% if current_user.is_authenticated %}
-                <!-- Organización -->
-                <div class="nav-section">
-                    <h3 class="nav-section-title">
-                        <i class="fa-solid fa-sitemap"></i>
-                        Organización
-                    </h3>
-                    <div class="nav-section-items">
-                        <a href="{{ url_for('historial') }}" class="nav-item">
-                            <i class="fa-solid fa-chart-line"></i>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="{{ url_for('planificacion') }}" class="nav-item active">
-                            <i class="fa-solid fa-calendar-days"></i>
-                            <span>Planificador</span>
-                        </a>
-                        <a href="{{ url_for('mi_calendario') }}" class="nav-item">
-                            <i class="fa-solid fa-calendar-check"></i>
-                            <span>Mi Calendario</span>
-                        </a>
-                        <a href="{{ url_for('carpetas') }}" class="nav-item">
-                            <i class="fa-solid fa-folder-open"></i>
-                            <span>Mis Carpetas</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Estudio -->
-                <div class="nav-section">
-                    <h3 class="nav-section-title">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                        Estudio
-                    </h3>
-                    <div class="nav-section-items">
-                        <a href="{{ url_for('generar') }}" class="nav-item">
-                            <i class="fa-solid fa-file-lines"></i>
-                            <span>Generador de Exámenes</span>
-                        </a>
-                        <a href="{{ url_for('wolfram_query') }}" class="nav-item">
-                            <i class="fa-solid fa-calculator"></i>
-                            <span>Ejercicios Matemáticos</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Mi Perfil -->
-                <div class="nav-section">
-                    <h3 class="nav-section-title">
-                        <i class="fa-solid fa-user-circle"></i>
-                        Mi Perfil
-                    </h3>
-                    <div class="nav-section-items">
-                        <a href="{{ url_for('perfil') }}" class="nav-item">
-                            <i class="fa-solid fa-user"></i>
-                            <span>Configuración</span>
-                        </a>
-                        <a href="{{ url_for('logout') }}" class="nav-item">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                            <span>Cerrar Sesión</span>
-                        </a>
-                    </div>
-                </div>
-            {% else %}
-                <div class="nav-section">
-                    <h3 class="nav-section-title">
-                        <i class="fa-solid fa-info-circle"></i>
-                        Información
-                    </h3>
-                    <div class="nav-section-items">
-                        <a href="{{ url_for('como_funciona') }}" class="nav-item">
-                            <i class="fa-solid fa-question-circle"></i>
-                            <span>Cómo Funciona</span>
-                        </a>
-                        <a href="{{ url_for('login') }}" class="nav-item">
-                            <i class="fa-solid fa-right-to-bracket"></i>
-                            <span>Iniciar Sesión</span>
-                        </a>
-                        <a href="{{ url_for('registro') }}" class="nav-item">
-                            <i class="fa-solid fa-user-plus"></i>
-                            <span>Registrarse</span>
-                        </a>
-                    </div>
-                </div>
-            {% endif %}
-        </nav>
-    </div>
-
+    {% block content %}
     <div class="container">
         <div class="progress-container">
             <div class="progress-bar" id="progressBar" style="width: 20%"></div>
@@ -941,24 +880,28 @@
         <div class="step-indicator" id="stepIndicator">Paso 1 de 5</div>
         
         <h1>✨ Planificación de estudio</h1>
-        <form id="wizardForm" method="POST" enctype="multipart/form-data">
+        <form id="wizardForm" method="POST" enctype="multipart/form-data" style="position: relative; min-height: 400px;">
             <!-- Slide 1: Día de examen -->
             <div class="wizard-slide active" id="slide-1">
                 <label for="fecha_examen">📅 Seleccioná el día del examen:</label>
                 <div class="calendario-box">
                     <span class="cal-icon">📅</span>
-                    <input type="text" id="fecha_examen" name="fecha_examen" placeholder="¡Seleccioná desde el calendario!" readonly>
+                    <input type="date" id="fecha_examen" name="fecha_examen" min="{{ today }}" placeholder="Seleccioná una fecha">
                 </div>
             </div>
             
             <!-- Slide 2: Días NO disponibles -->
             <div class="wizard-slide" id="slide-2">
                 <label for="dias_no">🚫 Seleccioná los días en los que <b>NO</b> podés estudiar:</label>
-                <div class="calendario-box">
+                <div class="calendario-box" id="calendario-dias-no">
                     <span class="cal-icon">📅</span>
-                    <input type="text" id="dias_no" name="dias_no" placeholder="¡Tocá y elegí varios días!" readonly>
+                    <input type="date" id="dias_no" name="dias_no" min="{{ today }}" placeholder="Seleccioná una fecha">
+                    <button type="button" class="btn-add-date" id="add-date-btn">+ Agregar fecha</button>
                 </div>
-                <div class="cal-tip">💡 Tip: podés seleccionar varios días haciendo clic en el calendario.</div>
+                <div class="selected-dates" id="selected-dates-container"></div>
+                <!-- Campo oculto para enviar todas las fechas seleccionadas -->
+                <input type="hidden" id="dias_no_multiple" name="dias_no_multiple" value="">
+                <div class="cal-tip">💡 Tip: podés agregar múltiples fechas una por una.</div>
             </div>
             
             <!-- Slide 3: Tiempo por día -->
@@ -1004,8 +947,19 @@
                 <label for="resumen">📚 Pegá tu resumen o temario:</label>
                 <textarea id="resumen" name="resumen" rows="2" placeholder="Pegá aquí el contenido que necesitás estudiar..."></textarea>
                 <label for="archivo">📎 O subí un archivo (.txt, .pdf, .docx):</label>
-                <input type="file" id="archivo" name="archivo" accept=".txt,.pdf,.docx">
-                <span id="archivo-nombre"></span>
+                <div class="file-upload-container">
+                    <label for="archivo" class="file-upload-label" id="file-upload-label">
+                        <div>📁 Arrastrá un archivo aquí o hacé clic para seleccionar</div>
+                        <div style="font-size: 0.85rem; margin-top: 5px; opacity: 0.7;">
+                            Formatos soportados: .txt, .pdf, .docx
+                        </div>
+                    </label>
+                    <input type="file" id="archivo" name="archivo" accept=".txt,.pdf,.docx" style="display: none;">
+                    <div class="file-info" id="file-info">
+                        <div class="file-name" id="file-name"></div>
+                        <div class="file-size" id="file-size"></div>
+                    </div>
+                </div>
             </div>
             
             <div class="wizard-nav">
@@ -1016,9 +970,10 @@
         </form>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <script>
-    // Wizard logic con animación tipo PowerPoint y validaciones
+        
+        // Wizard logic with PowerPoint-like animation and validations
     let currentSlide = 0;
     const slides = document.querySelectorAll('.wizard-slide');
     const prevBtn = document.getElementById('prevBtn');
@@ -1037,9 +992,9 @@
         stepIndicator.textContent = `Paso ${currentSlide + 1} de ${slides.length}`;
     }
 
-    // Validaciones por slide
+        // Validations per slide
     function validarSlide(n) {
-        // Limpiar errores previos
+            // Clear previous errors
         document.querySelectorAll('.error-msg').forEach(e => e.remove());
         document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
         
@@ -1052,8 +1007,8 @@
         }
         if (n === 1) { // Días no disponibles
             const fechaExamen = document.getElementById('fecha_examen').value;
-            const diasNo = document.getElementById('dias_no').value.split(',').map(d=>d.trim());
-            if (diasNo.includes(fechaExamen)) {
+                const diasNo = document.getElementById('dias_no').value;
+                if (fechaExamen && diasNo && diasNo === fechaExamen) {
                 mostrarError('dias_no', 'No podés marcar el día del examen como no disponible.');
                 return false;
             }
@@ -1099,7 +1054,7 @@
             }
         });
         
-        // Lógica de botones: siempre mantener el espacio con placeholder
+            // Button logic: always maintain space with placeholder
         if (n === 0) {
             prevBtn.style.display = 'none';
             prevBtnPlaceholder.style.display = 'inline-block';
@@ -1155,36 +1110,99 @@
         }, 600);
     }
     
-    // Calendario para fecha de examen (single date)
-    flatpickr("#fecha_examen", {
-        dateFormat: "Y-m-d",
-        minDate: "today",
-        allowInput: false,
-        locale: "es"
-    });
-    
-    // Calendario para días NO disponibles (multiple dates)
-    flatpickr("#dias_no", {
-        mode: "multiple",
-        dateFormat: "Y-m-d",
-        minDate: "today",
-        allowInput: false,
-        locale: "es"
-    });
-    
-    // Manejo de textarea/archivo en resumen
+        // Native date input validation and handling
+        const fechaExamenInput = document.getElementById('fecha_examen');
+        const diasNoInput = document.getElementById('dias_no');
+        
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        fechaExamenInput.min = today;
+        diasNoInput.min = today;
+        
+        // Add click event to calendar boxes to focus the input
+        document.querySelectorAll('.calendario-box').forEach(box => {
+            box.addEventListener('click', function() {
+                const input = this.querySelector('input[type="date"]');
+                if (input) {
+                    input.focus();
+                    input.showPicker && input.showPicker(); // Show calendar picker if supported
+                }
+            });
+        });
+        
+        // Add visual feedback when date is selected
+        function updateDateDisplay(input) {
+            const box = input.closest('.calendario-box');
+            if (input.value) {
+                box.classList.add('date-selected');
+            } else {
+                box.classList.remove('date-selected');
+            }
+        }
+        
+        // Listen for date changes
+        fechaExamenInput.addEventListener('change', function() {
+            updateDateDisplay(this);
+        });
+        
+        diasNoInput.addEventListener('change', function() {
+            updateDateDisplay(this);
+        });
+        
+        // Validation for exam date
+        fechaExamenInput.addEventListener('change', function() {
+            const fechaExamen = this.value;
+            const diasNo = diasNoInput.value;
+            
+            // Clear previous errors
+            this.classList.remove('input-error');
+            const existingError = this.parentNode.querySelector('.error-msg');
+            if (existingError) existingError.remove();
+            
+            // Validate that exam date is not in the past
+            if (fechaExamen < today) {
+                mostrarError('fecha_examen', 'La fecha del examen no puede ser anterior a hoy.');
+                this.value = '';
+                return;
+            }
+            
+            // Validate that exam date is not in unavailable days
+            if (diasNo && diasNo === fechaExamen) {
+                mostrarError('fecha_examen', 'La fecha del examen no puede estar en los días no disponibles.');
+                this.value = '';
+                return;
+            }
+        });
+        
+        // Validation for unavailable days
+        diasNoInput.addEventListener('change', function() {
+            const fechaExamen = fechaExamenInput.value;
+            const diasNo = this.value;
+            
+            // Clear previous errors
+            this.classList.remove('input-error');
+            const existingError = this.parentNode.querySelector('.error-msg');
+            if (existingError) existingError.remove();
+            
+            // Validate that unavailable day is not the exam date
+            if (fechaExamen && diasNo && diasNo === fechaExamen) {
+                mostrarError('dias_no', 'No podés marcar el día del examen como no disponible.');
+                this.value = '';
+                return;
+            }
+        });
+        
+        // Handling textarea/file in summary
     const resumen = document.getElementById('resumen');
     const archivo = document.getElementById('archivo');
     const archivoNombre = document.getElementById('archivo-nombre');
     
     archivo.addEventListener('change', function() {
         if (archivo.files.length > 0) {
-            // Cambiar el color del área de archivo a violeta
             archivo.classList.add('file-uploaded');
             resumen.disabled = true;
             resumen.style.opacity = '0.5';
         } else {
-            // Volver al color original
             archivo.classList.remove('file-uploaded');
             resumen.disabled = false;
             resumen.style.opacity = '1';
@@ -1201,106 +1219,236 @@
         }
     });
     
-    // Funcionalidad para los botones de ejemplo de aclaraciones
+        // Functionality for example clarification buttons
     document.querySelectorAll('.example-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const text = this.getAttribute('data-text');
             const input = document.getElementById('aclaraciones');
             
-            // Remover selección previa
+                // Remove previous selection
             document.querySelectorAll('.example-btn').forEach(b => b.classList.remove('selected'));
-            // Seleccionar el actual
+                // Select current
             this.classList.add('selected');
             
-            // Llenar el input con el texto del ejemplo
+                // Fill input with example text
             input.value = text;
             
-            // Trigger input event para validación
+                // Trigger input event for validation
             input.dispatchEvent(new Event('input'));
         });
     });
     
-    // Limpiar selección de ejemplos cuando se escribe manualmente
+        // Clear example selection when typing manually
     document.getElementById('aclaraciones').addEventListener('input', function() {
         if (this.value.trim() === '') {
             document.querySelectorAll('.example-btn').forEach(btn => btn.classList.remove('selected'));
         }
     });
-    </script>
-
-    <!-- Funcionalidad del buscador -->
-    <script>
-        // Funcionalidad del buscador
-        const searchInput = document.querySelector('.search-input');
-        const navItems = document.querySelectorAll('.nav-item');
+    
+    // Multiple dates functionality
+    let selectedDates = [];
+    
+    document.getElementById('add-date-btn').addEventListener('click', function() {
+        const dateInput = document.getElementById('dias_no');
+        const selectedDate = dateInput.value;
         
-        // Función para buscar en la navegación
-        function searchNavigation(query) {
-            const searchTerm = query.toLowerCase().trim();
-            
-            navItems.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                const navSection = item.closest('.nav-section');
-                
-                if (searchTerm === '') {
-                    // Mostrar todo si no hay búsqueda
-                    item.style.display = 'flex';
-                    navSection.style.display = 'block';
-                } else if (text.includes(searchTerm)) {
-                    // Mostrar item que coincide
-                    item.style.display = 'flex';
-                    navSection.style.display = 'block';
-                } else {
-                    // Ocultar item que no coincide
-                    item.style.display = 'none';
-                }
-            });
-            
-            // Ocultar secciones vacías
-            document.querySelectorAll('.nav-section').forEach(section => {
-                const visibleItems = section.querySelectorAll('.nav-item[style*="flex"]');
-                if (visibleItems.length === 0 && searchTerm !== '') {
-                    section.style.display = 'none';
-                } else {
-                    section.style.display = 'block';
-                }
-            });
+        if (!selectedDate) {
+            alert('Por favor seleccioná una fecha primero.');
+            return;
         }
         
-        // Event listener para el input de búsqueda
-        if (searchInput) {
-            searchInput.addEventListener('input', function(e) {
-                searchNavigation(e.target.value);
-            });
+        if (selectedDates.includes(selectedDate)) {
+            alert('Esta fecha ya fue agregada.');
+            return;
         }
         
-        // Atajos de teclado
-        document.addEventListener('keydown', function(e) {
-            // Cmd/Ctrl + K para enfocar el buscador
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        // Check if it's the exam date
+        const fechaExamen = document.getElementById('fecha_examen').value;
+        if (fechaExamen && selectedDate === fechaExamen) {
+            alert('No podés marcar el día del examen como no disponible.');
+            return;
+        }
+        
+        selectedDates.push(selectedDate);
+        updateSelectedDatesDisplay();
+        dateInput.value = ''; // Clear the input
+    });
+    
+    function updateSelectedDatesDisplay() {
+        const container = document.getElementById('selected-dates-container');
+        const hiddenInput = document.getElementById('dias_no_multiple');
+        
+        container.innerHTML = '';
+        
+        selectedDates.forEach(date => {
+            const dateTag = document.createElement('div');
+            dateTag.className = 'date-tag';
+            dateTag.innerHTML = `
+                <span>${formatDate(date)}</span>
+                <button type="button" class="remove-date" onclick="removeDate('${date}')">×</button>
+            `;
+            container.appendChild(dateTag);
+        });
+        
+        // Actualizar el campo oculto con todas las fechas separadas por comas
+        hiddenInput.value = selectedDates.join(',');
+    }
+    
+    function removeDate(date) {
+        selectedDates = selectedDates.filter(d => d !== date);
+        updateSelectedDatesDisplay();
+    }
+    
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
+    
+    // File upload functionality
+    const fileInput = document.getElementById('archivo');
+    const fileUploadLabel = document.getElementById('file-upload-label');
+    const fileInfo = document.getElementById('file-info');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    
+    // Click to upload
+    fileUploadLabel.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    // Drag and drop functionality
+    fileUploadLabel.addEventListener('dragover', function(e) {
                 e.preventDefault();
-                if (searchInput) {
-                    searchInput.focus();
-                }
+        this.classList.add('dragover');
+    });
+    
+    fileUploadLabel.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+    
+    fileUploadLabel.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+    
+    function handleFileSelect(file) {
+        // Validate file type
+        const allowedTypes = ['.txt', '.pdf', '.docx'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedTypes.includes(fileExtension)) {
+            alert('Tipo de archivo no soportado. Solo se permiten archivos .txt, .pdf y .docx');
+            return;
+        }
+        
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
+            return;
+        }
+        
+        // Update display
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.classList.add('show');
+        
+        // Update label text
+        fileUploadLabel.innerHTML = `
+            <div>✅ Archivo seleccionado</div>
+            <div style="font-size: 0.85rem; margin-top: 5px; opacity: 0.7;">
+                ${file.name}
+            </div>
+        `;
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Override the validation function to include multiple dates
+    const originalValidarSlide = validarSlide;
+    validarSlide = function(n) {
+        // Clear previous errors
+        document.querySelectorAll('.error-msg').forEach(e => e.remove());
+        document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
+        
+        if (n === 0) { // Fecha examen
+            const fecha = document.getElementById('fecha_examen').value;
+            if (!fecha) {
+                mostrarError('fecha_examen', 'Seleccioná el día del examen.');
+                return false;
+            }
+        }
+        if (n === 1) { // Días no disponibles
+            const fechaExamen = document.getElementById('fecha_examen').value;
+            const diasNo = document.getElementById('dias_no').value;
+            
+            // Check if exam date is in selected unavailable dates
+            if (fechaExamen && selectedDates.includes(fechaExamen)) {
+                mostrarError('dias_no', 'No podés marcar el día del examen como no disponible.');
+                return false;
             }
             
-            // Escape para limpiar búsqueda
-            if (e.key === 'Escape') {
-                if (searchInput) {
-                    searchInput.value = '';
-                    searchNavigation('');
-                    searchInput.blur();
-                }
+            // At least one unavailable date should be selected
+            if (selectedDates.length === 0 && !diasNo) {
+                mostrarError('dias_no', 'Seleccioná al menos un día no disponible.');
+                return false;
             }
-        });
+        }
+        if (n === 2) { // Tiempo por día
+            const tiempo = parseFloat(document.getElementById('tiempo_dia').value);
+            if (isNaN(tiempo) || tiempo <= 0 || tiempo > 24) {
+                mostrarError('tiempo_dia', 'Ingresá un valor válido (mayor a 0 y hasta 24 horas).');
+                return false;
+            }
+        }
+        if (n === 4) { // Resumen/temario
+            const resumen = document.getElementById('resumen').value.trim();
+            const archivo = document.getElementById('archivo').files[0];
+            if (!resumen && !archivo) {
+                mostrarError('resumen', 'Pegá un resumen o subí un archivo.');
+                mostrarError('archivo', 'Pegá un resumen o subí un archivo.');
+                return false;
+            }
+        }
+        return true;
+    };
+    
+    // Asegurar que las fechas se envíen cuando se envía el formulario
+    document.getElementById('wizardForm').addEventListener('submit', function(e) {
+        // Actualizar el campo oculto antes de enviar
+        const hiddenInput = document.getElementById('dias_no_multiple');
+        hiddenInput.value = selectedDates.join(',');
         
-        // Limpiar búsqueda al hacer clic fuera
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.sidebar-search') && searchInput) {
-                searchInput.blur();
-            }
-        });
+        // También actualizar el campo original si hay fechas seleccionadas
+        const originalInput = document.getElementById('dias_no');
+        if (selectedDates.length > 0 && !originalInput.value) {
+            originalInput.value = selectedDates[0]; // Enviar al menos la primera fecha
+        }
+    });
     </script>
-
+    {% endblock %}
 </body>
 </html>
