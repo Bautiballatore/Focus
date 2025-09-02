@@ -1,136 +1,574 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Historial de Exámenes</title>
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Focus Studio{% endblock %}
+
+{% block extra_styles %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #7c3aed;
             --primary-light: #a855f7;
             --secondary: #38bdf8;
             --accent: #4ade80;
-            --bg-dark: #18181b;
-            --text-light: #fff;
-            --card-dark: #23263a;
-            --muted: #a0aec0;
+            --warning: #facc15;
+            --danger: #f87171;
+            --bg-dark: #0f0f23;
+            --card-dark: #1a1a2e;
+            --card-light: #23263a;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(148, 163, 184, 0.1);
+            --glass: rgba(255, 255, 255, 0.05);
         }
-        html, body { height: 100%; margin: 0; padding: 0; }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
         body {
             font-family: 'Inter', 'Montserrat', Arial, sans-serif;
             background: var(--bg-dark);
             color: var(--text-light);
             min-height: 100vh;
             overflow-x: hidden;
+            position: relative;
         }
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            background: var(--card-dark);
-            border-radius: 18px;
-            padding: 36px 44px 30px 44px;
-            box-shadow: 0 4px 24px #0008;
-        }
-        h1 {
-            margin-bottom: 28px;
-            color: var(--primary);
-            font-size: 2.2rem;
-            letter-spacing: 1px;
-            font-family: 'Montserrat', Arial, sans-serif;
-        }
-        .table {
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-top: 30px;
-            background: var(--card-dark);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px #7c3aed11;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 90%, rgba(74, 222, 128, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: backgroundFloat 20s ease-in-out infinite;
         }
-        .table th, .table td {
-            padding: 14px 18px;
+        
+        @keyframes backgroundFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 0 280px;
+            padding: 40px 20px;
+        }
+        
+        .dashboard-header {
             text-align: center;
+            margin-bottom: 48px;
+            position: relative;
+            z-index: 1;
         }
-        .table th {
-            background: var(--primary);
-            color: #fff;
-            font-weight: 600;
-            font-size: 1.05rem;
+        
+        .dashboard-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 16px;
+            font-family: 'Montserrat', sans-serif;
         }
-        .table tr:nth-child(even) {
-            background: #23263aee;
+        
+        .dashboard-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 400;
         }
-        .table tr:nth-child(odd) {
-            background: #1a1a1e;
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
         }
-        .btn-main {
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            color: #fff;
-            padding: 8px 20px;
+        
+        .stat-card {
+            background: var(--card-dark);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--glass), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .content-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+        
+        .section-card {
+            background: var(--card-dark);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            backdrop-filter: blur(20px);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-title i {
+            color: var(--primary);
+        }
+        
+        .view-all-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 8px 16px;
             border-radius: 8px;
             text-decoration: none;
+            font-size: 0.9rem;
             font-weight: 500;
-            font-size: 1rem;
-            margin: 0 4px;
-            transition: background 0.2s;
-            display: inline-block;
-            border: none;
-            box-shadow: 0 2px 12px #7c3aed33;
+            transition: all 0.3s ease;
         }
-        .btn-main:hover {
-            background: linear-gradient(90deg, var(--secondary), var(--primary));
-            box-shadow: 0 4px 16px #38bdf855;
+        
+        .view-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
         }
-        .volver {
-            margin-bottom: 18px;
-            display: inline-block;
+        
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
         }
-        .nota {
-            font-weight: bold;
+        
+        .recent-item:last-child {
+            border-bottom: none;
+        }
+        
+        .recent-item:hover {
+            background: var(--glass);
+            margin: 0 -16px;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .recent-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        .recent-icon.examen { background: linear-gradient(135deg, var(--primary), var(--primary-light)); }
+        .recent-icon.consulta { background: linear-gradient(135deg, var(--secondary), var(--accent)); }
+        .recent-icon.carpeta { background: linear-gradient(135deg, var(--warning), var(--danger)); }
+        
+        .recent-content {
+            flex: 1;
+        }
+        
+        .recent-title {
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+        
+        .recent-meta {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .carpetas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .carpeta-card {
+            background: var(--card-light);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .carpeta-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.15);
+        }
+        
+        .carpeta-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+        
+        .carpeta-name {
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+        
+        .carpeta-count {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .achievements-section {
+            background: var(--card-dark);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+        }
+        
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+        
+        .achievement-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            border-radius: 16px;
+            background: var(--glass);
+            transition: all 0.3s ease;
+        }
+        
+        .achievement-badge:hover {
+            transform: scale(1.05);
+            background: var(--card-light);
+        }
+        
+        .achievement-icon {
+            font-size: 2rem;
             color: var(--accent);
-            font-size: 1.1rem;
         }
-        .correctas { color: #4ade80; font-weight: bold; }
-        .parciales { color: #facc15; font-weight: bold; }
-        .incorrectas { color: #f87171; font-weight: bold; }
+        
+        .achievement-name {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--text-light);
+        }
+        
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+        
+        .cta-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.3);
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                margin: 0 auto;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content-sections {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+            
+            .dashboard-title {
+                font-size: 2.5rem;
+            }
+        }
     </style>
-</head>
-<body>
+{% endblock %}
+
+{% block content %}
     <div class="container">
-        <h1><i class="fa-solid fa-list"></i> Historial de Exámenes</h1>
-        <a href="{{ url_for('perfil') }}" class="btn-main volver"><i class="fa-solid fa-user"></i> Volver al perfil</a>
-        {% if examenes %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Nota</th>
-                    <th>Correctas</th>
-                    <th>Parciales</th>
-                    <th>Incorrectas</th>
-                    <th>Tiempo (s)</th>
-                    <th>Detalle</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for examen in examenes %}
-                <tr>
-                    <td>{{ examen.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
-                    <td class="nota">{{ examen.nota }}</td>
-                    <td class="correctas">{{ examen.correctas }}</td>
-                    <td class="parciales">{{ examen.parciales }}</td>
-                    <td class="incorrectas">{{ examen.incorrectas }}</td>
-                    <td>{{ examen.tiempo_total }}</td>
-                    <td><a href="{{ url_for('detalle_examen', examen_id=examen.id) }}" class="btn-main">Ver</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No has realizado exámenes aún.</p>
-        {% endif %}
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">🎯 Mi Dashboard</h1>
+            <p class="dashboard-subtitle">Resumen de tu actividad y progreso en Focus Studio</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-number">{{ total_examenes }}</div>
+                <div class="stat-label">Exámenes Rendidos</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-number">{{ promedio_nota|round(1) }}</div>
+                <div class="stat-label">Promedio de Notas</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-number">{{ tiempo_total_horas }}</div>
+                <div class="stat-label">Horas de Estudio</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">📁</div>
+                <div class="stat-number">{{ total_carpetas }}</div>
+                <div class="stat-label">Carpetas Creadas</div>
+            </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div class="content-sections">
+            <!-- Recent Activity -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fa-solid fa-clock"></i>
+                        Actividad Reciente
+                    </h2>
+                    <a href="{{ url_for('historial_completo') }}" class="view-all-btn">Ver Todo</a>
+                </div>
+                
+                {% if examenes_recientes %}
+                    {% for examen in examenes_recientes[:5] %}
+                    <div class="recent-item">
+                        <div class="recent-icon examen">
+                            <i class="fa-solid fa-file-alt"></i>
+                        </div>
+                        <div class="recent-content">
+                            <div class="recent-title">
+                                <a href="{{ url_for('detalle_examen', examen_id=examen.id) }}" style="color: var(--text-light); text-decoration: none;">
+                                    {{ examen.titulo[:40] }}{% if examen.titulo|length > 40 %}...{% endif %}
+                                </a>
+                            </div>
+                            <div class="recent-meta">
+                                {{ examen.fecha.strftime('%d/%m/%Y') }} • Nota: {{ examen.nota }}/10
+                                {% if examen.carpeta %}
+                                    • 📁 {{ examen.carpeta.nombre }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <a href="{{ url_for('detalle_examen', examen_id=examen.id) }}" class="view-all-btn" style="font-size: 0.8rem; padding: 6px 12px;">
+                            <i class="fa-solid fa-eye"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fa-solid fa-clock"></i>
+                        <h3>Sin actividad reciente</h3>
+                        <p>¡Genera tu primer examen para empezar!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- My Folders -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fa-solid fa-folder-open"></i>
+                        Mis Carpetas
+                    </h2>
+                    <a href="{{ url_for('carpetas') }}" class="view-all-btn">Ver Todas</a>
+                </div>
+                
+                {% if carpetas %}
+                    <div class="carpetas-grid">
+                        {% for carpeta in carpetas[:4] %}
+                        <div class="carpeta-card" onclick="window.location.href='{{ url_for('ver_carpeta', carpeta_id=carpeta.id) }}'">
+                            <div class="carpeta-icon">
+                                <i class="fa-solid fa-folder"></i>
+                            </div>
+                            <div class="carpeta-name">{{ carpeta.nombre }}</div>
+                            <div class="carpeta-count">{{ carpeta.cantidad_examenes }} exámenes</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fa-solid fa-folder"></i>
+                        <h3>Sin carpetas creadas</h3>
+                        <p>Organiza tus exámenes en carpetas</p>
+                        <a href="{{ url_for('crear_carpeta') }}" class="cta-btn">Crear Primera Carpeta</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Achievements Section -->
+        <div class="achievements-section">
+            <h2 class="section-title">
+                <i class="fa-solid fa-trophy"></i>
+                Logros y Badges
+            </h2>
+            
+            <div class="achievements-grid">
+                {% if total_examenes >= 1 %}
+                <div class="achievement-badge">
+                    <div class="achievement-icon">🎯</div>
+                    <div class="achievement-name">Primer Examen</div>
+                </div>
+                {% endif %}
+                
+                {% if total_examenes >= 5 %}
+                <div class="achievement-badge">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-name">Estudiante Activo</div>
+                </div>
+                {% endif %}
+                
+                {% if promedio_nota >= 8 %}
+                <div class="achievement-badge">
+                    <div class="achievement-icon">🏆</div>
+                    <div class="achievement-name">Excelencia</div>
+                </div>
+                {% endif %}
+                
+                {% if total_carpetas >= 3 %}
+                <div class="achievement-badge">
+                    <div class="achievement-icon">📚</div>
+                    <div class="achievement-name">Organizado</div>
+                </div>
+                {% endif %}
+                
+                {% if tiempo_total_horas >= 10 %}
+                <div class="achievement-badge">
+                    <div class="achievement-icon">⏰</div>
+                    <div class="achievement-name">Perseverante</div>
+                </div>
+                {% endif %}
+                
+                {% if total_examenes == 0 %}
+                <div class="achievement-badge">
+                    <div class="achievement-icon">🌟</div>
+                    <div class="achievement-name">¡Comienza!</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-</body>
-</html> 
+{% endblock %}

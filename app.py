@@ -555,7 +555,18 @@ def generar():
     if not is_authenticated():
         return redirect(url_for('login'))
     if request.method == "GET":
-        return render_template("generar.html")
+        try:
+            if supabase:
+                # Obtener carpetas del usuario para el selector
+                carpetas_response = supabase.table('carpetas').select('id, nombre, color').eq('usuario_id', session.get('user_id')).order('nombre').execute()
+                carpetas = carpetas_response.data if carpetas_response.data else []
+            else:
+                carpetas = []
+        except Exception as e:
+            print(f"⚠️ Error obteniendo carpetas: {e}")
+            carpetas = []
+        
+        return render_template("generar.html", carpetas=carpetas)
 
     # Limpiar datos temporales de la sesión antes de generar un nuevo examen
     session.pop("preguntas", None)
@@ -881,6 +892,24 @@ def generar():
         session["start_time"] = time.time()
         session["pregunta_times"] = []
         session["last_question_time"] = time.time()
+        
+        # Guardar la carpeta seleccionada en la sesión
+        carpeta_id = request.values.get("carpeta_id")
+        if carpeta_id:
+            session['carpeta_seleccionada'] = carpeta_id
+            print(f"💾 Carpeta guardada en sesión ANTES de ir a pregunta: {carpeta_id}")
+        else:
+            session.pop('carpeta_seleccionada', None)
+            print("🗑️ No hay carpeta seleccionada, limpiando sesión")
+        
+        # Guardar el título personalizado en la sesión
+        titulo = request.values.get("titulo")
+        if titulo:
+            session['titulo_examen'] = titulo
+            print(f"📝 Título guardado en sesión: {titulo}")
+        else:
+            session.pop('titulo_examen', None)
+            print("🗑️ No hay título ingresado, limpiando sesión")
 
     except Exception as e:
         print(f"\n--- EXCEPCIÓN: {str(e)} ---\n")
@@ -1140,10 +1169,13 @@ def resultado():
                 print(f"❌ Error verificando tablas: {e}")
                 return render_template("resultado_abierto.html", respuestas=respuestas, preguntas=preguntas, feedbacks=feedbacks, resumen=resumen, respuestas_texto_usuario=respuestas_texto_usuario, respuestas_texto_correcta=respuestas_texto_correcta)
             
+            # Obtener carpeta seleccionada desde la sesión (ya guardada anteriormente)
+            carpeta_id = session.get('carpeta_seleccionada')
+            
             # Guardar examen principal
             examen_data = {
                 'usuario_id': current_user['id'],
-                'titulo': f'Examen de {preguntas[0].get("tema", "General")}',
+                'titulo': session.get('titulo_examen', f'Examen de {preguntas[0].get("tema", "General")}'),
                 'materia': preguntas[0].get("tema", "General"),
                 'fecha_creacion': datetime.utcnow().isoformat(),
                 'fecha_rendido': datetime.utcnow().isoformat(),
@@ -1159,10 +1191,16 @@ def resultado():
                 'incorrectas': incorrectas,
                 'total_preguntas': total,
                 # Agregar feedback general
-                'feedback_general': feedback_general
+                'feedback_general': feedback_general,
+                # Agregar carpeta si fue seleccionada (usar la de la sesión)
+                'carpeta_id': session.get('carpeta_seleccionada') if session.get('carpeta_seleccionada') else None
             }
             
             print(f"📊 Datos del examen: {examen_data}")
+            
+            # Limpiar datos de la sesión después de guardar
+            session.pop('titulo_examen', None)
+            session.pop('carpeta_seleccionada', None)
             
             examen_response = supabase.table('examenes').insert(examen_data).execute()
             
@@ -1298,14 +1336,112 @@ def historial():
     # Verificar autenticación simple
     if not is_authenticated():
         return redirect(url_for('login'))
+    
+    try:
+        if supabase:
+            current_user = get_current_user()
+            if not current_user:
+                return redirect(url_for('login'))
+            
+            # Obtener exámenes del usuario
+            examenes_response = supabase.table('examenes').select('*, carpetas(id, nombre, color)').eq('usuario_id', current_user['id']).order('fecha_rendido', desc=True).execute()
+            
+            # Obtener carpetas del usuario
+            carpetas_response = supabase.table('carpetas').select('id, nombre, color').eq('usuario_id', current_user['id']).order('nombre').execute()
+            
+            # Calcular métricas del dashboard
+            total_examenes = len(examenes_response.data) if examenes_response.data else 0
+            total_carpetas = len(carpetas_response.data) if carpetas_response.data else 0
+            
+            # Calcular promedio de notas
+            promedio_nota = 0
+            tiempo_total_segundos = 0
+            if examenes_response.data:
+                notas = [examen.get('nota', 0) for examen in examenes_response.data if examen.get('nota') is not None]
+                promedio_nota = sum(notas) / len(notas) if notas else 0
+                # Filtrar valores None para el tiempo total
+                tiempos = [examen.get('tiempo_duracion', 0) for examen in examenes_response.data if examen.get('tiempo_duracion') is not None]
+                tiempo_total_segundos = sum(tiempos) if tiempos else 0
+            
+            # Convertir tiempo total a horas
+            tiempo_total_horas = round(tiempo_total_segundos / 3600, 1)
+            
+            # Preparar exámenes recientes para el dashboard
+            examenes_recientes = []
+            if examenes_response.data:
+                for examen in examenes_response.data[:5]:  # Solo los 5 más recientes
+                    try:
+                        # Formatear fecha para mostrar en hora de Argentina (GMT-3)
+                        from datetime import timezone, timedelta
+                        fecha_rendido = examen.get('fecha_rendido')
+                        if fecha_rendido:
+                            fecha_utc = datetime.fromisoformat(fecha_rendido.replace('Z', '+00:00'))
+                            zona_horaria_argentina = timezone(timedelta(hours=-3))
+                            fecha_argentina = fecha_utc.astimezone(zona_horaria_argentina)
+                        else:
+                            fecha_argentina = datetime.now()
+                        
+                        examenes_recientes.append({
+                            'id': examen.get('id', 0),
+                            'titulo': examen.get('titulo', 'Examen de General'),
+                            'fecha': fecha_argentina,
+                            'nota': examen.get('nota', 0),
+                            'carpeta': examen.get('carpetas') if examen.get('carpetas') else None
+                        })
+                    except Exception as e:
+                        continue
+            
+            # Preparar carpetas para el dashboard
+            carpetas = []
+            if carpetas_response.data:
+                for carpeta in carpetas_response.data:
+                    try:
+                        # Contar exámenes en cada carpeta
+                        examenes_carpeta_response = supabase.table('examenes').select('id', count='exact').eq('carpeta_id', carpeta.get('id')).execute()
+                        cantidad_examenes = examenes_carpeta_response.count if hasattr(examenes_carpeta_response, 'count') else 0
+                        
+                        carpetas.append({
+                            'id': carpeta.get('id', 0),
+                            'nombre': carpeta.get('nombre', 'Sin nombre'),
+                            'color': carpeta.get('color', '#6366f1'),
+                            'cantidad_examenes': cantidad_examenes
+                        })
+                    except Exception as e:
+                        continue
+            
+            # Renderizar el dashboard
+            return render_template("historial.html", 
+                total_examenes=total_examenes,
+                promedio_nota=promedio_nota,
+                tiempo_total_horas=tiempo_total_horas,
+                total_carpetas=total_carpetas,
+                examenes_recientes=examenes_recientes,
+                carpetas=carpetas
+            )
+                
+    except Exception as e:
+        flash("Error al cargar el dashboard. Intenta nuevamente.")
+        # En caso de error, mostrar dashboard con valores por defecto
+        return render_template("historial.html", 
+            total_examenes=0,
+            promedio_nota=0,
+            tiempo_total_horas=0,
+            total_carpetas=0,
+            examenes_recientes=[],
+            carpetas=[]
+        )
+
+@app.route("/historial_completo")
+def historial_completo():
+    # Verificar autenticación simple
+    if not is_authenticated():
+        return redirect(url_for('login'))
     try:
         if supabase:
             # Obtener exámenes del usuario desde Supabase
             current_user = get_current_user()
-            print(f"🔍 Buscando exámenes para usuario: {current_user['id']}")
             
-            response = supabase.table('examenes').select('*').eq('usuario_id', current_user['id']).order('fecha_rendido', desc=True).execute()
-            print(f"📊 Respuesta de Supabase: {len(response.data) if response.data else 0} exámenes encontrados")
+            response = supabase.table('examenes').select('*, carpetas(id, nombre, color)').eq('usuario_id', current_user['id']).order('fecha_rendido', desc=True).execute()
             
             if response.data:
                 examenes = []
@@ -1318,6 +1454,7 @@ def historial():
                     
                     examenes.append({
                         'id': examen['id'],
+                        'titulo': examen.get('titulo', 'Examen de General'),
                         'fecha': fecha_argentina,
                         'nota': examen['nota'],
                         'materia': examen['materia'],
@@ -1326,16 +1463,16 @@ def historial():
                         # Agregar métricas detalladas
                         'correctas': examen.get('correctas', 0),
                         'parciales': examen.get('parciales', 0),
-                        'incorrectas': examen.get('incorrectas', 0)
+                        'incorrectas': examen.get('incorrectas', 0),
+                        # Agregar información de carpeta
+                        'carpeta': examen.get('carpetas') if examen.get('carpetas') else None
                     })
-                return render_template("historial.html", examenes=examenes)
+                return render_template("historial_completo.html", examenes=examenes)
             else:
-                flash("No tienes exámenes rendidos aún. ¡Genera tu primer examen!")
-                return redirect(url_for('generar'))
+                return render_template("historial_completo.html", examenes=[])
                 
     except Exception as e:
-        print(f"Error obteniendo historial: {e}")
-        flash("Error al cargar el historial. Intenta nuevamente.")
+        flash("Error al cargar el historial completo. Intenta nuevamente.")
         return redirect(url_for('generar'))
 
 @app.route("/examen/<examen_id>")
@@ -1394,6 +1531,7 @@ def detalle_examen(examen_id):
                     
                     examen_formateado = {
                         'id': examen['id'],
+                        'titulo': examen.get('titulo', 'Examen de General'),
                         'fecha': fecha_argentina,
                         'nota': examen['nota'],
                         'materia': examen['materia'],
@@ -1420,14 +1558,19 @@ def detalle_examen(examen_id):
 
 @app.route("/wolfram", methods=["GET", "POST"])
 def wolfram_query():
+    print(f"[DEBUG] Wolfram query - Method: {request.method}")
     # Verificar autenticación simple
     if not is_authenticated():
+        print("[DEBUG] Usuario no autenticado")
         return redirect(url_for('login'))
     resultado = None
     imagen_url = None
     error = None
     pods = []
     if request.method == "POST":
+        print(f"[DEBUG] Form data: {request.form}")
+        print(f"[DEBUG] Operación: {request.form.get('operacion', '')}")
+        print(f"[DEBUG] Expresión: {request.form.get('expresion', '')}")
         operacion = request.form.get("operacion", "")
         expresion = request.form.get("expresion", "")
         consulta = expresion.strip()
@@ -1468,15 +1611,24 @@ def wolfram_query():
             except Exception as e:
                 error = f"No se pudo traducir la frase a consulta matemática: {str(e)}"
         try:
+            print(f"[DEBUG] Consulta a Wolfram: {consulta}")
+            print(f"[DEBUG] API Key: {app_id}")
+            
             url = "https://api.wolframalpha.com/v2/query"
             params = {
                 "input": consulta,
                 "appid": app_id,
                 "format": "image,plaintext"
             }
+            print(f"[DEBUG] Parámetros: {params}")
+            
             resp = requests.get(url, params=params, timeout=30)
+            print(f"[DEBUG] Status Code: {resp.status_code}")
+            print(f"[DEBUG] Response: {resp.text[:500]}...")
+            
             if resp.status_code != 200:
                 error = f"Error HTTP: {resp.status_code}"
+                print(f"[DEBUG] Error HTTP: {resp.status_code}")
             else:
                 root = ET.fromstring(resp.text)
                 for pod in root.findall(".//pod"):
@@ -1491,20 +1643,29 @@ def wolfram_query():
                     # Guardar todos los pods relevantes
                     if pod_plaintext or pod_img:
                         pods.append({"title": pod_title, "plaintext": pod_plaintext, "img": pod_img})
+                        print(f"[DEBUG] Pod encontrado: {pod_title} - {pod_plaintext}")
                     # Guardar el resultado principal
                     if pod_title.lower() in ["result", "resultado", "solution", "solución"] and not resultado:
                         resultado = pod_plaintext
                         imagen_url = pod_img
+                        print(f"[DEBUG] Resultado principal: {resultado}")
                 if not resultado and pods:
                     resultado = pods[0]["plaintext"]
                     imagen_url = pods[0]["img"]
+                    print(f"[DEBUG] Usando primer pod como resultado: {resultado}")
                 if not resultado:
                     error = "No se encontró una respuesta clara para tu consulta."
+                    print("[DEBUG] No se encontró resultado")
         except Exception as e:
             import traceback
             print("Error Wolfram:", e)
             traceback.print_exc()
             error = f"Error al consultar Wolfram Alpha: {str(e)}"
+    
+    print(f"[DEBUG] Final - Resultado: {resultado}")
+    print(f"[DEBUG] Final - Error: {error}")
+    print(f"[DEBUG] Final - Pods: {len(pods)}")
+    
     return render_template("wolfram.html", resultado=resultado, imagen_url=imagen_url, error=error, pods=pods)
 
 @app.route("/examen_matematico/<int:numero>", methods=["GET", "POST"])
@@ -2032,6 +2193,223 @@ def robots():
 def google_verification():
     """Archivo de verificación de Google Search Console"""
     return send_from_directory('static', 'google48eb92cb7318a041.html')
+
+# =====================================================
+# SISTEMA DE CARPETAS PARA ORGANIZAR EXÁMENES
+# =====================================================
+
+@app.route("/carpetas")
+def carpetas():
+    """Listar carpetas del usuario"""
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    try:
+        if supabase:
+            # Obtener carpetas del usuario
+            carpetas_response = supabase.table('carpetas').select('*').eq('usuario_id', session.get('user_id')).order('fecha_creacion', desc=True).execute()
+            
+            # Obtener estadísticas de cada carpeta
+            carpetas_con_stats = []
+            for carpeta in carpetas_response.data:
+                # Contar exámenes en esta carpeta
+                examenes_response = supabase.table('examenes').select('id', count='exact').eq('carpeta_id', carpeta['id']).execute()
+                cantidad_examenes = examenes_response.count if hasattr(examenes_response, 'count') else 0
+                
+                # Convertir fechas de string a datetime
+                from datetime import datetime
+                if carpeta.get('fecha_creacion'):
+                    try:
+                        carpeta['fecha_creacion'] = datetime.fromisoformat(carpeta['fecha_creacion'].replace('Z', '+00:00'))
+                    except:
+                        carpeta['fecha_creacion'] = None
+                
+                if carpeta.get('fecha_actualizacion'):
+                    try:
+                        carpeta['fecha_actualizacion'] = datetime.fromisoformat(carpeta['fecha_actualizacion'].replace('Z', '+00:00'))
+                    except:
+                        carpeta['fecha_actualizacion'] = None
+                
+                carpeta['cantidad_examenes'] = cantidad_examenes
+                carpetas_con_stats.append(carpeta)
+            
+            return render_template("carpetas.html", carpetas=carpetas_con_stats)
+            
+    except Exception as e:
+        print(f"❌ Error obteniendo carpetas: {e}")
+        flash("Error al cargar las carpetas")
+        return redirect(url_for('generar'))
+    
+    return render_template("carpetas.html", carpetas=[])
+
+@app.route("/carpetas/crear", methods=["GET", "POST"])
+def crear_carpeta():
+    """Crear nueva carpeta"""
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    if request.method == "POST":
+        nombre = request.form.get("nombre")
+        descripcion = request.form.get("descripcion")
+        color = request.form.get("color", "#10a37f")
+        
+        if not nombre:
+            flash("El nombre de la carpeta es obligatorio")
+            return render_template("crear_carpeta.html")
+        
+        try:
+            if supabase:
+                nueva_carpeta = {
+                    'usuario_id': session.get('user_id'),
+                    'nombre': nombre,
+                    'descripcion': descripcion,
+                    'color': color
+                }
+                
+                response = supabase.table('carpetas').insert(nueva_carpeta).execute()
+                
+                if response.data:
+                    flash("Carpeta creada exitosamente!")
+                    return redirect(url_for('carpetas'))
+                else:
+                    flash("Error al crear la carpeta")
+                    
+        except Exception as e:
+            print(f"❌ Error creando carpeta: {e}")
+            flash("Error al crear la carpeta")
+    
+    return render_template("crear_carpeta.html")
+
+@app.route("/carpetas/<carpeta_id>")
+def ver_carpeta(carpeta_id):
+    """Ver carpeta específica y sus exámenes"""
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    try:
+        if supabase:
+            # Obtener información de la carpeta
+            carpeta_response = supabase.table('carpetas').select('*').eq('id', carpeta_id).eq('usuario_id', session.get('user_id')).execute()
+            
+            if not carpeta_response.data:
+                flash("Carpeta no encontrada")
+                return redirect(url_for('carpetas'))
+            
+            carpeta = carpeta_response.data[0]
+            
+            # Convertir fechas de string a datetime
+            from datetime import datetime
+            if carpeta.get('fecha_creacion'):
+                try:
+                    carpeta['fecha_creacion'] = datetime.fromisoformat(carpeta['fecha_creacion'].replace('Z', '+00:00'))
+                except:
+                    carpeta['fecha_creacion'] = None
+            
+            if carpeta.get('fecha_actualizacion'):
+                try:
+                    carpeta['fecha_actualizacion'] = datetime.fromisoformat(carpeta['fecha_actualizacion'].replace('Z', '+00:00'))
+                except:
+                    carpeta['fecha_actualizacion'] = None
+            
+            # Obtener exámenes de esta carpeta
+            examenes_response = supabase.table('examenes').select('*').eq('carpeta_id', carpeta_id).order('fecha_creacion', desc=True).execute()
+            
+            # Convertir fechas de los exámenes también
+            examenes = []
+            for examen in examenes_response.data:
+                if examen.get('fecha_creacion'):
+                    try:
+                        examen['fecha_creacion'] = datetime.fromisoformat(examen['fecha_creacion'].replace('Z', '+00:00'))
+                    except:
+                        examen['fecha_creacion'] = None
+                examenes.append(examen)
+            
+            return render_template("carpeta_detalle.html", carpeta=carpeta, examenes=examenes)
+            
+    except Exception as e:
+        print(f"❌ Error obteniendo carpeta: {e}")
+        flash("Error al cargar la carpeta")
+        return redirect(url_for('carpetas'))
+    
+    return redirect(url_for('carpetas'))
+
+@app.route("/carpetas/<carpeta_id>/editar", methods=["GET", "POST"])
+def editar_carpeta(carpeta_id):
+    """Editar carpeta existente"""
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    try:
+        if supabase:
+            if request.method == "POST":
+                nombre = request.form.get("nombre")
+                descripcion = request.form.get("descripcion")
+                color = request.form.get("color", "#10a37f")
+                
+                if not nombre:
+                    flash("El nombre de la carpeta es obligatorio")
+                    return render_template("editar_carpeta.html", carpeta=carpeta)
+                
+                # Actualizar carpeta
+                update_data = {
+                    'nombre': nombre,
+                    'descripcion': descripcion,
+                    'color': color
+                }
+                
+                response = supabase.table('carpetas').update(update_data).eq('id', carpeta_id).eq('usuario_id', session.get('user_id')).execute()
+                
+                if response.data:
+                    flash("Carpeta actualizada exitosamente!")
+                    return redirect(url_for('ver_carpeta', carpeta_id=carpeta_id))
+                else:
+                    flash("Error al actualizar la carpeta")
+            else:
+                # GET: mostrar formulario de edición
+                carpeta_response = supabase.table('carpetas').select('*').eq('id', carpeta_id).eq('usuario_id', session.get('user_id')).execute()
+                
+                if not carpeta_response.data:
+                    flash("Carpeta no encontrada")
+                    return redirect(url_for('carpetas'))
+                
+                carpeta = carpeta_response.data[0]
+                return render_template("editar_carpeta.html", carpeta=carpeta)
+                
+    except Exception as e:
+        print(f"❌ Error editando carpeta: {e}")
+        flash("Error al editar la carpeta")
+        return redirect(url_for('carpetas'))
+    
+    return redirect(url_for('carpetas'))
+
+@app.route("/carpetas/<carpeta_id>/eliminar", methods=["POST"])
+def eliminar_carpeta(carpeta_id):
+    """Eliminar carpeta"""
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    try:
+        if supabase:
+            # Verificar que la carpeta pertenece al usuario
+            carpeta_response = supabase.table('carpetas').select('id').eq('id', carpeta_id).eq('usuario_id', session.get('user_id')).execute()
+            
+            if not carpeta_response.data:
+                flash("Carpeta no encontrada")
+                return redirect(url_for('carpetas'))
+            
+            # Eliminar carpeta (los exámenes se quedarán sin carpeta por ON DELETE SET NULL)
+            response = supabase.table('carpetas').delete().eq('id', carpeta_id).execute()
+            
+            if response.data:
+                flash("Carpeta eliminada exitosamente!")
+            else:
+                flash("Error al eliminar la carpeta")
+                
+    except Exception as e:
+        print(f"❌ Error eliminando carpeta: {e}")
+        flash("Error al eliminar la carpeta")
+    
+    return redirect(url_for('carpetas'))
 
 # =====================================================
 # SISTEMA SIMPLE DE AUTENTICACIÓN CON SUPABASE AUTH

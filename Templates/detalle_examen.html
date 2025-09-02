@@ -121,6 +121,7 @@
         <h1><i class="fa-solid fa-file-alt"></i> Detalle del Examen</h1>
         <a href="{{ url_for('historial') }}" class="btn-main"><i class="fa-solid fa-list"></i> Volver al historial</a>
         <div class="resumen">
+            <p><b>Título:</b> <span style="color:var(--primary-light); font-size: 1.1em;">{{ examen.titulo }}</span></p>
             <p><b>Fecha:</b> {{ examen.fecha.strftime('%d/%m/%Y %H:%M') }}</p>
             <p><b>Nota:</b> <span style="color:var(--accent)">{{ examen.nota }}</span></p>
             <p><b>Correctas:</b> <span style="color:#4ade80">{{ examen.correctas }}</span> | <b>Parciales:</b> <span style="color:#facc15">{{ examen.parciales }}</span> | <b>Incorrectas:</b> <span style="color:#f87171">{{ examen.incorrectas }}</span></p>

@@ -32,6 +32,7 @@
         .container {
             max-width: 600px;
             margin: 40px auto;
+            margin-left: calc(280px + (100vw - 280px - 600px) / 2);
             background: var(--card-dark);
             border-radius: 18px;
             padding: 36px 44px 30px 44px;
@@ -218,6 +219,20 @@
     .modal-content-error p { font-size: 1.15em; margin-bottom: 0; text-align: center; }
     .close-error { position: absolute; right: 15px; top: 10px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; }
     .close-error:hover { color: #e74c3c; }
+    
+    @media (max-width: 1024px) {
+        .container {
+            margin: 40px auto;
+            margin-left: auto;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .container {
+            margin: 20px;
+            padding: 24px;
+        }
+    }
     </style>
     {% endif %}
 {% endblock %}
@@ -227,6 +242,10 @@
 <div class="container">
     <h1><i class="fa-solid fa-file-circle-plus"></i> Generar examen</h1>
     <form method="POST" enctype="multipart/form-data">
+        <div class="grupo-campo">
+            <label for="titulo">Título del examen</label>
+            <input type="text" id="titulo" name="titulo" placeholder="Ej: Examen de Matemática - Unidad 1" required>
+        </div>
         <div class="grupo-campo">
             <label for="nivel">Nivel educativo</label>
             <select id="nivel" name="nivel" required>
@@ -293,6 +312,21 @@
             <label for="archivo">O suba un archivo (.txt, .pdf, .docx)</label>
             <input type="file" id="archivo" name="archivo" accept=".txt,.pdf,.docx">
         </div>
+        
+        {% if carpetas %}
+        <div class="grupo-campo">
+            <label for="carpeta_id">Guardar en carpeta (opcional)</label>
+            <select id="carpeta_id" name="carpeta_id">
+                <option value="">Sin carpeta (General)</option>
+                {% for carpeta in carpetas %}
+                <option value="{{ carpeta.id }}" style="color: {{ carpeta.color }};">
+                    📁 {{ carpeta.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        
         <button type="submit" class="btn-main"><i class="fa-solid fa-bolt"></i> Generar examen</button>
     </form>
 </div>
@@ -316,9 +350,25 @@
     toggleTemasMath();
     // Mostrar modal de carga al enviar el formulario
     document.querySelector('form').addEventListener('submit', function(e) {
+        console.log('🚀 FORM SUBMIT EVENT TRIGGERED');
+        console.log('Evento:', e);
+        
+        // Verificar el estado del formulario antes de enviar
+        const formData = new FormData(this);
+        console.log('📋 FormData antes del envío:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+        
+        // Verificar específicamente carpeta_id
+        const carpetaSelect = document.getElementById('carpeta_id');
+        console.log('📁 Carpeta en submit:', carpetaSelect ? carpetaSelect.value : 'No encontrado');
+        
+                // NO prevenir el envío - solo mostrar el modal
         document.getElementById('modal-carga').classList.add('active');
-        });
-    </script>
+    });
+    
+</script>
     
     <script>
     // Fondo animado tipo red
@@ -377,19 +427,4 @@
     </script>
 {% endblock %}
 
-{% block nav_buttons %}
-<div class="nav-buttons">
-    <a href="{{ url_for('planificacion') }}" class="nav-btn secondary">
-        <i class="fa-solid fa-calendar-days"></i> Planificación
-    </a>
-    <a href="{{ url_for('wolfram_query') }}" class="nav-btn accent">
-        <i class="fa-solid fa-calculator"></i> Ejercicios matemáticos
-    </a>
-    <a href="{{ url_for('historial') }}" class="nav-btn outline">
-        <i class="fa-solid fa-history"></i> Ver historial
-    </a>
-    <a href="{{ url_for('perfil') }}" class="nav-btn outline">
-        <i class="fa-solid fa-user"></i> Mi perfil
-    </a>
-</div>
-{% endblock %} 
+

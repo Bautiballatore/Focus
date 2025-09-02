@@ -7,6 +7,178 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Sidebar independiente - CSS idéntico a base.html */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(148, 163, 184, 0.1);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-brand i {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-search {
+            padding: 20px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 12px;
+            color: rgba(148, 163, 184, 0.6);
+            font-size: 0.9rem;
+            z-index: 1;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 8px;
+            color: #f8fafc;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .search-shortcuts {
+            position: absolute;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .shortcut {
+            background: rgba(148, 163, 184, 0.2);
+            color: rgba(148, 163, 184, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+        }
+
+        .nav-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 20px 12px 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(148, 163, 184, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .nav-section-title i {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .nav-section-items {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: rgba(248, 250, 252, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            color: #f8fafc;
+            background: rgba(99, 102, 241, 0.1);
+            transform: translateX(8px);
+        }
+
+        .nav-item.active {
+            color: #f8fafc;
+            background: rgba(99, 102, 241, 0.15);
+            border-right: 3px solid #6366f1;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+            color: #6366f1;
+            flex-shrink: 0;
+        }
+
+        .nav-item.active i {
+            color: #8b5cf6;
+        }
+
+        .nav-item span {
+            flex: 1;
+        }
+
+        /* Ajustar contenido principal para la sidebar fija */
+        body {
+            padding-left: 280px;
+        }
+
         * {
             box-sizing: border-box;
         }
@@ -21,7 +193,7 @@
             position: relative;
             overflow-x: hidden;
         }
-
+        
         /* Animated background particles */
         body::before {
             content: '';
@@ -44,7 +216,8 @@
         
         .container { 
             max-width: 650px; 
-            margin: 20px auto; 
+            /* centering the container in the right panel area */
+            margin: 20px auto 20px calc(280px + (100vw - 280px - 650px) / 2); 
             background: rgba(30, 30, 50, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -267,9 +440,33 @@
         }
         
         .flatpickr-calendar { 
-            color: #1a1a2e;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            color: #1a1a2e !important;
+            border-radius: 12px !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+            z-index: 99999 !important;
+        }
+        
+        .flatpickr-calendar .flatpickr-month {
+            background: #f8f9fa !important;
+            color: #1a1a2e !important;
+        }
+        
+        .flatpickr-calendar .flatpickr-weekday {
+            background: #e9ecef !important;
+            color: #495057 !important;
+        }
+        
+        .flatpickr-calendar .flatpickr-day {
+            color: #495057 !important;
+        }
+        
+        .flatpickr-calendar .flatpickr-day:hover {
+            background: #e9ecef !important;
+        }
+        
+        .flatpickr-calendar .flatpickr-day.selected {
+            background: #007bff !important;
+            color: white !important;
         }
         
         form { 
@@ -468,6 +665,13 @@
         }
 
         /* Responsive design */
+        @media (max-width: 1024px) {
+            .container {
+                /* responsive fallback for smaller screens */
+                margin: 20px auto;
+            }
+        }
+        
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -618,192 +822,117 @@
             }
         }
 
-        /* Enhanced Navbar */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 32px;
-            background: rgba(15, 15, 35, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-        }
 
-        .navbar-brand {
-            font-family: 'Poppins', sans-serif;
-            font-size: 2.2rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .navbar-brand::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            transition: width 0.3s ease;
-        }
-
-        .navbar-brand:hover::after {
-            width: 100%;
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .navbar-nav a {
-            color: #f8fafc;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .navbar-nav a::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            border-radius: 8px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: -1;
-        }
-
-        .navbar-nav a:hover {
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .navbar-nav a:hover::before {
-            opacity: 1;
-        }
-
-        .navbar-nav a i {
-            font-size: 1.1em;
-        }
-
-        /* Dropdown Menu */
-        .dropdown {
-            position: relative;
-        }
-
-        .dropdown-toggle {
-            cursor: pointer;
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: #1a1a2e;
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            min-width: 200px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 1001;
-        }
-
-        .dropdown:hover .dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .dropdown-menu a {
-            display: block;
-            padding: 12px 16px;
-            border-radius: 0;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-        }
-
-        .dropdown-menu a:last-child {
-            border-bottom: none;
-        }
-
-        /* Ajustar el body para la navbar */
-        body {
-            padding-top: 0;
-        }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <a href="{{ url_for('index') }}" class="navbar-brand">Focus Studio</a>
-        <div class="navbar-nav">
-            <a href="{{ url_for('planificacion') }}">
-                <i class="fa-solid fa-calendar-days"></i> Planificación
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('index') }}" class="sidebar-brand">
+                <i class="fa-solid fa-brain"></i>
+                <span>Focus Studio</span>
             </a>
-            <div class="dropdown">
-                <a href="#" class="dropdown-toggle">
-                    <i class="fa-solid fa-tools"></i> Herramientas
-                </a>
-                <div class="dropdown-menu">
-                    <a href="{{ url_for('generar') }}">
-                        <i class="fa-solid fa-file-lines"></i> Generar exámenes
-                    </a>
-                    <a href="{{ url_for('wolfram_query') }}">
-                        <i class="fa-solid fa-calculator"></i> Ejercicios matemáticos
-                    </a>
-                    <a href="{{ url_for('como_funciona') }}">
-                        <i class="fa-solid fa-question-circle"></i> Cómo funciona
-                    </a>
+        </div>
+
+        <div class="sidebar-search">
+            <div class="search-container">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" placeholder="Buscar..." class="search-input">
+                <div class="search-shortcuts">
+                    <span class="shortcut">⌘</span>
+                    <span class="shortcut">K</span>
                 </div>
             </div>
-            {% if current_user.is_authenticated %}
-                <a href="{{ url_for('historial') }}">
-                    <i class="fa-solid fa-history"></i> Historial
-                </a>
-                <a href="{{ url_for('mi_calendario') }}">
-                    <i class="fa-solid fa-calendar-check"></i> Mi Calendario
-                </a>
-                <a href="{{ url_for('perfil') }}">
-                    <i class="fa-solid fa-user"></i> Mi perfil
-                </a>
-                <a href="{{ url_for('logout') }}">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión
-                </a>
-            {% else %}
-                <a href="{{ url_for('login') }}">
-                    <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
-                </a>
-                <a href="{{ url_for('registro') }}">
-                    <i class="fa-solid fa-user-plus"></i> Registrarse
-                </a>
-            {% endif %}
         </div>
-    </nav>
+
+        <nav class="sidebar-nav">
+            {% if current_user.is_authenticated %}
+                <!-- Organización -->
+                <div class="nav-section">
+                    <h3 class="nav-section-title">
+                        <i class="fa-solid fa-sitemap"></i>
+                        Organización
+                    </h3>
+                    <div class="nav-section-items">
+                        <a href="{{ url_for('historial') }}" class="nav-item">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{{ url_for('planificacion') }}" class="nav-item active">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            <span>Planificador</span>
+                        </a>
+                        <a href="{{ url_for('mi_calendario') }}" class="nav-item">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span>Mi Calendario</span>
+                        </a>
+                        <a href="{{ url_for('carpetas') }}" class="nav-item">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span>Mis Carpetas</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Estudio -->
+                <div class="nav-section">
+                    <h3 class="nav-section-title">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        Estudio
+                    </h3>
+                    <div class="nav-section-items">
+                        <a href="{{ url_for('generar') }}" class="nav-item">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span>Generador de Exámenes</span>
+                        </a>
+                        <a href="{{ url_for('wolfram_query') }}" class="nav-item">
+                            <i class="fa-solid fa-calculator"></i>
+                            <span>Ejercicios Matemáticos</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mi Perfil -->
+                <div class="nav-section">
+                    <h3 class="nav-section-title">
+                        <i class="fa-solid fa-user-circle"></i>
+                        Mi Perfil
+                    </h3>
+                    <div class="nav-section-items">
+                        <a href="{{ url_for('perfil') }}" class="nav-item">
+                            <i class="fa-solid fa-user"></i>
+                            <span>Configuración</span>
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="nav-item">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            <span>Cerrar Sesión</span>
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="nav-section">
+                    <h3 class="nav-section-title">
+                        <i class="fa-solid fa-info-circle"></i>
+                        Información
+                    </h3>
+                    <div class="nav-section-items">
+                        <a href="{{ url_for('como_funciona') }}" class="nav-item">
+                            <i class="fa-solid fa-question-circle"></i>
+                            <span>Cómo Funciona</span>
+                        </a>
+                        <a href="{{ url_for('login') }}" class="nav-item">
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                            <span>Iniciar Sesión</span>
+                        </a>
+                        <a href="{{ url_for('registro') }}" class="nav-item">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Registrarse</span>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </nav>
+    </div>
 
     <div class="container">
         <div class="progress-container">
@@ -1098,5 +1227,80 @@
         }
     });
     </script>
+
+    <!-- Funcionalidad del buscador -->
+    <script>
+        // Funcionalidad del buscador
+        const searchInput = document.querySelector('.search-input');
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        // Función para buscar en la navegación
+        function searchNavigation(query) {
+            const searchTerm = query.toLowerCase().trim();
+            
+            navItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                const navSection = item.closest('.nav-section');
+                
+                if (searchTerm === '') {
+                    // Mostrar todo si no hay búsqueda
+                    item.style.display = 'flex';
+                    navSection.style.display = 'block';
+                } else if (text.includes(searchTerm)) {
+                    // Mostrar item que coincide
+                    item.style.display = 'flex';
+                    navSection.style.display = 'block';
+                } else {
+                    // Ocultar item que no coincide
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Ocultar secciones vacías
+            document.querySelectorAll('.nav-section').forEach(section => {
+                const visibleItems = section.querySelectorAll('.nav-item[style*="flex"]');
+                if (visibleItems.length === 0 && searchTerm !== '') {
+                    section.style.display = 'none';
+                } else {
+                    section.style.display = 'block';
+                }
+            });
+        }
+        
+        // Event listener para el input de búsqueda
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                searchNavigation(e.target.value);
+            });
+        }
+        
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            // Cmd/Ctrl + K para enfocar el buscador
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }
+            
+            // Escape para limpiar búsqueda
+            if (e.key === 'Escape') {
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchNavigation('');
+                    searchInput.blur();
+                }
+            }
+        });
+        
+        // Limpiar búsqueda al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.sidebar-search') && searchInput) {
+                searchInput.blur();
+            }
+        });
+    </script>
+
 </body>
 </html>

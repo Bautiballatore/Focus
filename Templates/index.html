@@ -113,49 +113,143 @@
         width: 100%;
     }
     
-    .navbar-auth {
+    .navbar-nav {
         display: flex;
-        gap: 20px; /* Reducido de 24px */
         align-items: center;
+        gap: 24px;
     }
-    
-    .navbar-auth a {
-        color: var(--text-accent);
+
+    .navbar-nav a {
+        color: #f8fafc;
         text-decoration: none;
         font-weight: 500;
-        font-size: 0.9rem; /* Reducido de 0.95rem */
-        padding: 6px 14px; /* Reducido de 8px 16px */
+        padding: 8px 16px;
         border-radius: 8px;
         transition: all 0.3s ease;
         position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .navbar-nav a::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border-radius: 8px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+    }
+
+    .navbar-nav a:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .navbar-nav a:hover::before {
+        opacity: 1;
+    }
+
+    .navbar-nav a i {
+        font-size: 1.1em;
+    }
+
+    /* Enhanced Dropdown Menu */
+    .dropdown {
+        position: relative;
+    }
+
+    .dropdown-toggle {
+        cursor: pointer;
+        position: relative;
+    }
+
+    .dropdown-toggle::after {
+        content: '\f107';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        margin-left: 8px;
+        transition: transform 0.3s ease;
+        opacity: 0.7;
+    }
+
+    .dropdown:hover .dropdown-toggle::after {
+        transform: rotate(180deg);
+    }
+
+            .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            transform: translateY(-10px);
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1001;
+            padding: 8px 0;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 20px;
+        color: var(--text-light);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        position: relative;
         overflow: hidden;
     }
-    
-    .navbar-auth a::before {
+
+    .dropdown-menu a::before {
         content: '';
         position: absolute;
         top: 0;
         left: -100%;
         width: 100%;
         height: 100%;
-        background: var(--gradient-primary);
-        opacity: 0.1;
+        background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
         transition: left 0.3s ease;
-        z-index: -1;
     }
-    
-    .navbar-auth a:hover {
-        color: var(--primary-light);
-        transform: translateY(-1px); /* Reducido de -2px */
+
+    .dropdown-menu a:hover {
+        background: rgba(99, 102, 241, 0.1);
+        color: white;
+        transform: translateX(8px);
     }
-    
-    .navbar-auth a:hover::before {
-        left: 0;
+
+    .dropdown-menu a:hover::before {
+        left: 100%;
     }
-    
-    .navbar-auth a i {
-        margin-right: 5px; /* Reducido de 6px */
-        font-size: 0.85rem; /* Reducido de 0.9rem */
+
+    .dropdown-menu a i {
+        font-size: 1.1em;
+        width: 20px;
+        text-align: center;
+        color: var(--primary);
+    }
+
+    .dropdown-menu a:hover i {
+        color: white;
     }
     
     /* Enhanced Hero Section - Más compacto */
@@ -987,13 +1081,42 @@
             font-size: 1.7rem; /* Reducido de 1.8rem */
         }
     
-        .navbar-auth {
+        .navbar-nav {
             gap: 14px; /* Reducido de 16px */
         }
     
-        .navbar-auth a {
+        .navbar-nav a {
             font-size: 0.85rem; /* Reducido de 0.9rem */
             padding: 5px 10px; /* Reducido de 6px 12px */
+        }
+
+        /* Mobile dropdown adjustments */
+        .dropdown-menu {
+            position: static;
+            transform: none;
+            opacity: 1;
+            visibility: visible;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            margin-top: 8px;
+            border-radius: 8px;
+            box-shadow: none;
+            min-width: auto;
+            width: 100%;
+        }
+
+        .dropdown-toggle::after {
+            display: none;
+        }
+
+        .dropdown-menu a {
+            padding: 10px 16px;
+            font-size: 0.9em;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        .dropdown-menu a:last-child {
+            border-bottom: none;
         }
     
         .hero {
@@ -1064,13 +1187,25 @@
             font-size: 1.4rem; /* Reducido de 1.5rem */
         }
     
-        .navbar-auth {
+        .navbar-nav {
             gap: 10px; /* Reducido de 12px */
         }
     
-        .navbar-auth a {
+        .navbar-nav a {
             font-size: 0.8rem; /* Reducido de 0.85rem */
             padding: 3px 6px; /* Reducido de 4px 8px */
+        }
+
+        /* Stack navbar vertically on very small screens */
+        .navbar {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .navbar-nav {
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
     
         .hero,
@@ -1142,21 +1277,68 @@
     <div class="main-wrapper">
         <div class="navbar">
             <a href="/" class="navbar-brand">Focus Studio</a>
-            <div class="navbar-auth">
-                <a href="{{ url_for('planificacion') }}"><i class="fa-solid fa-calendar-days"></i> Planificación de estudio</a>
-                <div class="dropdown">
-                    <a href="#" class="dropdown-toggle">Herramientas <i class="fa fa-caret-down"></i></a>
-                    <div class="dropdown-menu">
-                        <a href="{{ url_for('generar') }}">Generador de exámenes</a>
-                        <a href="{{ url_for('wolfram_query') }}">Ejercicios matemáticos</a>
-                    </div>
-                </div>
+            <div class="navbar-nav">
                 {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('perfil') }}"><i class="fa-solid fa-user"></i> Mi perfil</a>
-                    <a href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+                    <!-- Organización -->
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle">
+                            <i class="fa-solid fa-sitemap"></i> Organización
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('planificacion') }}">
+                                <i class="fa-solid fa-calendar-days"></i> Planificador
+                            </a>
+                            <a href="{{ url_for('historial') }}">
+                                <i class="fa-solid fa-history"></i> Historial
+                            </a>
+                            <a href="{{ url_for('mi_calendario') }}">
+                                <i class="fa-solid fa-calendar-check"></i> Mi Calendario
+                            </a>
+                            <a href="{{ url_for('carpetas') }}">
+                                <i class="fa-solid fa-folder-open"></i> Mis Carpetas
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Estudio -->
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle">
+                            <i class="fa-solid fa-graduation-cap"></i> Estudio
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('generar') }}">
+                                <i class="fa-solid fa-file-lines"></i> Generador de Exámenes
+                            </a>
+                            <a href="{{ url_for('wolfram_query') }}">
+                                <i class="fa-solid fa-calculator"></i> Ejercicios Matemáticos
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Mi Perfil -->
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle">
+                            <i class="fa-solid fa-user-circle"></i> Mi Perfil
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('perfil') }}">
+                                <i class="fa-solid fa-user"></i> Configuración
+                            </a>
+                            <a href="{{ url_for('logout') }}">
+                                <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
+                            </a>
+                        </div>
+                    </div>
                 {% else %}
-                    <a href="{{ url_for('login') }}"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</a>
-                    <a href="{{ url_for('registro') }}"><i class="fa-solid fa-user-plus"></i> Registrarse</a>
+                    <a href="{{ url_for('como_funciona') }}">
+                        <i class="fa-solid fa-question-circle"></i> Cómo Funciona
+                    </a>
+                    <a href="{{ url_for('login') }}">
+                        <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+                    </a>
+                    <a href="{{ url_for('registro') }}">
+                        <i class="fa-solid fa-user-plus"></i> Registrarse
+                    </a>
                 {% endif %}
             </div>
         </div>
