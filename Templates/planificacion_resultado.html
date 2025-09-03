@@ -2,6 +2,8 @@
     {%- set texto = item.tema_principal.strip() -%}
     {%- set es_dia_dificil = 'día difícil' in texto.lower() -%}
     {%- set color = '#a259f7' if es_dia_dificil else '' -%}
+    
+    {# Si hay subtemas (temas separados por |), mostrarlos como lista #}
     {%- if item.subtemas and item.subtemas|length > 0 -%}
         <ul style="margin:0;padding-left:1.2em;list-style-type:disc;text-align:left;">
             <li><b style="color:{{ color }};text-align:left;">{{ texto[0]|upper ~ texto[1:] if texto|length > 1 else texto|upper }}</b>
@@ -12,8 +14,11 @@
                 </ul>
             </li>
         </ul>
+    {# Si no hay subtemas, mostrar solo el tema principal #}
     {%- else -%}
-        <div style="margin:0.5em 0; color:{{ color }};text-align:left;">{{ texto[0]|upper ~ texto[1:] if texto|length > 1 else texto|upper }}</div>
+        <div style="margin:0.5em 0; color:{{ color }};text-align:left;">
+            <strong>{{ texto[0]|upper ~ texto[1:] if texto|length > 1 else texto|upper }}</strong>
+        </div>
     {%- endif -%}
 {% endmacro %}
 

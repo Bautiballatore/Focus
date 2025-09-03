@@ -616,15 +616,28 @@ def generar():
                 "Incluí la expresión matemática principal entre corchetes al final, por ejemplo: [expresión]. No incluyas la solución ni la respuesta."
             )
             try:
-                enunciado_gpt = client.chat.completions.create(
-                    model="gpt-4o-mini",
+                print(f"🔍 [MATEMÁTICAS] Generando ejercicio {i+1}/{cantidad}...")
+                print(f"🔍 [MATEMÁTICAS] Longitud del prompt: {len(prompt)} caracteres")
+                
+                response = client.chat.completions.create(
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": "Sos un generador de ejercicios matemáticos para exámenes."},
                         {"role": "user", "content": prompt}
                     ],
-                    max_tokens=120,
+                    max_completion_tokens=120,
                     timeout=30
-                ).choices[0].message.content.strip()
+                )
+                
+                # Log de tokens utilizados
+                if hasattr(response, 'usage'):
+                    print(f"🔍 [MATEMÁTICAS] Tokens utilizados:")
+                    print(f"   📥 Input tokens: {response.usage.prompt_tokens}")
+                    print(f"   📤 Output tokens: {response.usage.completion_tokens}")
+                    print(f"   📊 Total tokens: {response.usage.total_tokens}")
+                
+                enunciado_gpt = response.choices[0].message.content.strip()
+                print(f"🔍 [MATEMÁTICAS] Ejercicio generado: {len(enunciado_gpt)} caracteres")
             except Exception as e:
                 enunciado_gpt = f"[Error al generar enunciado: {str(e)}]"
             # Extraer expresión entre corchetes
@@ -801,16 +814,32 @@ def generar():
     print("\n--- PROMPT ENVIADO A LA IA ---\n", prompt + "\n\n" + texto[:3000], "\n--- FIN PROMPT ---\n")
 
     try:
+        print(f"🔍 [GENERADOR] Enviando prompt a GPT-4o...")
+        print(f"🔍 [GENERADOR] API Key presente: {'Sí' if os.getenv('OPENAI_API_KEY') else 'No'}")
+        print(f"🔍 [GENERADOR] Longitud del prompt: {len(prompt)} caracteres")
+        print(f"🔍 [GENERADOR] Longitud del texto: {len(texto[:3000])} caracteres")
+        
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "Sos un generador de exámenes"},
                 {"role": "user", "content": prompt + "\n\n" + texto[:3000]}
             ],
-            max_tokens=3000,
+            max_completion_tokens=3000,
             timeout=60
         )
+        
+        # Log de tokens utilizados
+        if hasattr(response, 'usage'):
+            print(f"🔍 [GENERADOR] Tokens utilizados:")
+            print(f"   📥 Input tokens: {response.usage.prompt_tokens}")
+            print(f"   📤 Output tokens: {response.usage.completion_tokens}")
+            print(f"   📊 Total tokens: {response.usage.total_tokens}")
+        
+        print(f"✅ [GENERADOR] Respuesta recibida de GPT-4o")
         preguntas_raw = response.choices[0].message.content
+        print(f"🔍 [GENERADOR] Respuesta recibida: {len(preguntas_raw)} caracteres")
+        print(f"🔍 [DEBUG] Longitud de la respuesta: {len(preguntas_raw)}")
 
         # Log para depuración: ver qué devuelve la IA
         print("\n\n--- RESPUESTA IA RAW ---\n", preguntas_raw, "\n--- FIN RESPUESTA ---\n\n")
@@ -927,6 +956,8 @@ def generar():
 
     except Exception as e:
         print(f"\n--- EXCEPCIÓN: {str(e)} ---\n")
+        print(f"🔍 [DEBUG] Tipo de error: {type(e).__name__}")
+        print(f"🔍 [DEBUG] Detalles del error: {str(e)}")
         import traceback
         traceback.print_exc()
         
@@ -936,6 +967,11 @@ def generar():
         else:
             return render_template("generar.html", mensaje_error=f"Error al generar preguntas: {str(e)}. Por favor, intenta nuevamente.")
 
+    # Resumen final de tokens utilizados
+    print(f"\n📊 [RESUMEN GENERADOR] Función completada exitosamente")
+    print(f"📊 [RESUMEN GENERADOR] Total de preguntas generadas: {len(preguntas)}")
+    print(f"📊 [RESUMEN GENERADOR] Revisar logs anteriores para detalles de tokens por función")
+    
     return redirect(url_for('pregunta', numero=0))
 
 @app.route("/pregunta/<int:numero>", methods=["GET", "POST"])
@@ -1023,15 +1059,28 @@ def resultado():
                         f"La respuesta correcta es: {correcta}\n"
                         f"Explicá en 1-2 frases, de forma breve y clara, por qué la respuesta correcta es la que corresponde. No repitas el enunciado completo."
                     )
-                    explicacion_ia = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
+                    print(f"🔍 [EXPLICACIÓN] Generando explicación para pregunta {i+1}...")
+                    print(f"🔍 [EXPLICACIÓN] Longitud del prompt: {len(prompt_ia)} caracteres")
+                    
+                    response = client.chat.completions.create(
+                        model="gpt-4o",
                         messages=[
                             {"role": "system", "content": "Sos un profesor que explica brevemente por qué una respuesta es correcta en un examen."},
                             {"role": "user", "content": prompt_ia}
                         ],
-                        max_tokens=120,
+                        max_completion_tokens=120,
                         timeout=30
-                    ).choices[0].message.content.strip()
+                    )
+                    
+                    # Log de tokens utilizados
+                    if hasattr(response, 'usage'):
+                        print(f"🔍 [EXPLICACIÓN] Tokens utilizados:")
+                        print(f"   📥 Input tokens: {response.usage.prompt_tokens}")
+                        print(f"   📤 Output tokens: {response.usage.completion_tokens}")
+                        print(f"   📊 Total tokens: {response.usage.total_tokens}")
+                    
+                    explicacion_ia = response.choices[0].message.content.strip()
+                    print(f"🔍 [EXPLICACIÓN] Explicación generada: {len(explicacion_ia)} caracteres")
                 except Exception as e:
                     explicacion_ia = "(No se pudo generar explicación IA)"
                 if pregunta["tipo"] == "multiple":
@@ -1053,15 +1102,28 @@ def resultado():
                 "Al final, decí solo CORRECTA, INCORRECTA o PARCIALMENTE CORRECTA."
             )
             try:
-                feedback_raw = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                print(f"🔍 [FEEDBACK] Generando feedback para pregunta {i+1}...")
+                print(f"🔍 [FEEDBACK] Longitud del prompt: {len(prompt)} caracteres")
+                
+                response = client.chat.completions.create(
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": "Sos un corrector de exámenes"},
                         {"role": "user", "content": prompt}
                     ],
-                    max_tokens=500,
+                    max_completion_tokens=500,
                     timeout=45
-                ).choices[0].message.content
+                )
+                
+                # Log de tokens utilizados
+                if hasattr(response, 'usage'):
+                    print(f"🔍 [FEEDBACK] Tokens utilizados:")
+                    print(f"   📥 Input tokens: {response.usage.prompt_tokens}")
+                    print(f"   📤 Output tokens: {response.usage.completion_tokens}")
+                    print(f"   📊 Total tokens: {response.usage.total_tokens}")
+                
+                feedback_raw = response.choices[0].message.content
+                print(f"🔍 [FEEDBACK] Feedback generado: {len(feedback_raw)} caracteres")
 
                 if feedback_raw:
                     f_lower = feedback_raw.lower()
@@ -1110,15 +1172,28 @@ def resultado():
             )
             for pf in preguntas_falladas:
                 prompt_general += f"- Enunciado: {pf['enunciado']}\n  Respuesta del alumno: {pf['respuesta_usuario']}\n  Respuesta correcta: {pf['respuesta_correcta']}\n"
-            feedback_general = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+            print(f"🔍 [FEEDBACK GENERAL] Generando feedback general...")
+            print(f"🔍 [FEEDBACK GENERAL] Longitud del prompt: {len(prompt_general)} caracteres")
+            
+            response = client.chat.completions.create(
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "Sos un tutor experto en ayudar a estudiantes a mejorar en exámenes."},
                     {"role": "user", "content": prompt_general}
                 ],
-                max_tokens=200,
+                max_completion_tokens=200,
                 timeout=45
-            ).choices[0].message.content.strip()
+            )
+            
+            # Log de tokens utilizados
+            if hasattr(response, 'usage'):
+                print(f"🔍 [FEEDBACK GENERAL] Tokens utilizados:")
+                print(f"   📥 Input tokens: {response.usage.prompt_tokens}")
+                print(f"   📤 Output tokens: {response.usage.completion_tokens}")
+                print(f"   📊 Total tokens: {response.usage.total_tokens}")
+            
+            feedback_general = response.choices[0].message.content.strip()
+            print(f"🔍 [FEEDBACK GENERAL] Feedback general generado: {len(feedback_general)} caracteres")
         except Exception as e:
             feedback_general = "(No se pudo generar feedback personalizado)"
     else:
@@ -1613,15 +1688,28 @@ def wolfram_query():
                     "Convertí la siguiente frase a una consulta matemática en inglés para Wolfram Alpha. "
                     "No expliques, solo devolvé la consulta lista para enviar.\nFrase: " + expresion
                 )
-                consulta = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                print(f"🔍 [WOLFRAM] Traduciendo expresión matemática...")
+                print(f"🔍 [WOLFRAM] Longitud del prompt: {len(prompt_ia)} caracteres")
+                
+                response = client.chat.completions.create(
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": "Sos un traductor de frases matemáticas a consultas para Wolfram Alpha."},
                         {"role": "user", "content": prompt_ia}
                     ],
-                    max_tokens=60,
+                    max_completion_tokens=60,
                     timeout=30
-                ).choices[0].message.content.strip()
+                )
+                
+                # Log de tokens utilizados
+                if hasattr(response, 'usage'):
+                    print(f"🔍 [WOLFRAM] Tokens utilizados:")
+                    print(f"   📥 Input tokens: {response.usage.prompt_tokens}")
+                    print(f"   📤 Output tokens: {response.usage.completion_tokens}")
+                    print(f"   📊 Total tokens: {response.usage.total_tokens}")
+                
+                consulta = response.choices[0].message.content.strip()
+                print(f"🔍 [WOLFRAM] Consulta generada: {len(consulta)} caracteres")
             except Exception as e:
                 error = f"No se pudo traducir la frase a consulta matemática: {str(e)}"
         try:
@@ -1799,37 +1887,43 @@ def planificacion():
         elif dias_no:
             dias_no_final = dias_no
             
-        print(f"🔍 DEBUG - dias_no_final: '{dias_no_final}'")
+
         
         # Armar prompt para la IA
         from datetime import date
         fecha_actual = date.today().strftime('%Y-%m-%d')
         prompt = (
-            f"Sos un planificador de estudio. El usuario tiene un examen el día {fecha_examen}. "
+            f"Sos un planificador de estudio experto. El usuario tiene un examen el día {fecha_examen}. "
             f"No puede estudiar los días: {dias_no_final}. Puede dedicar {tiempo_dia} horas por día. "
             f"Aclaraciones: {aclaraciones}. Temario/resumen: {texto_resumen}\n"
             f"El primer día del plan debe ser la fecha de hoy: {fecha_actual}. "
-            "ES OBLIGATORIO que todos los temas, unidades o títulos del resumen estén incluidos en el plan, aunque implique agrupar varios temas en un mismo día. "
-            "Si hay más temas que días, agrupá todos los que hagan falta en un mismo día, pero NO DEJES NINGÚN TEMA FUERA. "
-            "En cada actividad, usá el formato: 'Tema principal | subtema1, subtema2, subtema3' (usá el símbolo | para separar el tema principal de los subtemas, y comas para separar los subtemas). "
-            "En cada actividad, usá la palabra 'Estudiar' y mencioná el nombre real de la unidad o tema y sus componentes principales. "
-            "Si hay un día con mucho contenido, agregá un mensaje motivacional personalizado como: 'Día difícil: estudiar ... ¡Tú puedes!'. "
-            "Si corresponde, agregá repasos o autoevaluaciones antes del examen. "
-            "Respondé SOLO en formato JSON, sin explicaciones ni texto adicional. El JSON debe ser una lista de objetos con 'fecha' (YYYY-MM-DD) y 'actividad'.\n"
-            "Ejemplo de formato:\n"
-            "[\n  {\"fecha\": \"2025-07-21\", \"actividad\": \"Estudiar Gestión de Costos | planificación, estimación, presupuesto, control, KPI\"},\n  {\"fecha\": \"2025-07-22\", \"actividad\": \"Día difícil: Estudiar Gestión de Adquisiciones | tipos de contrato, criterios de selección, proceso de compras. ¡Tú puedes!\"},\n  {\"fecha\": \"2025-07-23\", \"actividad\": \"Repaso general de todos los temas y autoevaluación\"}\n]"
+            "\nREQUISITOS FUNDAMENTALES:\n"
+            "1. Identifica TODOS los temas principales del temario (no omitas ninguno)\n"
+            "2. Busca indicadores como: números (1., 2., 3.), títulos en mayúsculas, palabras clave como 'Tema', 'Unidad', 'Capítulo', 'Sección'\n"
+            "3. El plan DEBE terminar ANTES o EN la fecha del examen ({fecha_examen})\n"
+            "4. Si hay muchos temas y pocos días disponibles, AGREGA múltiples temas en una sola actividad usando el símbolo |\n"
+            "5. Usa los nombres exactos de los temas como aparecen en el resumen\n"
+            "6. CRÍTICO: TODOS los temas identificados DEBEN estar incluidos en el plan\n"
+            "\nFORMATO DE ACTIVIDADES:\n"
+            "- Un tema: 'Estudiar [Nombre del Tema]'\n"
+            "- Múltiples temas: 'Estudiar [Tema 1] | [Tema 2] | [Tema 3]'\n"
+            "- El símbolo | separa diferentes temas en la misma actividad\n"
+            "\nResponde SOLO en formato JSON, sin explicaciones. Lista de objetos con 'fecha' (YYYY-MM-DD) y 'actividad'.\n"
+            "Ejemplo:\n"
+            "[\n  {\"fecha\": \"2025-07-21\", \"actividad\": \"Estudiar Gestión de Costos | Control de Costos\"},\n  {\"fecha\": \"2025-07-22\", \"actividad\": \"Estudiar Gestión de Adquisiciones\"}\n]"
         )
         # Consultar a OpenAI
         try:
             response = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "Sos un planificador de estudio experto."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=1200,
+                max_completion_tokens=4000,
                 timeout=90
             )
+            
             plan_json = response.choices[0].message.content.strip()
         except Exception as e:
             plan_json = f"[{{'fecha':'error','actividad':'Error al generar planificación: {str(e)}'}}]"
@@ -1842,7 +1936,6 @@ def planificacion():
         # Intentar parsear directamente el JSON
         try:
             plan = json.loads(plan_json)
-            print("\n--- PLAN JSON GENERADO POR LA IA ---\n", json.dumps(plan, ensure_ascii=False, indent=2), "\n--- FIN PLAN JSON ---\n")
             explicacion_ia = None  # Si se puede parsear como JSON, no hay explicación
         except json.JSONDecodeError:
             # Si no es JSON válido, intentar extraer JSON con regex
@@ -1852,7 +1945,6 @@ def planificacion():
                 json_str = markdown_match.group(1)
                 try:
                     plan = json.loads(json_str)
-                    print("\n--- PLAN JSON GENERADO POR LA IA ---\n", json.dumps(plan, ensure_ascii=False, indent=2), "\n--- FIN PLAN JSON ---\n")
                     explicacion_ia = None
                 except Exception:
                     plan = None
@@ -1887,29 +1979,28 @@ def planificacion():
         
         # Procesar cada actividad para separar tema principal y subtemas (split inteligente)
         def split_subtemas(text):
+            # Separar por | para temas principales
+            temas = text.split('|')
             subtemas = []
-            buffer = ''
-            paren = 0
-            for c in text:
-                if c == '(': paren += 1
-                elif c == ')': paren -= 1
-                if c == ',' and paren == 0:
-                    if buffer.strip():
-                        subtemas.append(buffer.strip())
-                    buffer = ''
-                else:
-                    buffer += c
-            if buffer.strip():
-                subtemas.append(buffer.strip())
+            for tema in temas:
+                tema_limpio = tema.strip()
+                if tema_limpio:
+                    subtemas.append(tema_limpio)
             return subtemas
         
         if plan and isinstance(plan, list):
             for item in plan:
                 actividad = item.get('actividad', '')
                 if '|' in actividad:
-                    tema, subs = actividad.split('|', 1)
-                    item['tema_principal'] = tema.strip()
-                    item['subtemas'] = split_subtemas(subs.strip())
+                    # Si hay múltiples temas separados por |, el primer tema es el principal
+                    # y el resto son subtemas
+                    partes = actividad.split('|')
+                    item['tema_principal'] = partes[0].strip()
+                    # Los temas restantes se convierten en subtemas
+                    if len(partes) > 1:
+                        item['subtemas'] = [parte.strip() for parte in partes[1:] if parte.strip()]
+                    else:
+                        item['subtemas'] = []
                 else:
                     item['tema_principal'] = actividad.strip()
                     item['subtemas'] = []
@@ -1925,14 +2016,9 @@ def planificacion():
                 for item in plan if item['fecha'] in actividades_por_fecha
             ]
             fechas_ordenadas.sort(key=lambda x: x[0])
-            print("\n--- FECHAS ORDENADAS PARA TIMELINE ---\n", fechas_ordenadas, "\n--- FIN FECHAS ORDENADAS ---\n")
+
         
-        # Debug: imprimir valores que se pasan al template
-        print("\n--- VALORES PARA TEMPLATE ---")
-        print(f"plan: {plan}")
-        print(f"explicacion_ia: {explicacion_ia}")
-        print(f"plan_json: {plan_json[:200]}...")
-        print("--- FIN VALORES ---\n")
+
         
         return render_template("planificacion_resultado.html", plan=plan, plan_json=plan_json, days_list=days_list, actividades_por_fecha=actividades_por_fecha, explicacion_ia=explicacion_ia, fechas_ordenadas=fechas_ordenadas, es_planificacion_guardada=False)
     
