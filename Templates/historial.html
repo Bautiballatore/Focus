@@ -6,13 +6,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
     <style>
+        /* Usar las variables de tema de base.html */
         :root {
-            --primary: #7c3aed;
-            --primary-light: #a855f7;
-            --secondary: #38bdf8;
-            --accent: #4ade80;
-            --warning: #facc15;
-            --danger: #f87171;
+            --primary: #6366f1;
+            --primary-light: #8b5cf6;
+            --secondary: #06b6d4;
+            --accent: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
             --bg-dark: #0f0f23;
             --card-dark: #1a1a2e;
             --card-light: #23263a;
@@ -20,6 +21,34 @@
             --text-muted: #94a3b8;
             --border: rgba(148, 163, 184, 0.1);
             --glass: rgba(255, 255, 255, 0.05);
+            --button-text: #ffffff;
+            --gradient-hero: linear-gradient(135deg, var(--bg-dark) 0%, var(--card-light) 50%, var(--card-dark) 100%);
+        }
+        
+        /* Fixed button text contrast for dark mode */
+        [data-theme="dark"] {
+            --bg-dark: #0a0a0a;
+            --card-dark: #1a1a1a;
+            --card-light: #2a2a2a;
+            --text-light: #e5e5e5;
+            --text-muted: #8a8a8a;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.05);
+            --button-text: #1a1a1a;
+            --gradient-hero: linear-gradient(135deg, var(--bg-dark) 0%, var(--card-light) 50%, var(--card-dark) 100%);
+        }
+        
+        /* Variables específicas para modo claro */
+        [data-theme="light"] {
+            --bg-dark: #f8fafc;
+            --card-dark: #ffffff;
+            --card-light: #f1f5f9;
+            --text-light: #1e293b;
+            --text-muted: #64748b;
+            --border: rgba(100, 116, 139, 0.2);
+            --glass: rgba(0, 0, 0, 0.05);
+            --button-text: #ffffff;
+            --gradient-hero: linear-gradient(135deg, var(--bg-dark) 0%, var(--card-light) 50%, var(--card-dark) 100%);
         }
         
         * {
@@ -36,32 +65,47 @@
         
         body {
             font-family: 'Inter', 'Montserrat', Arial, sans-serif;
-            background: var(--bg-dark);
+            background: var(--gradient-hero);
             color: var(--text-light);
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
         }
-        
+
+        /* Enhanced dynamic background with theme colors - same as carpetas.html */
         body::before {
             content: '';
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 90% 90%, rgba(74, 222, 128, 0.1) 0%, transparent 50%);
+            width: 100vw;
+            height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(16, 163, 127, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 60% 40%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            pointer-events: none;
             z-index: -1;
             animation: backgroundFloat 20s ease-in-out infinite;
         }
         
         @keyframes backgroundFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(1deg); }
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(-10px, -10px) scale(1.05);
+            }
+            50% {
+                transform: translate(10px, -5px) scale(0.95);
+            }
+            75% {
+                transform: translate(-5px, 10px) scale(1.02);
+            }
         }
         
         .container {
@@ -103,7 +147,7 @@
         
         .stat-card {
             background: var(--card-dark);
-            border: 1px solid var(--border);
+            border: 2px solid var(--border);
             border-radius: 20px;
             padding: 32px;
             text-align: center;
@@ -111,6 +155,12 @@
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        [data-theme="dark"] .stat-card {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
         
         .stat-card::before {
@@ -169,10 +219,16 @@
         
         .section-card {
             background: var(--card-dark);
-            border: 1px solid var(--border);
+            border: 2px solid var(--border);
             border-radius: 20px;
             padding: 32px;
             backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        [data-theme="dark"] .section-card {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
         
         .section-header {
@@ -197,7 +253,7 @@
         
         .view-all-btn {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
+            color: var(--button-text);
             padding: 8px 16px;
             border-radius: 8px;
             text-decoration: none;
@@ -269,12 +325,18 @@
         
         .carpeta-card {
             background: var(--card-light);
-            border: 1px solid var(--border);
+            border: 2px solid var(--border);
             border-radius: 16px;
             padding: 20px;
             text-align: center;
             transition: all 0.3s ease;
             cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        [data-theme="dark"] .carpeta-card {
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
         
         .carpeta-card:hover {
@@ -302,11 +364,17 @@
         
         .achievements-section {
             background: var(--card-dark);
-            border: 1px solid var(--border);
+            border: 2px solid var(--border);
             border-radius: 20px;
             padding: 32px;
             text-align: center;
             backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        [data-theme="dark"] .achievements-section {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
         
         .achievements-grid {
@@ -324,7 +392,14 @@
             padding: 16px;
             border-radius: 16px;
             background: var(--glass);
+            border: 1px solid var(--border);
             transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        [data-theme="dark"] .achievement-badge {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
         
         .achievement-badge:hover {
@@ -369,7 +444,7 @@
         
         .cta-btn {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
+            color: var(--button-text);
             padding: 16px 32px;
             border-radius: 12px;
             text-decoration: none;
@@ -407,168 +482,200 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        <!-- Dashboard Header -->
-        <div class="dashboard-header">
-            <h1 class="dashboard-title">🎯 Mi Dashboard</h1>
-            <p class="dashboard-subtitle">Resumen de tu actividad y progreso en Focus Studio</p>
+<div class="container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">🎯 Mi Dashboard</h1>
+        <p class="dashboard-subtitle">Resumen de tu actividad y progreso en Focus Studio</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number">{{ total_examenes }}</div>
+            <div class="stat-label">Exámenes Rendidos</div>
         </div>
-
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-number">{{ total_examenes }}</div>
-                <div class="stat-label">Exámenes Rendidos</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">⭐</div>
-                <div class="stat-number">{{ promedio_nota|round(1) }}</div>
-                <div class="stat-label">Promedio de Notas</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">⏱️</div>
-                <div class="stat-number">{{ tiempo_total_horas }}</div>
-                <div class="stat-label">Horas de Estudio</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">📁</div>
-                <div class="stat-number">{{ total_carpetas }}</div>
-                <div class="stat-label">Carpetas Creadas</div>
-            </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-number">{{ promedio_nota|round(1) }}</div>
+            <div class="stat-label">Promedio de Notas</div>
         </div>
-
-        <!-- Content Sections -->
-        <div class="content-sections">
-            <!-- Recent Activity -->
-            <div class="section-card">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <i class="fa-solid fa-clock"></i>
-                        Actividad Reciente
-                    </h2>
-                    <a href="{{ url_for('historial_completo') }}" class="view-all-btn">Ver Todo</a>
-                </div>
-                
-                {% if examenes_recientes %}
-                    {% for examen in examenes_recientes[:5] %}
-                    <div class="recent-item">
-                        <div class="recent-icon examen">
-                            <i class="fa-solid fa-file-alt"></i>
-                        </div>
-                        <div class="recent-content">
-                            <div class="recent-title">
-                                <a href="{{ url_for('detalle_examen', examen_id=examen.id) }}" style="color: var(--text-light); text-decoration: none;">
-                                    {{ examen.titulo[:40] }}{% if examen.titulo|length > 40 %}...{% endif %}
-                                </a>
-                            </div>
-                            <div class="recent-meta">
-                                {{ examen.fecha.strftime('%d/%m/%Y') }} • Nota: {{ examen.nota }}/10
-                                {% if examen.carpeta %}
-                                    • 📁 {{ examen.carpeta.nombre }}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <a href="{{ url_for('detalle_examen', examen_id=examen.id) }}" class="view-all-btn" style="font-size: 0.8rem; padding: 6px 12px;">
-                            <i class="fa-solid fa-eye"></i>
-                        </a>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fa-solid fa-clock"></i>
-                        <h3>Sin actividad reciente</h3>
-                        <p>¡Genera tu primer examen para empezar!</p>
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- My Folders -->
-            <div class="section-card">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <i class="fa-solid fa-folder-open"></i>
-                        Mis Carpetas
-                    </h2>
-                    <a href="{{ url_for('carpetas') }}" class="view-all-btn">Ver Todas</a>
-                </div>
-                
-                {% if carpetas %}
-                    <div class="carpetas-grid">
-                        {% for carpeta in carpetas[:4] %}
-                        <div class="carpeta-card" onclick="window.location.href='{{ url_for('ver_carpeta', carpeta_id=carpeta.id) }}'">
-                            <div class="carpeta-icon">
-                                <i class="fa-solid fa-folder"></i>
-                            </div>
-                            <div class="carpeta-name">{{ carpeta.nombre }}</div>
-                            <div class="carpeta-count">{{ carpeta.cantidad_examenes }} exámenes</div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fa-solid fa-folder"></i>
-                        <h3>Sin carpetas creadas</h3>
-                        <p>Organiza tus exámenes en carpetas</p>
-                        <a href="{{ url_for('crear_carpeta') }}" class="cta-btn">Crear Primera Carpeta</a>
-                    </div>
-                {% endif %}
-            </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-number">{{ tiempo_total_horas }}</div>
+            <div class="stat-label">Horas de Estudio</div>
         </div>
-
-        <!-- Achievements Section -->
-        <div class="achievements-section">
-            <h2 class="section-title">
-                <i class="fa-solid fa-trophy"></i>
-                Logros y Badges
-            </h2>
-            
-            <div class="achievements-grid">
-                {% if total_examenes >= 1 %}
-                <div class="achievement-badge">
-                    <div class="achievement-icon">🎯</div>
-                    <div class="achievement-name">Primer Examen</div>
-                </div>
-                {% endif %}
-                
-                {% if total_examenes >= 5 %}
-                <div class="achievement-badge">
-                    <div class="achievement-icon">🚀</div>
-                    <div class="achievement-name">Estudiante Activo</div>
-                </div>
-                {% endif %}
-                
-                {% if promedio_nota >= 8 %}
-                <div class="achievement-badge">
-                    <div class="achievement-icon">🏆</div>
-                    <div class="achievement-name">Excelencia</div>
-                </div>
-                {% endif %}
-                
-                {% if total_carpetas >= 3 %}
-                <div class="achievement-badge">
-                    <div class="achievement-icon">📚</div>
-                    <div class="achievement-name">Organizado</div>
-                </div>
-                {% endif %}
-                
-                {% if tiempo_total_horas >= 10 %}
-                <div class="achievement-badge">
-                    <div class="achievement-icon">⏰</div>
-                    <div class="achievement-name">Perseverante</div>
-                </div>
-                {% endif %}
-                
-                {% if total_examenes == 0 %}
-                <div class="achievement-badge">
-                    <div class="achievement-icon">🌟</div>
-                    <div class="achievement-name">¡Comienza!</div>
-                </div>
-                {% endif %}
-            </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">📁</div>
+            <div class="stat-number">{{ total_carpetas }}</div>
+            <div class="stat-label">Carpetas Creadas</div>
         </div>
     </div>
+
+    <!-- Content Sections -->
+    <div class="content-sections">
+        <!-- Recent Activity -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-clock"></i>
+                    Actividad Reciente
+                </h2>
+                <a href="{{ url_for('historial_completo') }}" class="view-all-btn">Ver Todo</a>
+            </div>
+            
+            {% if examenes_recientes %}
+                {% for examen in examenes_recientes[:5] %}
+                <div class="recent-item">
+                    <div class="recent-icon examen">
+                        <i class="fa-solid fa-file-alt"></i>
+                    </div>
+                    <div class="recent-content">
+                        <div class="recent-title">
+                            <a href="{{ url_for('detalle_examen', examen_id=examen.id) }}" style="color: var(--text-light); text-decoration: none;">
+                                {{ examen.titulo[:40] }}{% if examen.titulo|length > 40 %}...{% endif %}
+                            </a>
+                        </div>
+                        <div class="recent-meta">
+                            {{ examen.fecha.strftime('%d/%m/%Y') }} • Nota: {{ examen.nota }}/10
+                            {% if examen.carpeta %}
+                                • 📁 {{ examen.carpeta.nombre }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a href="{{ url_for('detalle_examen', examen_id=examen.id) }}" class="view-all-btn" style="font-size: 0.8rem; padding: 6px 12px;">
+                        <i class="fa-solid fa-eye"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-clock"></i>
+                    <h3>Sin actividad reciente</h3>
+                    <p>¡Genera tu primer examen para empezar!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- My Folders -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-folder-open"></i>
+                    Mis Carpetas
+                </h2>
+                <a href="{{ url_for('carpetas') }}" class="view-all-btn">Ver Todas</a>
+            </div>
+            
+            {% if carpetas %}
+                <div class="carpetas-grid">
+                    {% for carpeta in carpetas[:4] %}
+                    <div class="carpeta-card" onclick="window.location.href='{{ url_for('ver_carpeta', carpeta_id=carpeta.id) }}'">
+                        <div class="carpeta-icon">
+                            <i class="fa-solid fa-folder"></i>
+                        </div>
+                        <div class="carpeta-name">{{ carpeta.nombre }}</div>
+                        <div class="carpeta-count">{{ carpeta.cantidad_examenes }} exámenes</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-folder"></i>
+                    <h3>Sin carpetas creadas</h3>
+                    <p>Organiza tus exámenes en carpetas</p>
+                    <a href="{{ url_for('crear_carpeta') }}" class="cta-btn">Crear Primera Carpeta</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Achievements Section -->
+    <div class="achievements-section">
+        <h2 class="section-title">
+            <i class="fa-solid fa-trophy"></i>
+            Logros y Badges
+        </h2>
+        
+        <div class="achievements-grid">
+            {% if total_examenes >= 1 %}
+            <div class="achievement-badge">
+                <div class="achievement-icon">🎯</div>
+                <div class="achievement-name">Primer Examen</div>
+            </div>
+            {% endif %}
+            {% if total_examenes >= 5 %}
+            <div class="achievement-badge">
+                <div class="achievement-icon">🚀</div>
+                <div class="achievement-name">Estudiante Activo</div>
+            </div>
+            {% endif %}
+            {% if promedio_nota >= 8 %}
+            <div class="achievement-badge">
+                <div class="achievement-icon">🏆</div>
+                <div class="achievement-name">Excelencia</div>
+            </div>
+            {% endif %}
+            {% if total_carpetas >= 3 %}
+            <div class="achievement-badge">
+                <div class="achievement-icon">📚</div>
+                <div class="achievement-name">Organizado</div>
+            </div>
+            {% endif %}
+            {% if tiempo_total_horas >= 10 %}
+            <div class="achievement-badge">
+                <div class="achievement-icon">⏰</div>
+                <div class="achievement-name">Perseverante</div>
+            </div>
+            {% endif %}
+            {% if total_examenes == 0 %}
+            <div class="achievement-badge">
+                <div class="achievement-icon">🌟</div>
+                <div class="achievement-name">¡Comienza!</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Animaciones suaves al cargar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animar las tarjetas de estadísticas
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.6s ease';
+                
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100);
+            }, index * 100);
+        });
+        
+        // Animar las secciones de contenido
+        const sections = document.querySelectorAll('.section-card, .achievements-section');
+        sections.forEach((section, index) => {
+            setTimeout(() => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(30px)';
+                section.style.transition = 'all 0.8s ease';
+                
+                setTimeout(() => {
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, 200);
+            }, 500 + (index * 200));
+        });
+    });
+</script>
 {% endblock %}

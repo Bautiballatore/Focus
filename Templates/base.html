@@ -138,14 +138,30 @@
             align-items: center;
             gap: 12px;
             font-family: 'Poppins', sans-serif;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .brand-title {
             font-size: 1.5rem;
             font-weight: 800;
             background: var(--gradient-primary);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            text-decoration: none;
-            transition: all 0.3s ease;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            opacity: 0.8;
         }
 
         .sidebar-brand i {
@@ -154,6 +170,33 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+
+        /* Logo styles */
+        .sidebar-brand img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        /* Show light logo in light mode */
+        [data-theme="light"] .logo-light {
+            display: block !important;
+        }
+
+        [data-theme="light"] .logo-dark,
+        [data-theme="light"] .logo-fallback {
+            display: none !important;
+        }
+
+        /* Show dark logo in dark mode */
+        [data-theme="dark"] .logo-dark {
+            display: block !important;
+        }
+
+        [data-theme="dark"] .logo-light,
+        [data-theme="dark"] .logo-fallback {
+            display: none !important;
         }
 
         .sidebar-search {
@@ -695,8 +738,13 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="{{ url_for('index') }}" class="sidebar-brand">
-                <i class="fa-solid fa-brain"></i>
-                <span>Focus Studio</span>
+                <img src="{{ url_for('static', filename='logo-light.png') }}" alt="Focus Studio" class="logo-light" style="display: none;">
+                <img src="{{ url_for('static', filename='logo-dark.png') }}" alt="Focus Studio" class="logo-dark" style="display: none;">
+                <i class="fa-solid fa-brain logo-fallback"></i>
+                <div class="brand-text">
+                    <span class="brand-title">Focus Studio</span>
+                    <span class="brand-subtitle">Tu aliado académico, con IA</span>
+                </div>
             </a>
         </div>
 
