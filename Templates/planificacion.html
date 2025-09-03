@@ -71,7 +71,7 @@
             padding: 40px; 
             box-shadow: var(--shadow-lg); 
             border: 1px solid var(--border-subtle);
-            position: relative; 
+            position: relative;
             overflow: visible;
             min-height: 500px;
         }
@@ -337,51 +337,15 @@
             color: var(--text-muted);
         }
 
-        /* File upload styling */
+        /* Simple file input styling - same as generador */
         input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
             background: var(--bg-section);
-            border: 2px dashed var(--border-subtle);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            color: var(--text-light);
             margin-bottom: 20px;
-            color: var(--text-light);
-        }
-
-        input[type="file"]:hover {
-            border-color: var(--primary);
-            background: var(--bg-section);
-        }
-
-        /* Light theme file upload */
-        [data-theme="light"] input[type="file"] {
-            background: var(--bg-section);
-            border-color: var(--border-subtle);
-            color: var(--text-light);
-        }
-
-        [data-theme="light"] input[type="file"]:hover {
-            border-color: var(--primary);
-            background: var(--bg-section);
-        }
-
-        /* Uploaded file state styling */
-        input[type="file"].file-uploaded {
-            background: var(--primary-alpha);
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-alpha);
-        }
-
-        input[type="file"].file-uploaded:hover {
-            background: var(--primary-alpha);
-            border-color: var(--primary);
-        }
-
-        /* Hidden confirmation text */
-        #archivo-nombre {
-            display: none !important;
         }
 
         /* Examples grid styling */
@@ -901,7 +865,7 @@
                 <div class="selected-dates" id="selected-dates-container"></div>
                 <!-- Campo oculto para enviar todas las fechas seleccionadas -->
                 <input type="hidden" id="dias_no_multiple" name="dias_no_multiple" value="">
-                <div class="cal-tip">💡 Tip: podés agregar múltiples fechas una por una.</div>
+                <div class="cal-tip">💡 Tip: podés agregar múltiples fechas una por una. Este campo es opcional.</div>
             </div>
             
             <!-- Slide 3: Tiempo por día -->
@@ -947,19 +911,7 @@
                 <label for="resumen">📚 Pegá tu resumen o temario:</label>
                 <textarea id="resumen" name="resumen" rows="2" placeholder="Pegá aquí el contenido que necesitás estudiar..."></textarea>
                 <label for="archivo">📎 O subí un archivo (.txt, .pdf, .docx):</label>
-                <div class="file-upload-container">
-                    <label for="archivo" class="file-upload-label" id="file-upload-label">
-                        <div>📁 Arrastrá un archivo aquí o hacé clic para seleccionar</div>
-                        <div style="font-size: 0.85rem; margin-top: 5px; opacity: 0.7;">
-                            Formatos soportados: .txt, .pdf, .docx
-                        </div>
-                    </label>
-                    <input type="file" id="archivo" name="archivo" accept=".txt,.pdf,.docx" style="display: none;">
-                    <div class="file-info" id="file-info">
-                        <div class="file-name" id="file-name"></div>
-                        <div class="file-size" id="file-size"></div>
-                    </div>
-                </div>
+                <input type="file" id="archivo" name="archivo" accept=".txt,.pdf,.docx">
             </div>
             
             <div class="wizard-nav">
@@ -1076,7 +1028,7 @@
             if (!validarSlide(currentSlide)) return;
             nextBtn.classList.add('loading');
             nextBtn.innerHTML = 'Generando...';
-            document.getElementById('archivo').disabled = false;
+            // No deshabilitar el archivo - mantenerlo habilitado
             document.getElementById('wizardForm').submit();
             return;
         }
@@ -1192,30 +1144,16 @@
             }
         });
         
-        // Handling textarea/file in summary
+        // Simple file handling - same as generador
     const resumen = document.getElementById('resumen');
     const archivo = document.getElementById('archivo');
-    const archivoNombre = document.getElementById('archivo-nombre');
     
+    // Simple file change handler
     archivo.addEventListener('change', function() {
         if (archivo.files.length > 0) {
-            archivo.classList.add('file-uploaded');
-            resumen.disabled = true;
-            resumen.style.opacity = '0.5';
+            console.log('✅ Archivo seleccionado:', archivo.files[0].name);
         } else {
-            archivo.classList.remove('file-uploaded');
-            resumen.disabled = false;
-            resumen.style.opacity = '1';
-        }
-    });
-    
-    resumen.addEventListener('input', function() {
-        if (resumen.value.trim().length > 0) {
-            archivo.disabled = true;
-            archivo.style.opacity = '0.5';
-        } else {
-            archivo.disabled = false;
-            archivo.style.opacity = '1';
+            console.log('❌ No hay archivo seleccionado');
         }
     });
     
@@ -1300,7 +1238,10 @@
     }
     
     function formatDate(dateString) {
-        const date = new Date(dateString);
+        // Parse the date string directly to avoid timezone issues
+        const [year, month, day] = dateString.split('-');
+        const date = new Date(year, month - 1, day); // month is 0-indexed
+        
         return date.toLocaleDateString('es-AR', {
             day: '2-digit',
             month: '2-digit',
@@ -1308,84 +1249,7 @@
         });
     }
     
-    // File upload functionality
-    const fileInput = document.getElementById('archivo');
-    const fileUploadLabel = document.getElementById('file-upload-label');
-    const fileInfo = document.getElementById('file-info');
-    const fileName = document.getElementById('file-name');
-    const fileSize = document.getElementById('file-size');
-    
-    // Click to upload
-    fileUploadLabel.addEventListener('click', function() {
-        fileInput.click();
-    });
-    
-    // Drag and drop functionality
-    fileUploadLabel.addEventListener('dragover', function(e) {
-                e.preventDefault();
-        this.classList.add('dragover');
-    });
-    
-    fileUploadLabel.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        this.classList.remove('dragover');
-    });
-    
-    fileUploadLabel.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('dragover');
-        
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFileSelect(files[0]);
-        }
-    });
-    
-    // File input change
-    fileInput.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
-            handleFileSelect(e.target.files[0]);
-        }
-    });
-    
-    function handleFileSelect(file) {
-        // Validate file type
-        const allowedTypes = ['.txt', '.pdf', '.docx'];
-        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-        
-        if (!allowedTypes.includes(fileExtension)) {
-            alert('Tipo de archivo no soportado. Solo se permiten archivos .txt, .pdf y .docx');
-            return;
-        }
-        
-        // Validate file size (max 10MB)
-        const maxSize = 10 * 1024 * 1024; // 10MB
-        if (file.size > maxSize) {
-            alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
-            return;
-        }
-        
-        // Update display
-        fileName.textContent = file.name;
-        fileSize.textContent = formatFileSize(file.size);
-        fileInfo.classList.add('show');
-        
-        // Update label text
-        fileUploadLabel.innerHTML = `
-            <div>✅ Archivo seleccionado</div>
-            <div style="font-size: 0.85rem; margin-top: 5px; opacity: 0.7;">
-                ${file.name}
-            </div>
-        `;
-    }
-    
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
+        // Simple file handling - removed complex drag & drop
     
     // Override the validation function to include multiple dates
     const originalValidarSlide = validarSlide;
@@ -1411,11 +1275,8 @@
                 return false;
             }
             
-            // At least one unavailable date should be selected
-            if (selectedDates.length === 0 && !diasNo) {
-                mostrarError('dias_no', 'Seleccioná al menos un día no disponible.');
-                return false;
-            }
+            // REMOVED: No longer require at least one unavailable date
+            // This field is now optional
         }
         if (n === 2) { // Tiempo por día
             const tiempo = parseFloat(document.getElementById('tiempo_dia').value);
@@ -1446,8 +1307,8 @@
         const originalInput = document.getElementById('dias_no');
         if (selectedDates.length > 0 && !originalInput.value) {
             originalInput.value = selectedDates[0]; // Enviar al menos la primera fecha
-        }
-    });
+            }
+        });
     </script>
     {% endblock %}
 </body>
