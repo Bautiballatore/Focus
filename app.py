@@ -1889,138 +1889,372 @@ def planificacion():
             
 
         
-        # Armar prompt para la IA
-        from datetime import date
+        # Preparar datos para el nuevo prompt optimizado
+        from datetime import date, timedelta
         fecha_actual = date.today().strftime('%Y-%m-%d')
-        prompt = (
-            f"Sos un planificador de estudio experto. El usuario tiene un examen el día {fecha_examen}. "
-            f"No puede estudiar los días: {dias_no_final}. Puede dedicar {tiempo_dia} horas por día. "
-            f"Aclaraciones: {aclaraciones}. Temario/resumen: {texto_resumen}\n"
-            f"El primer día del plan debe ser la fecha de hoy: {fecha_actual}. "
-            "\nREQUISITOS FUNDAMENTALES:\n"
-            "1. Identifica TODOS los temas principales del temario (no omitas ninguno)\n"
-            "2. Busca indicadores como: números (1., 2., 3.), títulos en mayúsculas, palabras clave como 'Tema', 'Unidad', 'Capítulo', 'Sección'\n"
-            "3. El plan DEBE terminar ANTES o EN la fecha del examen ({fecha_examen})\n"
-            "4. Si hay muchos temas y pocos días disponibles, AGREGA múltiples temas en una sola actividad usando el símbolo |\n"
-            "5. Usa los nombres exactos de los temas como aparecen en el resumen\n"
-            "6. CRÍTICO: TODOS los temas identificados DEBEN estar incluidos en el plan\n"
-            "\nFORMATO DE ACTIVIDADES:\n"
-            "- Un tema: 'Estudiar [Nombre del Tema]'\n"
-            "- Múltiples temas: 'Estudiar [Tema 1] | [Tema 2] | [Tema 3]'\n"
-            "- El símbolo | separa diferentes temas en la misma actividad\n"
-            "\nResponde SOLO en formato JSON, sin explicaciones. Lista de objetos con 'fecha' (YYYY-MM-DD) y 'actividad'.\n"
-            "Ejemplo:\n"
-            "[\n  {\"fecha\": \"2025-07-21\", \"actividad\": \"Estudiar Gestión de Costos | Control de Costos\"},\n  {\"fecha\": \"2025-07-22\", \"actividad\": \"Estudiar Gestión de Adquisiciones\"}\n]"
-        )
-        # Consultar a OpenAI
+        
+        # Procesar días no disponibles para el nuevo formato
+        dias_no_disponibles_formateados = []
+        if dias_no_final:
+            # Separar por comas y limpiar
+            dias_lista = [dia.strip() for dia in dias_no_final.split(',') if dia.strip()]
+            for dia in dias_lista:
+                # Si es una fecha (contiene -), mantenerla
+                if '-' in dia:
+                    dias_no_disponibles_formateados.append(dia)
+                # Si es un día de la semana, mantenerlo
+                else:
+                    dias_no_disponibles_formateados.append(dia.lower())
+        
+        # Preparar horas por día (convertir a número si es string)
         try:
+            horas_por_dia = float(tiempo_dia) if tiempo_dia else 3.0
+        except:
+            horas_por_dia = 3.0
+        
+        # Nuevo prompt optimizado con GPT-5.0
+        prompt_template = """Rol e intención
+
+Eres un planificador de estudios estricto y fiable. Tu única salida debe ser un JSON válido que describa un plan de estudio diario que respeta absolutamente todas las restricciones del usuario.
+Es fundamental que TODO el temario quede cubierto, sin omitir ningún tema o subtema. Si el tiempo no alcanza para mantenerlos separados, agrúpalos de manera explícita, pero jamás los elimines.
+
+Entradas (proporcionadas por la aplicación)
+
+temario_texto: texto plano completo extraído del archivo del usuario (PDF/DOCX). Mantiene saltos de línea y viñetas.
+fecha_inicio: fecha ISO YYYY-MM-DD desde la que se puede empezar a estudiar.
+fecha_examen: fecha ISO YYYY-MM-DD del examen (el plan debe terminar ese día o antes).
+dias_no_disponibles: lista que puede incluir fechas ISO específicas [\"YYYY-MM-DD\", ...] y/o nombres de días de la semana en español [\"lunes\", \"martes\", ...].
+horas_por_dia: puede ser
+un número (horas fijas por cada día disponible), o
+un objeto {{ "YYYY-MM-DD": horas, ... }} para horas variables por fecha.
+aclaraciones_adicionales: texto libre con prioridades, temas clave, métodos preferidos, etc. Úsalo para ponderar la importancia/orden.
+
+Objetivo
+
+Generar un plan detallado, específico y realista que:
+- Termine en o antes de fecha_examen.
+- Excluya por completo los dias_no_disponibles (fechas y/o días de la semana).
+- Distribuya TODO el temario, sin dejar nada afuera. Si es necesario, agrupa subtemas relacionados en un solo bloque.
+- Respete estrictamente horas_por_dia, permitiendo dividir la carga de un mismo día en varias actividades.
+- Incluya TODOS los temas del temario (sin omitir ninguno).
+- Distinga claramente entre temas principales y subtemas.
+- Use exactamente el formato de actividad: "Estudiar [Tema Principal] | [Subtema 1], [Subtema 2], ...".
+- Añada días de repaso antes del examen.
+- Añada mensajes motivacionales solo en días con carga alta sin romper el formato exigido.
+
+Detección y estructuración de contenidos del temario
+
+- Analiza temario_texto y extrae TODOS los temas, conservando su orden.
+- Identifica temas principales usando numeraciones, mayúsculas, encabezados.
+- Extrae subtemas de ítems subordinados.
+- Si hay más de dos niveles, mapea: Nivel 1 → tema_principal; Niveles 2+ → subtemas.
+- No inventes temas. Incluye todo lo que aparezca en el temario.
+
+Asignación temporal y realismo
+
+- Genera un calendario entre fecha_inicio y fecha_examen excluyendo los días prohibidos.
+- Capacidad diaria: calcula subtemas por día según horas_por_dia, usando la regla 1 subtema ≈ 45 minutos.
+- Si un tema principal tiene demasiados subtemas para un solo día, divídelo en varios días consecutivos, pero no lo recortes.
+- Si el total de subtemas excede el tiempo disponible, AGRUPA, nunca omitas. Usa nombres compuestos claros (ejemplo: "2.2–2.4 Regresiones: lineal, logística, regularización").
+- Está permitido generar más de una entrada de actividad por día, mientras el total no exceda la capacidad diaria.
+
+Repaso
+
+- Incluye 1–2 días de repaso antes del examen.
+- Usa como tema_principal “Repaso general” o repaso por bloques.
+- Subtemas: lista de los puntos clave o difíciles.
+
+Mensajes motivacionales
+
+- Solo si carga ≥ 4h o ≥ 6 subtemas.
+- Añádelos al final de “actividad” tras “ // ”.
+- Breves y en español.
+
+Reglas duras
+
+- No programes nada fuera del rango [fecha_inicio, fecha_examen].
+- No incluyas entradas en dias_no_disponibles.
+- No excedas capacidad diaria. Divide en varias actividades si es necesario.
+- Incluye TODO el contenido del temario. Si falta tiempo, agrupa explícitamente.
+- Mantén el orden lógico del temario. Solo reordena mínimamente si es imprescindible para equilibrar carga.
+- Formato EXACTO de actividad: "Estudiar [Tema Principal] | [Subtema 1], [Subtema 2], ..." (+ opcional " // [Mensaje]").
+- El último día del plan debe ser en o antes de fecha_examen.
+- Salida estrictamente en español.
+
+Formato de salida (JSON estricto)
+
+Devuelve únicamente un array JSON. Sin texto adicional antes o después. Sin comentarios. Sin comas finales. Sin claves extra.
+Cada elemento del array debe tener exactamente estas claves:
+"fecha": "YYYY-MM-DD"
+"actividad": "Estudiar [Tema Principal] | [Subtema 1], [Subtema 2], ..." + opcional " // [Mensaje motivacional]"
+"tema_principal": "[Tema Principal]"
+"subtemas": ["[Subtema 1]", "[Subtema 2]", ...]
+Ordena el array ascendentemente por "fecha".
+Permite múltiples elementos con la misma fecha, siempre que no superen en total las horas disponibles de ese día.
+
+Datos
+temario_texto: {temario_texto}
+fecha_inicio: {fecha_inicio}
+fecha_examen: {fecha_examen}
+dias_no_disponibles: {dias_no_disponibles}
+horas_por_dia: {horas_por_dia}
+aclaraciones_adicionales: {aclaraciones_adicionales}
+
+"""
+        
+        # Consultar a OpenAI con GPT-4.1 y response_format
+        try:
+            # Construir el prompt con las variables
+            prompt = prompt_template.format(
+                temario_texto=texto_resumen,
+                fecha_inicio=fecha_actual,
+                fecha_examen=fecha_examen,
+                dias_no_disponibles=dias_no_disponibles_formateados,
+                horas_por_dia=horas_por_dia,
+                aclaraciones_adicionales=aclaraciones
+            )
+            print(f"🔍 [PLANIFICACIÓN] Enviando prompt a GPT-4o...")
+            print(f"🔍 [PLANIFICACIÓN] Longitud del prompt: {len(prompt)} caracteres")
+            print(f"🔍 [PLANIFICACIÓN] Días no disponibles: {dias_no_disponibles_formateados}")
+            print(f"🔍 [PLANIFICACIÓN] Horas por día: {horas_por_dia}")
+            print(f"🔍 [PLANIFICACIÓN] Template antes del format:")
+            print(f"🔍 [PLANIFICACIÓN] {prompt_template[:500]}...")
+            print(f"🔍 [PLANIFICACIÓN] Variables del format:")
+            print(f"🔍 [PLANIFICACIÓN] temario_texto: {len(texto_resumen)} chars")
+            print(f"🔍 [PLANIFICACIÓN] fecha_inicio: {fecha_actual}")
+            print(f"🔍 [PLANIFICACIÓN] fecha_examen: {fecha_examen}")
+            print(f"🔍 [PLANIFICACIÓN] dias_no_disponibles: {dias_no_disponibles_formateados}")
+            print(f"🔍 [PLANIFICACIÓN] horas_por_dia: {horas_por_dia}")
+            print(f"🔍 [PLANIFICACIÓN] aclaraciones_adicionales: {aclaraciones}")
+            
+            # Log del prompt completo antes de enviarlo
+            print(f"🔍 [PLANIFICACIÓN] PROMPT COMPLETO:")
+            print(f"🔍 [PLANIFICACIÓN] {prompt}")
+            print(f"🔍 [PLANIFICACIÓN] --- FIN PROMPT ---")
+            
             response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o", 
                 messages=[
-                    {"role": "system", "content": "Sos un planificador de estudio experto."},
                     {"role": "user", "content": prompt}
                 ],
-                max_completion_tokens=4000,
-                timeout=90
+                max_completion_tokens=6000,
+                temperature=0.2,  # Para consistencia
+                seed=123,  # Para reproducibilidad
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "plan_estudio",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": ["plan"],
+                            "properties": {
+                                "plan": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "additionalProperties": False,
+                                        "required": ["fecha", "actividad", "tema_principal", "subtemas"],
+                                        "properties": {
+                                            "fecha": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+                                            "actividad": {"type": "string"},
+                                            "tema_principal": {"type": "string"},
+                                            "subtemas": {
+                                                "type": "array",
+                                                "items": {"type": "string"},
+                                                "minItems": 1
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "strict": True
+                    }
+                },
+                timeout=120
             )
             
-            plan_json = response.choices[0].message.content.strip()
+            # Log de tokens utilizados
+            if hasattr(response, 'usage'):
+                print(f"🔍 [PLANIFICACIÓN] Tokens utilizados:")
+                print(f"   📥 Input tokens: {response.usage.prompt_tokens}")
+                print(f"   📤 Output tokens: {response.usage.completion_tokens}")
+                print(f"   📊 Total tokens: {response.usage.total_tokens}")
+            
+            # Debug: verificar si tiene parsed
+            print(f"🔍 [PLANIFICACIÓN] hasattr parsed: {hasattr(response.choices[0].message, 'parsed')}")
+            print(f"🔍 [PLANIFICACIÓN] message attributes: {dir(response.choices[0].message)}")
+            
+            # Obtener el JSON parseado directamente
+            if hasattr(response.choices[0].message, 'parsed'):
+                parsed_data = response.choices[0].message.parsed
+                print(f"🔍 [PLANIFICACIÓN] parsed_data: {type(parsed_data)}")
+                print(f"🔍 [PLANIFICACIÓN] parsed_data keys: {list(parsed_data.keys()) if isinstance(parsed_data, dict) else 'No es dict'}")
+                print(f"🔍 [PLANIFICACIÓN] parsed_data content: {parsed_data}")
+                
+                # Extraer el array del objeto
+                if isinstance(parsed_data, dict) and 'plan' in parsed_data:
+                    plan = parsed_data['plan']
+                elif isinstance(parsed_data, list):
+                    plan = parsed_data
+                else:
+                    plan = []
+                
+                plan_json = json.dumps(plan, ensure_ascii=False, indent=2)
+                print(f"✅ [PLANIFICACIÓN] JSON parseado directamente por GPT-4o")
+                print(f"🔍 [PLANIFICACIÓN] Plan obtenido: {len(plan)} actividades")
+                print(f"🔍 [PLANIFICACIÓN] Plan type: {type(plan)}")
+            else:
+                # Fallback al método tradicional
+                plan_json = response.choices[0].message.content.strip()
+                print(f"✅ [PLANIFICACIÓN] Respuesta recibida de GPT-4o")
+                print(f"🔍 [PLANIFICACIÓN] Contenido obtenido: {len(plan_json)} caracteres")
+                
+                # Log detallado de la respuesta
+                print(f"🔍 [PLANIFICACIÓN] RESPUESTA COMPLETA:")
+                print(f"🔍 [PLANIFICACIÓN] {plan_json}")
+                print(f"🔍 [PLANIFICACIÓN] --- FIN RESPUESTA ---")
+                
+                if len(plan_json) == 0:
+                    print("❌ [PLANIFICACIÓN] El contenido está vacío!")
+                    plan_json = None
+                else:
+                    print(f"🔍 [PLANIFICACIÓN] Primeros 500 caracteres:")
+                    print(f"   {plan_json[:500]}...")
         except Exception as e:
             plan_json = f"[{{'fecha':'error','actividad':'Error al generar planificación: {str(e)}'}}]"
         # Extraer temas/unidades del resumen (líneas no vacías con más de 10 caracteres)
         import json, re
         from datetime import datetime, timedelta, date
         explicacion_ia = None
-        plan = None
         
-        # Intentar parsear directamente el JSON
-        try:
-            plan = json.loads(plan_json)
-            explicacion_ia = None  # Si se puede parsear como JSON, no hay explicación
-        except json.JSONDecodeError:
-            # Si no es JSON válido, intentar extraer JSON con regex
-            # Primero intentar extraer JSON de markdown (```json ... ```)
-            markdown_match = re.search(r'```json\s*([\s\S]*?)\s*```', plan_json)
-            if markdown_match:
-                json_str = markdown_match.group(1)
-                try:
-                    plan = json.loads(json_str)
-                    explicacion_ia = None
-                except Exception:
+        # Si ya tenemos el plan parseado desde response_format, usarlo directamente
+        if 'plan' in locals() and plan is not None:
+            print(f"✅ [PLANIFICACIÓN] Usando plan parseado directamente: {len(plan)} actividades")
+        else:
+            # Intentar parsear directamente el JSON
+            try:
+                parsed_json = json.loads(plan_json)
+                print(f"✅ [PLANIFICACIÓN] JSON parseado correctamente")
+                print(f"🔍 [PLANIFICACIÓN] Tipo de parsed_json: {type(parsed_json)}")
+                
+                # Extraer el array del objeto
+                if isinstance(parsed_json, dict) and 'plan' in parsed_json:
+                    plan = parsed_json['plan']
+                    print(f"✅ [PLANIFICACIÓN] Array extraído del objeto: {len(plan)} actividades")
+                elif isinstance(parsed_json, list):
+                    plan = parsed_json
+                    print(f"✅ [PLANIFICACIÓN] JSON es array directo: {len(plan)} actividades")
+                else:
+                    print(f"❌ [PLANIFICACIÓN] Estructura JSON no reconocida: {type(parsed_json)}")
                     plan = None
-                    explicacion_ia = plan_json
-            else:
-                # Intentar extraer JSON normal con regex
-                match = re.search(r'\[\s*{[\s\S]*?}\s*\]', plan_json)
-                if match:
-                    json_str = match.group(0)
+                    
+                explicacion_ia = None  # Si se puede parsear como JSON, no hay explicación
+            except json.JSONDecodeError as e:
+                print(f"⚠️ [PLANIFICACIÓN] Error parseando JSON: {e}")
+                print(f"⚠️ [PLANIFICACIÓN] Contenido que falló: {plan_json}")
+                print(f"⚠️ [PLANIFICACIÓN] Intentando extraer...")
+                # Si no es JSON válido, intentar extraer JSON con regex
+                # Primero intentar extraer JSON de markdown (```json ... ```)
+                markdown_match = re.search(r'```json\s*([\s\S]*?)\s*```', plan_json)
+                if markdown_match:
+                    json_str = markdown_match.group(1)
+                    print(f"🔍 [PLANIFICACIÓN] JSON extraído de markdown: {json_str}")
                     try:
                         plan = json.loads(json_str)
-                        print("\n--- PLAN JSON GENERADO POR LA IA ---\n", json.dumps(plan, ensure_ascii=False, indent=2), "\n--- FIN PLAN JSON ---\n")
-                        # Si hay texto antes del JSON, lo guardo como explicación
-                        if plan_json.strip() != json_str.strip():
-                            explicacion_ia = plan_json.replace(json_str, '').strip()
-                        else:
-                            explicacion_ia = None
-                    except Exception:
+                        explicacion_ia = None
+                        print(f"✅ [PLANIFICACIÓN] JSON extraído de markdown: {len(plan)} actividades")
+                    except Exception as e2:
                         plan = None
                         explicacion_ia = plan_json
                 else:
-                    # Si no hay JSON, mostrar como texto plano
-                    explicacion_ia = plan_json
-                    plan = None
-        
-        # Preparar datos para el calendario visual (igual que antes)
-        days_list = []
-        actividades_por_fecha = {}
-        if plan and isinstance(plan, list) and len(plan) > 0 and 'fecha' in plan[0]:
-            # (Eliminado el ajuste automático de fechas)
-            pass # No hay ajuste automático de fechas aquí
-        
-        # Procesar cada actividad para separar tema principal y subtemas (split inteligente)
-        def split_subtemas(text):
-            # Separar por | para temas principales
-            temas = text.split('|')
-            subtemas = []
-            for tema in temas:
-                tema_limpio = tema.strip()
-                if tema_limpio:
-                    subtemas.append(tema_limpio)
-            return subtemas
-        
-        if plan and isinstance(plan, list):
-            for item in plan:
-                actividad = item.get('actividad', '')
-                if '|' in actividad:
-                    # Si hay múltiples temas separados por |, el primer tema es el principal
-                    # y el resto son subtemas
-                    partes = actividad.split('|')
-                    item['tema_principal'] = partes[0].strip()
-                    # Los temas restantes se convierten en subtemas
-                    if len(partes) > 1:
-                        item['subtemas'] = [parte.strip() for parte in partes[1:] if parte.strip()]
+                    # Intentar extraer JSON normal con regex
+                    print(f"🔍 [PLANIFICACIÓN] Intentando extraer JSON con regex...")
+                    match = re.search(r'\[\s*{[\s\S]*?}\s*\]', plan_json)
+                    if match:
+                        json_str = match.group(0)
+                        print(f"🔍 [PLANIFICACIÓN] JSON extraído con regex: {json_str}")
+                        try:
+                            plan = json.loads(json_str)
+                            print(f"✅ [PLANIFICACIÓN] JSON extraído con regex: {len(plan)} actividades")
+                            # Si hay texto antes del JSON, lo guardo como explicación
+                            if plan_json.strip() != json_str.strip():
+                                explicacion_ia = plan_json.replace(json_str, '').strip()
+                            else:
+                                explicacion_ia = None
+                        except Exception as e3:
+                            print(f"❌ [PLANIFICACIÓN] Error parseando JSON extraído: {e3}")
+                            plan = None
+                            explicacion_ia = plan_json
                     else:
+                        print(f"❌ [PLANIFICACIÓN] No se encontró JSON válido en la respuesta")
+                        # Si no hay JSON, mostrar como texto plano
+                        explicacion_ia = plan_json
+                        plan = None
+                        print(f"❌ [PLANIFICACIÓN] No se pudo parsear JSON, usando como explicación")
+        
+        # Verificar y procesar la estructura del plan
+        if plan and len(plan) > 0:
+            # Verificar si ya tiene la estructura nueva (tema_principal, subtemas)
+            primer_item = plan[0]
+            if 'tema_principal' in primer_item and 'subtemas' in primer_item:
+                print(f"✅ [PLANIFICACIÓN] Plan ya tiene estructura completa (tema_principal, subtemas)")
+            else:
+                print(f"🔄 [PLANIFICACIÓN] Procesando plan para agregar tema_principal y subtemas")
+                # Procesar cada actividad para separar tema principal y subtemas
+                for item in plan:
+                    actividad = item.get('actividad', '')
+                    
+                    # Extraer mensaje motivacional si existe (después de //)
+                    if ' // ' in actividad:
+                        actividad_base, mensaje_motivacional = actividad.split(' // ', 1)
+                        item['actividad'] = actividad_base.strip()
+                        item['mensaje_motivacional'] = mensaje_motivacional.strip()
+                    else:
+                        item['mensaje_motivacional'] = None
+                    
+                    # Procesar tema principal y subtemas
+                    if '|' in actividad:
+                        # Si hay múltiples temas separados por |, el primer tema es el principal
+                        partes = actividad.split('|')
+                        item['tema_principal'] = partes[0].strip().replace('Estudiar ', '').strip()
+                        # Los temas restantes se convierten en subtemas
+                        if len(partes) > 1:
+                            item['subtemas'] = [parte.strip() for parte in partes[1:] if parte.strip()]
+                        else:
+                            item['subtemas'] = []
+                    else:
+                        # Si no hay |, toda la actividad es el tema principal
+                        item['tema_principal'] = actividad.replace('Estudiar ', '').strip()
                         item['subtemas'] = []
-                else:
-                    item['tema_principal'] = actividad.strip()
-                    item['subtemas'] = []
         
-        # Preparar datos para el calendario visual (solo fechas reales del plan, ordenadas)
-        if plan and isinstance(plan, list) and len(plan) > 0 and 'fecha' in plan[0]:
-            actividades_por_fecha = {item['fecha']: item['actividad'] for item in plan}
-        
+        # Preparar datos para el calendario visual
         fechas_ordenadas = []
+        actividades_por_fecha = {}
+        
         if plan and isinstance(plan, list) and len(plan) > 0 and 'fecha' in plan[0]:
-            fechas_ordenadas = [
-                (datetime.strptime(item['fecha'], '%Y-%m-%d'), item['fecha'], actividades_por_fecha[item['fecha']])
-                for item in plan if item['fecha'] in actividades_por_fecha
-            ]
+            # Crear diccionario de actividades por fecha
+            actividades_por_fecha = {item['fecha']: item['actividad'] for item in plan}
+            
+            # Ordenar fechas y procesar para el template
+            fechas_ordenadas = []
+            for item in plan:
+                try:
+                    fecha_str = item.get('fecha', '')
+                    actividad = item.get('actividad', '')
+                    fecha_dt = datetime.strptime(fecha_str, '%Y-%m-%d')
+                    fechas_ordenadas.append((fecha_dt, fecha_str, actividad))
+                except ValueError:
+                    continue
+            
             fechas_ordenadas.sort(key=lambda x: x[0])
+            print(f"✅ [PLANIFICACIÓN] Plan procesado: {len(fechas_ordenadas)} fechas válidas")
 
         
 
         
-        return render_template("planificacion_resultado.html", plan=plan, plan_json=plan_json, days_list=days_list, actividades_por_fecha=actividades_por_fecha, explicacion_ia=explicacion_ia, fechas_ordenadas=fechas_ordenadas, es_planificacion_guardada=False)
+        return render_template("planificacion_resultado.html", plan=plan, plan_json=plan_json, actividades_por_fecha=actividades_por_fecha, explicacion_ia=explicacion_ia, fechas_ordenadas=fechas_ordenadas, es_planificacion_guardada=False)
     
     return render_template("planificacion.html")
 
