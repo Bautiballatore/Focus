@@ -811,19 +811,19 @@ def generar():
         )
 
     # LOG: Mostrar el prompt enviado a la IA
-    print("\n--- PROMPT ENVIADO A LA IA ---\n", prompt + "\n\n" + texto[:3000], "\n--- FIN PROMPT ---\n")
+    print("\n--- PROMPT ENVIADO A LA IA ---\n", prompt + "\n\n" + texto, "\n--- FIN PROMPT ---\n")
 
     try:
         print(f"🔍 [GENERADOR] Enviando prompt a GPT-4o...")
         print(f"🔍 [GENERADOR] API Key presente: {'Sí' if os.getenv('OPENAI_API_KEY') else 'No'}")
         print(f"🔍 [GENERADOR] Longitud del prompt: {len(prompt)} caracteres")
-        print(f"🔍 [GENERADOR] Longitud del texto: {len(texto[:3000])} caracteres")
+        print(f"🔍 [GENERADOR] Longitud del texto: {len(texto)} caracteres")
         
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "Sos un generador de exámenes"},
-                {"role": "user", "content": prompt + "\n\n" + texto[:3000]}
+                {"role": "user", "content": prompt + "\n\n" + texto}
             ],
             max_completion_tokens=3000,
             timeout=60
