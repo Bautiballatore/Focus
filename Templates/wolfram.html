@@ -11,6 +11,28 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     /* Estilos específicos para la página de Wolfram */
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 20px;
+        background: var(--bg-section);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-subtle);
+    }
+    
+    .page-title {
+        color: var(--primary);
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-family: 'Montserrat', Arial, sans-serif;
+    }
+    
+    .page-subtitle {
+        color: var(--text-light);
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
     
     .container {
         max-width: 1200px;
@@ -321,6 +343,10 @@
         .container {
             margin: 40px auto;
         }
+        .page-header {
+            margin-left: 40px;
+            margin-right: 40px;
+        }
     }
     
     @media (max-width: 768px) {
@@ -328,11 +354,24 @@
             margin: 20px;
             padding: 24px;
         }
+        .page-header {
+            margin-left: 20px;
+            margin-right: 20px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fa-solid fa-calculator"></i> Ejercicios Matemáticos
+    </h1>
+    <p class="page-subtitle">
+        Resuelve problemas matemáticos complejos con Wolfram Alpha
+    </p>
+</div>
 
 <div class="container">
     <div class="sugerencias">
