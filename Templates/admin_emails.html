@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Emails Permitidos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .email-list {
+        background: var(--bg-card);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-subtle);
+    }
+    
+    .email-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        background: var(--bg-section);
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-subtle);
+    }
+    
+    .email-item:hover {
+        background: var(--bg-card);
+        border-color: var(--primary);
+    }
+    
+    .add-email-form {
+        background: var(--bg-card);
+        border-radius: 1rem;
+        padding: 2rem;
+        border: 1px solid var(--border-subtle);
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-light);
+        font-weight: 600;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-subtle);
+        border-radius: 0.5rem;
+        background: var(--bg-section);
+        color: var(--text-light);
+        font-size: 1rem;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: var(--gradient-primary);
+        color: var(--button-text);
+    }
+    
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .remove-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+    
+    .remove-btn:hover {
+        background: #dc2626;
+    }
+    
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid var(--border-subtle);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="header">
+        <h1><i class="fas fa-envelope"></i> Administrar Emails Permitidos</h1>
+        <p>Gestiona la lista de emails autorizados para registrarse en la plataforma</p>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ allowed_emails|length }}</div>
+            <div class="stat-label">Emails Permitidos</div>
+        </div>
+    </div>
+    
+    <!-- Lista de emails actuales -->
+    <div class="email-list">
+        <h2><i class="fas fa-list"></i> Emails Actualmente Permitidos</h2>
+        
+        {% if allowed_emails %}
+            {% for email in allowed_emails %}
+            <div class="email-item">
+                <span><i class="fas fa-envelope"></i> {{ email }}</span>
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="remove">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <button type="submit" class="remove-btn" onclick="return confirm('¿Estás seguro de que quieres remover este email?')">
+                        <i class="fas fa-trash"></i> Remover
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No hay emails en la lista.</p>
+        {% endif %}
+    </div>
+    
+    <!-- Formulario para agregar emails -->
+    <div class="add-email-form">
+        <h2><i class="fas fa-plus"></i> Agregar Nuevo Email</h2>
+        <form method="POST">
+            <input type="hidden" name="action" value="add">
+            <div class="form-group">
+                <label for="email">Email a Agregar:</label>
+                <input type="email" id="email" name="email" required placeholder="ejemplo@email.com">
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Agregar Email
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

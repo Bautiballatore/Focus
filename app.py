@@ -198,12 +198,63 @@ def favicon():
 # NUEVAS RUTAS DE AUTENTICACIÓN CON SUPABASE AUTH
 # =====================================================
 
+# Lista de emails permitidos para registrarse
+ALLOWED_EMAILS = [
+    "admin@focusstudio.com",
+    "test@focusstudio.com", 
+    "demo@focusstudio.com",
+    "usuario1@ejemplo.com",
+    "usuario2@ejemplo.com",
+    "estudiante@universidad.edu",
+    "profesor@universidad.edu",
+    # Agrega aquí los emails que quieras permitir
+    # "nuevo@email.com",
+]
+
+def is_email_allowed(email):
+    """
+    Verifica si un email está en la lista de emails permitidos
+    """
+    return email.lower() in [e.lower() for e in ALLOWED_EMAILS]
+
+def add_allowed_email(email):
+    """
+    Agrega un email a la lista de emails permitidos
+    """
+    if email not in ALLOWED_EMAILS:
+        ALLOWED_EMAILS.append(email)
+        print(f"✅ Email agregado a la lista: {email}")
+        return True
+    else:
+        print(f"ℹ️ Email ya está en la lista: {email}")
+        return False
+
+def remove_allowed_email(email):
+    """
+    Remueve un email de la lista de emails permitidos
+    """
+    if email in ALLOWED_EMAILS:
+        ALLOWED_EMAILS.remove(email)
+        print(f"✅ Email removido de la lista: {email}")
+        return True
+    else:
+        print(f"ℹ️ Email no está en la lista: {email}")
+        return False
+
 @app.route("/auth/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
         email = request.form["email"].lower()
         password = request.form["password"]
         nombre = request.form["nombre"]
+        
+        # Verificar si el email está en la lista de emails permitidos
+        if not is_email_allowed(email):
+            print(f"❌ Email {email} no está en la lista de emails permitidos")
+            flash("Lo sentimos, tu email no está autorizado para registrarse en esta plataforma. Contacta al administrador si crees que esto es un error.")
+            return render_template("registro.html")
+        
+        print(f"✅ Email {email} está permitido, procediendo con el registro...")
         
         try:
             if supabase:
@@ -237,6 +288,39 @@ def signup():
         return render_template("registro.html")
     
     return render_template("registro.html")
+
+@app.route("/admin/emails", methods=["GET", "POST"])
+def manage_emails():
+    """
+    Ruta de administración para gestionar emails permitidos
+    Solo para administradores
+    """
+    # Verificar si el usuario es administrador (puedes personalizar esta lógica)
+    if not is_authenticated():
+        return redirect(url_for('login'))
+    
+    # Verificar si es administrador (ejemplo: email específico)
+    current_user_email = session.get('user_email', '')
+    if current_user_email not in ['admin@focusstudio.com']:
+        flash("No tienes permisos para acceder a esta página.")
+        return redirect(url_for('index'))
+    
+    if request.method == "POST":
+        action = request.form.get('action')
+        email = request.form.get('email', '').strip()
+        
+        if action == 'add' and email:
+            if add_allowed_email(email):
+                flash(f"Email {email} agregado exitosamente.")
+            else:
+                flash(f"El email {email} ya está en la lista.")
+        elif action == 'remove' and email:
+            if remove_allowed_email(email):
+                flash(f"Email {email} removido exitosamente.")
+            else:
+                flash(f"El email {email} no está en la lista.")
+    
+    return render_template("admin_emails.html", allowed_emails=ALLOWED_EMAILS)
 
 @app.route("/auth/signin", methods=["GET", "POST"])
 def signin():
@@ -2387,6 +2471,9 @@ def ver_planificacion(plan_id):
         # Convertir el plan_json de vuelta a formato usable
         import json
         try:
+            print(f"🔍 Plan JSON tipo: {type(planificacion['plan_json'])}")
+            print(f"🔍 Plan JSON contenido: {planificacion['plan_json']}")
+            
             # El plan_json puede venir en formato string o ya como objeto
             if isinstance(planificacion['plan_json'], str):
                 # Limpiar el string de markdown si viene con ```json
@@ -2400,8 +2487,19 @@ def ver_planificacion(plan_id):
                 plan_data = json.loads(clean_json)
             else:
                 plan_data = planificacion['plan_json']
+                
+            print(f"🔍 Plan data después del parsing: {plan_data}")
+            print(f"🔍 Plan data tipo: {type(plan_data)}")
+            print(f"🔍 Plan data es lista: {isinstance(plan_data, list)}")
+            if isinstance(plan_data, list):
+                print(f"🔍 Plan data longitud: {len(plan_data)}")
+                if len(plan_data) > 0:
+                    print(f"🔍 Primer elemento: {plan_data[0]}")
+                    print(f"🔍 Primer elemento tipo: {type(plan_data[0])}")
         except Exception as e:
             print(f"❌ Error parseando JSON: {e}")
+            import traceback
+            traceback.print_exc()
             plan_data = []
         
         print(f"🔍 Plan JSON original: {planificacion['plan_json']}")
@@ -2409,8 +2507,20 @@ def ver_planificacion(plan_id):
         
         # Preparar datos para el template usando la misma lógica del historial
         plan = []
-        if plan_data and isinstance(plan_data, list):
-            for item in plan_data:
+        
+        # El plan_data puede venir como diccionario con clave 'plan' o como lista directa
+        plan_list = []
+        if isinstance(plan_data, dict) and 'plan' in plan_data:
+            plan_list = plan_data['plan']
+            print(f"🔍 Extrayendo lista del diccionario: {len(plan_list)} elementos")
+        elif isinstance(plan_data, list):
+            plan_list = plan_data
+            print(f"🔍 Usando lista directa: {len(plan_list)} elementos")
+        else:
+            print(f"🔍 Tipo de plan_data no reconocido: {type(plan_data)}")
+        
+        if plan_list and isinstance(plan_list, list):
+            for item in plan_list:
                 if isinstance(item, dict) and 'fecha' in item and 'actividad' in item:
                     # Extraer tema principal y subtemas
                     actividad = item['actividad']

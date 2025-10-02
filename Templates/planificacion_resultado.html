@@ -678,7 +678,18 @@
     <div class="container">
         <h1>Planificación generada</h1>
         
-
+        <!-- Tip de Focus Studio -->
+        <div class="focus-tip" style="background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); color: #92400e; padding: 20px; border-radius: 16px; margin: 20px 0; border: 1px solid #f59e0b; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 2rem;">💡</div>
+                <div>
+                    <h3 style="margin: 0 0 8px 0; font-size: 1.2rem; font-weight: 700; color: #92400e;">Tip de Focus</h3>
+                    <p style="margin: 0; font-size: 1rem; line-height: 1.5; color: #a16207;">
+                        Pausas cortas = más memoria a largo plazo. Probá la técnica Pomodoro ⏱ — 25 min de foco + 5 de descanso.
+                    </p>
+                </div>
+            </div>
+        </div>
         
         {# Nota de la IA oculta - comentada temporalmente
         {% if explicacion_ia and not (explicacion_ia.strip().startswith('[') and 'fecha' in explicacion_ia and 'actividad' in explicacion_ia) %}
@@ -693,6 +704,11 @@
             <div class="plan-text" style="color:var(--text-accent); background:var(--bg-card); border:1.5px solid var(--text-accent); margin-bottom:18px;">
                 <b>❌ Ocurrió un error al generar la planificación.</b><br>
                 Por favor, intentá nuevamente o revisá el temario cargado.
+            </div>
+        {% elif plan|length == 0 %}
+            <div class="plan-text" style="color:var(--text-accent); background:var(--bg-card); border:1.5px solid var(--text-accent); margin-bottom:18px;">
+                <b>⚠️ La planificación está vacía.</b><br>
+                No se encontraron actividades en esta planificación guardada.
             </div>
         {% else %}
             <!-- Timeline Visual -->
@@ -779,6 +795,19 @@
         <div class="save-planification-section" style="background: var(--bg-section); border: 2px solid var(--primary); padding: 25px; border-radius: 16px; text-align: center;">
             <h3 style="color: var(--primary); margin-bottom: 20px;">📋 Planificación Guardada</h3>
             <p style="color: var(--text-light); margin-bottom: 25px;">Esta es tu planificación guardada. Puedes revisarla cuando quieras desde tu calendario personal.</p>
+            
+            <!-- Tip de Focus Studio para planificación guardada -->
+            <div class="focus-tip" style="background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); color: #92400e; padding: 20px; border-radius: 16px; margin: 20px 0; border: 1px solid #f59e0b; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);">
+                <div style="display: flex; align-items: center; gap: 15px; justify-content: center;">
+                    <div style="font-size: 2rem;">💡</div>
+                    <div>
+                        <h3 style="margin: 0 0 8px 0; font-size: 1.2rem; font-weight: 700; color: #92400e;">Tip de Focus</h3>
+                        <p style="margin: 0; font-size: 1rem; line-height: 1.5; color: #a16207;">
+                            Pausas cortas = más memoria a largo plazo. Probá la técnica Pomodoro ⏱ — 25 min de foco + 5 de descanso.
+                        </p>
+                    </div>
+                </div>
+            </div>
             
             <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <a href="{{ url_for('mi_calendario') }}" class="btn-main">📅 Volver a Mi Calendario</a>
