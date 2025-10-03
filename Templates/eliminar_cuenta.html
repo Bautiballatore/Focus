@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar Cuenta - Focus Studio{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="delete-account-section">
+        <div class="warning-header">
+            <div class="warning-icon">⚠️</div>
+            <h1>Eliminar Cuenta</h1>
+            <p class="warning-subtitle">Esta acción es irreversible</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message{% if 'exitosamente' in message or 'éxito' in message %} success{% else %} error{% endif %}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="warning-content">
+            <div class="warning-box">
+                <h3>🚨 Advertencia Importante</h3>
+                <p>Estás a punto de eliminar permanentemente tu cuenta y <strong>TODOS</strong> tus datos. Esta acción no se puede deshacer.</p>
+            </div>
+
+            <div class="data-loss-warning">
+                <h4>Se eliminará permanentemente:</h4>
+                <ul>
+                    <li>📊 Todos tus exámenes y resultados</li>
+                    <li>📁 Todas tus carpetas y organizaciones</li>
+                    <li>📅 Todas tus planificaciones de estudio</li>
+                    <li>📈 Tu historial de actividad</li>
+                    <li>👤 Tu perfil y configuración</li>
+                    <li>🔐 Tu cuenta de acceso</li>
+                </ul>
+            </div>
+
+            <div class="confirmation-section">
+                <h4>¿Estás completamente seguro?</h4>
+                <p>Si estás seguro de que quieres eliminar tu cuenta, escribe <strong>"ELIMINAR"</strong> en el campo de abajo:</p>
+                
+                <form method="POST" class="delete-form">
+                    <div class="form-group">
+                        <label for="confirmacion">Confirmación:</label>
+                        <input 
+                            type="text" 
+                            id="confirmacion" 
+                            name="confirmacion" 
+                            placeholder="Escribe ELIMINAR para confirmar"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-delete" id="deleteBtn" disabled>
+                            🗑️ Eliminar Cuenta Permanentemente
+                        </button>
+                        <a href="{{ url_for('perfil') }}" class="btn-cancel">
+                            ❌ Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.delete-account-section {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background: var(--bg-card);
+    border-radius: 16px;
+    border: 2px solid #ef4444;
+    box-shadow: var(--shadow-lg);
+}
+
+.warning-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.warning-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+}
+
+.warning-header h1 {
+    color: #ef4444;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.warning-subtitle {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+}
+
+.warning-content {
+    margin-top: 30px;
+}
+
+.warning-box {
+    background: rgba(239, 68, 68, 0.1);
+    border: 2px solid #ef4444;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.warning-box h3 {
+    color: #ef4444;
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+
+.warning-box p {
+    color: var(--text-light);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.data-loss-warning {
+    background: var(--bg-section);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.data-loss-warning h4 {
+    color: #f59e0b;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.data-loss-warning ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.data-loss-warning li {
+    color: var(--text-light);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.data-loss-warning li:last-child {
+    border-bottom: none;
+}
+
+.confirmation-section {
+    background: var(--bg-section);
+    border-radius: 12px;
+    padding: 25px;
+    border: 2px solid #f59e0b;
+}
+
+.confirmation-section h4 {
+    color: #f59e0b;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+.confirmation-section p {
+    color: var(--text-light);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.delete-form {
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-subtle);
+    border-radius: 8px;
+    background: var(--bg-card);
+    color: var(--text-light);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-delete {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.btn-delete:enabled {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.btn-delete:enabled:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+}
+
+.btn-cancel {
+    background: var(--bg-card);
+    color: var(--text-light);
+    border: 2px solid var(--border-subtle);
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-cancel:hover {
+    background: var(--bg-section);
+    border-color: var(--text-muted);
+    transform: translateY(-2px);
+}
+
+.flash-messages {
+    margin-bottom: 25px;
+}
+
+.flash-message {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.flash-message.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.flash-message.success {
+    background: rgba(16, 163, 127, 0.1);
+    color: #10a37f;
+    border: 1px solid #10a37f;
+}
+
+@media (max-width: 768px) {
+    .delete-account-section {
+        margin: 20px;
+        padding: 20px;
+    }
+    
+    .warning-header h1 {
+        font-size: 2rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-delete, .btn-cancel {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmInput = document.getElementById('confirmacion');
+    const deleteBtn = document.getElementById('deleteBtn');
+    
+    confirmInput.addEventListener('input', function() {
+        if (this.value.toLowerCase() === 'eliminar') {
+            deleteBtn.disabled = false;
+        } else {
+            deleteBtn.disabled = true;
+        }
+    });
+    
+    // Confirmación adicional al hacer clic
+    deleteBtn.addEventListener('click', function(e) {
+        if (!confirm('¿ESTÁS COMPLETAMENTE SEGURO? Esta acción eliminará permanentemente tu cuenta y todos tus datos. No se puede deshacer.')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}
