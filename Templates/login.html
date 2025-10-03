@@ -185,6 +185,11 @@
             color: #f87171;
             border: 1px solid #a855f7;
         }
+        .flash-message.success {
+            color: #10a37f;
+            border: 1px solid #10a37f;
+            background: rgba(16, 163, 127, 0.1);
+        }
         @media (max-width: 480px) {
             .glass { 
                 padding: 24px 16px; 
@@ -206,7 +211,7 @@
             {% if messages %}
                 <div class="flash-messages">
                     {% for message in messages %}
-                        <div class="flash-message">{{ message }}</div>
+                        <div class="flash-message{% if 'exitosamente' in message or 'éxito' in message %} success{% endif %}">{{ message }}</div>
                     {% endfor %}
                 </div>
             {% endif %}
